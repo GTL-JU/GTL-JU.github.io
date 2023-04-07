@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="Hexo Theme Redefine">
+    <meta name="description" content="Hexo Theme Redefine">
+    <meta name="author" content="GTL-JU">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-redefine.png">
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://evan.beee.top" crossorigin>
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="http://example.com/2023/04/08/java rmi/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+        <meta name="description" content="JAVA RMI一、什么是 RMIRMI是远程方法调用，RMI技术可以使一个java虚拟机中的对象去调用另一个java虚拟中的对象方法并获取调用结果。也就是说RMI实现了客户端调用服务端的对象方法像调用本地的对象方法。 二、RMI原理分析既然是解决远程调用的问题，那么肯定要有client(客户端)和服务端(server)，也就是方法的调用者和被调用者，从客户端-服务器模型来看，客户端程序之间调用服">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://example.com/2023/04/08/java%20RMI/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="JAVA RMI一、什么是 RMIRMI是远程方法调用，RMI技术可以使一个java虚拟机中的对象去调用另一个java虚拟中的对象方法并获取调用结果。也就是说RMI实现了客户端调用服务端的对象方法像调用本地的对象方法。 二、RMI原理分析既然是解决远程调用的问题，那么肯定要有client(客户端)和服务端(server)，也就是方法的调用者和被调用者，从客户端-服务器模型来看，客户端程序之间调用服">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202303/2794407-20230331150932626-442742960.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202304/2794407-20230406172913133-1458454200.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202304/2794407-20230406172955540-213647078.png">
+<meta property="article:published_time" content="2023-04-07T17:13:24.741Z">
+<meta property="article:modified_time" content="2023-04-06T09:46:13.712Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img2023.cnblogs.com/blog/2794407/202303/2794407-20230331150932626-442742960.png">
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="/images/logo.png" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/logo.png">
+    <meta name="theme-color" content="#A31F34">
+    <link rel="shortcut icon" href="/images/logo.png">
+    <!--- Page Info-->
+    
+    <title>
+        
+        JU blog
+    </title>
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<link rel="stylesheet" href="/assets/fonts.css">
+
+    <!--- Font Part-->
+    
+    
+    
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+
+    <!--- Inject Part-->
+    
+    <script id="hexo-configurations">
+    let Global = window.Global || {};
+    Global.hexo_config = {"hostname":"example.com","root":"/","language":"zh-CN","path":"search.xml"};
+    Global.theme_config = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center"},"word_count":{"enable":true,"count":true,"min2read":true},"author_label":{"enable":true,"auto":true,"list":["php","java","比赛wp","环境搭建"]},"code_block":{"copy":true,"style":"mac","font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":3,"number":false,"expand":true,"init_open":true},"copyright":true,"lazyload":true,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#A31F34","secondary":null},"global":{"fonts":{"chinese":{"enable":true,"family":"Noto Sans SC","url":"https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap"},"english":{"enable":false,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":false,"percentage":true},"busuanzi_counter":{"enable":true,"site_pv":true,"site_uv":true,"post_pv":true},"pjax":true,"open_graph":true},"home_banner":{"enable":true,"image":{"light":"/images/wallhaven-wqery6-light.webp","dark":"/images/wallhaven-wqery6-dark.webp"},"title":"JU's blog","subtitle":{"text":[],"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":true,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"links":{"github":null,"instagram":null,"zhihu":null,"twitter":null,"email":null}}},"plugins":{"feed":{"enable":false},"aplayer":{"enable":false,"audios":[{"name":null,"artist":null,"url":null,"cover":null},{"name":null,"artist":null,"url":null,"cover":null}]},"mermaid":{"enable":false,"version":"9.3.0"}},"version":"2.1.0","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"},"Archives":{"path":"/archives","icon":"fa-regular fa-archive"},"Status":{"path":"https://status.evanluo.top/","icon":"fa-regular fa-chart-bar"},"About":{"icon":"fa-regular fa-user","submenus":{"Me":"/about","Github":"https://github.com/GTL-JU","Blog":"https://www.cnblogs.com/GTL-JU/","Friends":"/friends"}},"友链":{"icon":"fa-regular fa-link","path":"/links/"}},"search":{"enable":true,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur"},"home":{"sidebar":{"enable":true,"position":"left","announcement":null,"links":{"Archives":{"path":"/archives","icon":"fa-regular fa-archive"},"Tags":{"path":"/tags","icon":"fa-regular fa-tags"},"Categories":{"path":"/categories","icon":"fa-regular fa-folder"}}},"article_date_format":"auto","categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}}};
+    Global.language_ago = {"second":"%s 秒前","minute":"%s 分钟前","hour":"%s 小时前","day":"%s 天前","week":"%s 周前","month":"%s 个月前","year":"%s 年前"};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    
+<link rel="stylesheet" href="/fontawesome/fontawesome.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/brands.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/solid.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/regular.min.css">
+
+    
+    
+    
+    
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+        <span class="pjax-progress-bar"></span>
+        <span class="pjax-progress-icon">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+        </span>
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="main-content-container">
+
+        <div class="main-content-header">
+            <header class="navbar-container">
+    
+    <div class="navbar-content">
+        <div class="left">
+            
+            <a class="logo-title" href="/">
+                
+                JU blog
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-house"></i>
+                                        
+                                        首页
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/archives"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-archive"></i>
+                                        
+                                        归档
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    target="_blank" rel="noopener" href="https://status.evanluo.top/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-chart-bar"></i>
+                                        
+                                        状态
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="has-dropdown" 
+                                    href="#" onClick="return false;">
+                                    
+                                        
+                                            <i class="fa-regular fa-user"></i>
+                                        
+                                        关于&nbsp;<i class="fa-solid fa-chevron-down"></i>
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                                    <ul class="sub-menu">
+                                    
+                                        <li>
+                                        <a href="/about">ME
+                                        </a>
+                                        </li>
+                                    
+                                        <li>
+                                        <a target="_blank" rel="noopener" href="https://github.com/GTL-JU">GITHUB
+                                        </a>
+                                        </li>
+                                    
+                                        <li>
+                                        <a target="_blank" rel="noopener" href="https://www.cnblogs.com/GTL-JU/">BLOG
+                                        </a>
+                                        </li>
+                                    
+                                        <li>
+                                        <a href="/friends">友情链接
+                                        </a>
+                                        </li>
+                                    
+                                    </ul>
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/links/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-link"></i>
+                                        
+                                        友链
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                        <li class="navbar-item search search-popup-trigger">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </li>
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                    <div class="icon-item search search-popup-trigger"><i class="fa-solid fa-magnifying-glass"></i></div>
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile drawer -->
+    <div class="navbar-drawer">
+        <ul class="drawer-navbar-list">
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/"  >
+                             
+                                
+                                    <i class="fa-regular fa-house"></i>
+                                
+                                首页
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/archives"  >
+                             
+                                
+                                    <i class="fa-regular fa-archive"></i>
+                                
+                                归档
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        target="_blank" rel="noopener" href="https://status.evanluo.top/"  >
+                             
+                                
+                                    <i class="fa-regular fa-chart-bar"></i>
+                                
+                                状态
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="has-dropdown" 
+                        href="#" onClick="return false;">
+                            
+                                
+                                    <i class="fa-regular fa-user"></i>
+                                
+                                关于&nbsp;<i class="fa-solid fa-chevron-down"></i>
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                              
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" href="/about">ME</a>
+                            </li>
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" target="_blank" rel="noopener" href="https://github.com/GTL-JU">GITHUB</a>
+                            </li>
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" target="_blank" rel="noopener" href="https://www.cnblogs.com/GTL-JU/">BLOG</a>
+                            </li>
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" href="/friends">友情链接</a>
+                            </li>
+                        
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/links/"  >
+                             
+                                
+                                    <i class="fa-regular fa-link"></i>
+                                
+                                友链
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="main-content-body">
+
+            
+
+            <div class="main-content">
+
+                
+                    <div class="fade-in-down-animation">
+    <div class="post-page-container">
+        <div class="article-content-container">
+
+            
+            
+                <div class="article-title">
+                    <h1 class="article-title-regular"></h1>
+                </div>
+            
+                
+            
+
+            
+                <div class="article-header">
+                    <div class="avatar">
+                        <img src="/images/logo.png">
+                    </div>
+                    <div class="info">
+                        <div class="author">
+                            <span class="name">GTL-JU</span>
+                            
+                                <span class="author-label">Lv1</span>
+                            
+                        </div>
+                        <div class="meta-info">
+                            <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2023-04-08 01:13:24</span>
+        <span class="mobile">2023-04-08 01:13</span>
+        <span class="hover-info">创建</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2023-04-06 17:46:13</span>
+            <span class="mobile">2023-04-06 17:46</span>
+            <span class="hover-info">更新</span>
+        </span>
+    
+
+    
+    
+
+    
+    
+        <span class="article-wordcount article-meta-item">
+            <i class="fa-regular fa-typewriter"></i>&nbsp;<span>3.2k 字</span>
+        </span>
+    
+    
+        <span class="article-min2read article-meta-item">
+            <i class="fa-regular fa-clock"></i>&nbsp;<span>11 分钟</span>
+        </span>
+    
+    
+</div>
+
+                        </div>
+                    </div>
+                </div>
+            
+
+            <div class="article-content markdown-body">
+                <h2 id="JAVA-RMI"><a href="#JAVA-RMI" class="headerlink" title="JAVA RMI"></a>JAVA RMI</h2><h3 id="一、什么是-RMI"><a href="#一、什么是-RMI" class="headerlink" title="一、什么是 RMI"></a>一、什么是 RMI</h3><p>RMI是远程方法调用，RMI技术可以使一个java虚拟机中的对象去调用另一个java虚拟中的对象方法并获取调用结果。也就是说RMI实现了客户端调用服务端的对象方法像调用本地的对象方法。</p>
+<h3 id="二、RMI原理分析"><a href="#二、RMI原理分析" class="headerlink" title="二、RMI原理分析"></a>二、RMI原理分析</h3><p>既然是解决远程调用的问题，那么肯定要有client(客户端)和服务端(server)，也就是方法的调用者和被调用者，从客户端-服务器模型来看，客户端程序之间调用服务端，两者之间是通过JRMP协议实现的。</p>
+<p>这里简单了解一下JRMP协议，类似于HTTP协议，规定了客户端和服务端要满足的规范：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">JRMP（Java远程方法协议）可以定义为特定于Java的，基于流的协议，该协议查找并引用远程对象。它要求客户端和服务器都使用Java对象。它是线级协议，在RMI下和TCP / IP上运行。</span><br></pre></td></tr></table></figure></div>
+
+<p>下面通过流程图去进行RMI原理的分析：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202303/2794407-20230331150932626-442742960.png"
+                      alt="image-20230331150932629"
+                ></p>
+<p> RMI 客户端在调用远程方法时会先创建一个stub(sun.rmi.registry.RegistryImpl_Stub)也称为存根,Stub是RMI client的代理对象，Stub的主要功能是请求远程方法时构造一个信息块，然后通过RMI机制发送给客户端。</p>
+<p>stub构造的信息块由几个部分组成：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.远程对象标识符</span><br><span class="line">2.调用的方法描述</span><br><span class="line">3.编组后的参数值</span><br></pre></td></tr></table></figure></div>
+
+<p>Stub会Remote对象传递给客户端的远程引用层（java.rmi.server.RemoteRef）并创建远程调用对象（java.rmi.server.RemoteCall）</p>
+<p>Remotecall会对RMI的服务名称和Remote进行序列化，然后通过Socket连接的方式传输到服务端的远程应用层</p>
+<p>在上面我们看到client有一个stub构造信息块发送到服务端，那么在Skeleton就是在服务端接收这个信息的对象。</p>
+<p>Skeleton在接收到client传递来的信息块后调用Remotecall反序列化RMI客户端传过来的序列化</p>
+<p>然后Skeleton会处理客户端请求，调用相应服务端的对象进行调用，并将方法的返回值打包成响应消息并发送回客户端</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Skeleton 接收到客户端请求后，会调用远程对象方法并返回方法的执行结果。客户端不会直接访问远程对象，而是通过 Skeleton 间接访问远程对象。Skeleton 的作用是隐藏远程对象的实现细节，使客户端可以像调用本地对象一样调用远程对象。</span><br><span class="line">需要注意的是，当远程对象方法抛出异常时，Skeleton 会将异常打包成响应消息并发送回客户端。客户端需要处理这些异常，并根据需要采取相应的措施。</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="三、RMI代码实现"><a href="#三、RMI代码实现" class="headerlink" title="三、RMI代码实现"></a>三、RMI代码实现</h3><p>1、RMI服务端注册服务代码</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">package com.anbai.sec.rmi;</span><br><span class="line"></span><br><span class="line">import java.rmi.Naming;</span><br><span class="line">import java.rmi.registry.LocateRegistry;</span><br><span class="line"></span><br><span class="line">public class RMIServerTest &#123;</span><br><span class="line"></span><br><span class="line">    // RMI服务器IP地址</span><br><span class="line">    public static final String RMI_HOST = &quot;127.0.0.1&quot;;</span><br><span class="line"></span><br><span class="line">    // RMI服务端口</span><br><span class="line">    public static final int RMI_PORT = 9527;</span><br><span class="line"></span><br><span class="line">    // RMI服务名称</span><br><span class="line">    public static final String RMI_NAME = &quot;rmi://&quot; + RMI_HOST + &quot;:&quot; + RMI_PORT + &quot;/test&quot;;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            // 注册RMI端口</span><br><span class="line">            LocateRegistry.createRegistry(RMI_PORT);</span><br><span class="line"></span><br><span class="line">            // 绑定Remote对象</span><br><span class="line">            Naming.bind(RMI_NAME, new RMITestImpl());</span><br><span class="line"></span><br><span class="line">            System.out.println(&quot;RMI服务启动成功,服务地址:&quot; + RMI_NAME);</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();//createRegistry() 或 bind() 方法抛出异常，则会在控制台上输出异常信息。</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>前几行代码定义了RMI服务的ip，端口以及名字</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LocateRegistry.createRegistry(RMI_PORT);</span><br></pre></td></tr></table></figure></div>
+
+<p><code>LocateRegistry.createRegistry(RMI_PORT)</code> 是在 Java RMI 中创建 RMI 注册表的方法。它将在指定的 RMI 端口上启动 RMI 注册表，并返回一个对该注册表的远程引用。</p>
+<p>在JAVA RMI中RMI注册表是一种服务，在 RMI 中，客户端必须知道远程对象的位置（主机名和端口号），才能与之通信。RMI 注册表提供了一种机制，使客户端可以通过名称查找远程对象，而不必知道其位置。</p>
+<p>当你在 RMI 中启动一个远程对象时，你需要将其注册到 RMI  注册表中，以便客户端可以查找和访问它。这个注册代表着将远程对象绑定到一个名称上，这个名称可以被客户端用来查找远程对象。在 Java RMI  中，这个名称通常是一个字符串，被称为绑定名称 (binding name)。</p>
+<p>当客户端需要访问远程对象时，它可以使用 RMI 注册表来查找该对象。客户端使用绑定名称向 RMI 注册表发出请求，RMI 注册表会返回绑定名称所对应的远程对象的引用。然后客户端可以使用该引用来调用远程对象的方法。</p>
+<p>如果 RMI 注册表已经在指定的端口上运行，那么 <code>createRegistry()</code> 方法将不会创建新的注册表，而是返回对现有注册表的引用。如果你希望在另一个虚拟机上创建 RMI 注册表，可以使用 <code>LocateRegistry.getRegistry(host, port)</code> 方法来获取对远程 RMI 注册表的引用。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Naming.bind(RMI_NAME, new RMITestImpl());</span><br></pre></td></tr></table></figure></div>
+
+<p><code>Naming.bind()</code> 是 Java RMI 中用于将远程对象绑定到指定名称的方法。具体来说，它会将指定的远程对象绑定到一个指定的名称上，并将这个名称注册到 RMI 注册表中。这个名称可以用来在客户端中查找远程对象。</p>
+<p>使用 <code>Naming.bind()</code> 方法绑定远程对象时，需要指定一个 URL，该 URL 包含了 RMI 注册表的主机名、端口号和绑定名称。</p>
+<p>代码运行：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202304/2794407-20230406172913133-1458454200.png"
+                      alt="image-20230406172910934"
+                ></p>
+<p>2、RMITestImpl()类的实现</p>
+<p>在javaRMI中如果想将一个对象作为远程对象暴露给客户端使用，这个对象必须要满足以下要求：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1、实现一个远程接口(即扩展java.rmi,Remote接口)</span><br><span class="line">2、必须是可序列化(即实现java.serializable接口)</span><br><span class="line">3、必须扩展 UnicastRemoteObject 类或 Activatable 类之一。</span><br></pre></td></tr></table></figure></div>
+
+<p><code>UnicastRemoteObject</code> 是一个抽象类，它实现了 <code>Remote</code> 接口，并提供了一些默认的远程方法实现。当一个类继承了 <code>UnicastRemoteObject</code> 类后，它就可以直接暴露为远程对象，客户端可以通过 RMI 协议访问这个对象。</p>
+<p>RMITestImpl()类代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">package com.anbai.sec.rmi;</span><br><span class="line"></span><br><span class="line">import java.rmi.RemoteException;</span><br><span class="line">import java.rmi.server.UnicastRemoteObject;</span><br><span class="line"></span><br><span class="line">public class RMITestImpl extends UnicastRemoteObject implements RMITestInterface &#123;</span><br><span class="line"></span><br><span class="line">    private static final long serialVersionUID = 1L;</span><br><span class="line"></span><br><span class="line">    protected RMITestImpl() throws RemoteException &#123;</span><br><span class="line">        super();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * RMI测试方法</span><br><span class="line">     *</span><br><span class="line">     * @return 返回测试字符串</span><br><span class="line">     */</span><br><span class="line">    @Override</span><br><span class="line">    public String test() throws RemoteException &#123;</span><br><span class="line">        return &quot;Hello RMI~&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>远程接口RMITestInterface代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">package com.anbai.sec.rmi;</span><br><span class="line"></span><br><span class="line">import java.rmi.Remote;</span><br><span class="line">import java.rmi.RemoteException;</span><br><span class="line"></span><br><span class="line">/**</span><br><span class="line"> * RMI测试接口</span><br><span class="line"> */</span><br><span class="line">public interface RMITestInterface extends Remote &#123;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * RMI测试方法</span><br><span class="line">     *</span><br><span class="line">     * @return 返回测试字符串</span><br><span class="line">     */</span><br><span class="line">    String test() throws RemoteException;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>在RMITestImpl 这段代码中，定义了一个RMITestImpl类，并实现了一个RMITestInterface接口，这个类的作用是将test()方法暴露为远程方法，以便客户端可以通过RMI协议调用它。在这个类中我们重写了<code>RMITestInterface</code> 接口中的 <code>test()</code> 方法，该方法返回了一个字符串hello Rmi 。由于这个类继承了UnicastRemoteObject 因此它可以直接暴露为远程对象，客户端可以通过 RMI 协议访问它。</p>
+<p>那么为什么要继承<code>UnicastRemoteObject</code> 类呢？</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">	1、这是因为 RMI 通过序列化和反序列化对象来进行远程通信。当客户端调用远程对象的方法时，它实际上是在向远程对象发送序列化后的方法调用请求。而远程对象接收到请求后，需要将序列化后的数据反序列化成方法调用，并执行这个方法。如果远程对象没有实现 UnicastRemoteObject 类，那么 RMI 将无法序列化和传输这个对象，也就无法将它暴露为远程对象。</span><br><span class="line">2、因此，为了让一个对象可以作为远程对象暴露给客户端使用，必须将它的类继承 UnicastRemoteObject 类，并实现一个远程接口。这样，RMI 就可以将这个对象序列化并传输到客户端，客户端就可以通过 RMI 协议访问这个对象了。</span><br><span class="line"></span><br><span class="line">3、UnicastRemoteObject 是一个抽象类，它实现了 Remote 接口，并提供了一些默认的远程方法实现。当一个类继承了 UnicastRemoteObject 类后，它就可以直接暴露为远程对象，客户端可以通过 RMI 协议访问这个对象。</span><br></pre></td></tr></table></figure></div>
+
+<p>由上面我们可以知道</p>
+<p>在 Java RMI 中，如果要将一个对象暴露为远程对象，这个对象必须实现一个远程接口。这个远程接口必须继承 <code>Remote</code> 接口，并且其中的所有方法都必须声明抛出 <code>RemoteException</code> 异常。这个远程接口定义了客户端可以通过 RMI 协议调用的方法。</p>
+<p>在这个示例代码中，<code>RMITestImpl</code> 类实现了一个名为 <code>RMITestInterface</code> 的远程接口。这个接口中只有一个方法 <code>test()</code>，它声明了抛出 <code>RemoteException</code> 异常。由于 <code>RMITestImpl</code> 类实现了 <code>RMITestInterface</code> 接口，因此它必须实现 <code>test()</code> 方法，并且在方法声明中也必须声明抛出 <code>RemoteException</code> 异常。</p>
+<p>3、客户端代码实现</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">package com.anbai.sec.rmi;</span><br><span class="line"></span><br><span class="line">import java.rmi.Naming;</span><br><span class="line"></span><br><span class="line">import static com.anbai.sec.rmi.RMIServerTest.RMI_NAME;</span><br><span class="line"></span><br><span class="line">public class RMIClientTest &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            // 查找远程RMI服务</span><br><span class="line">            RMITestInterface rt = (RMITestInterface) Naming.lookup(RMI_NAME);</span><br><span class="line"></span><br><span class="line">            // 调用远程接口RMITestInterface类的test方法</span><br><span class="line">            String result = rt.test();</span><br><span class="line"></span><br><span class="line">            // 输出RMI方法调用结果</span><br><span class="line">            System.out.println(result);</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<ol>
+<li>在 <code>RMIClientTest</code> 类中定义了一个 <code>main</code> 方法，用于启动客户端程序。</li>
+<li>在 <code>main</code> 方法中，通过调用 <code>Naming.lookup</code> 方法查找指定名称的远程对象，该名称在常量 <code>RMI_NAME</code> 中定义。</li>
+<li>通过将 <code>Naming.lookup</code> 方法的返回结果转换为 <code>RMITestInterface</code> 类型，获取了远程接口对象的引用 <code>rt</code>。</li>
+<li>通过调用 <code>rt</code> 对象的 <code>test</code> 方法，执行了远程接口的方法调用。</li>
+<li>将远程方法调用的返回值打印到控制台。</li>
+<li>在代码中使用了 <code>try-catch</code> 语句来捕获可能发生的异常，比如在远程调用时可能发生的 <code>RemoteException</code> 异常等。</li>
+</ol>
+<p>代码运行：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202304/2794407-20230406172955540-213647078.png"
+                      alt="image-20230406172954315"
+                ></p>
+<h3 id="四、关于RMI实现代码和RMI机制的对照。"><a href="#四、关于RMI实现代码和RMI机制的对照。" class="headerlink" title="四、关于RMI实现代码和RMI机制的对照。"></a>四、关于RMI实现代码和RMI机制的对照。</h3><p>通过上面的学习我们可以知道Skeleton是RMI 服务器端用于接收远程方法地调用请求并将其转发到相应远程对象地中间件，skeleton通过解组远程方法调用请求，调用相应地远程对象方法，然后将结果打包发送回客户端。</p>
+<p>RMI 注册表是用于维护对象引用的中心存储库。客户端通过查找注册表来获取对远程对象的引用。在 RMI 服务器端，Skeleton 和注册表通常是一起使用的，以便为客户端提供完整的远程方法调用服务。</p>
+<p>具体来说，当 RMI 服务器端接收到客户端的远程方法调用请求时，Skeleton  会解组该请求并确定调用哪个远程对象的方法。然后，Skeleton  会调用相应的远程对象方法，并将结果打包成一个响应并发送回客户端。在这个过程中，Skeleton 可能需要查找注册表来获取对远程对象的引用。</p>
+<p>因此，可以说 Skeleton 和 RMI 注册表是 RMI 服务器端的两个核心组件，它们共同协作以提供完整的远程方法调用服务。</p>
+<p>客户端通过 Stub 对象来调用远程对象的方法。在 Java RMI 中，Stub 是客户端用于调用远程方法的代理对象，它封装了与远程对象的通信细节，使得客户端可以像调用本地对象一样调用远程对象的方法。</p>
+<p>当客户端需要调用远程对象的方法时，它会首先从 RMI 注册表中查找远程对象的引用。然后，客户端使用引用来获取远程对象的 Stub  对象。客户端使用 Stub 对象来调用远程对象的方法，就好像调用本地对象的方法一样。当客户端调用远程方法时，Stub  对象会将方法调用打包成一个请求并发送到 RMI 服务器端。RMI 服务器端接收到请求后，会使用 Skeleton  对象来解组请求并调用相应的远程对象方法，然后将结果打包成一个响应并发送回客户端。客户端接收到响应后，Stub  对象会将响应解包并返回给客户端调用方。</p>
+
+            </div>
+
+            
+                <div class="post-copyright-info">
+                    <div class="article-copyright-info-container">
+    <ul>
+        <li><strong>标题:</strong> </li>
+        <li><strong>作者:</strong> GTL-JU</li>
+        <li><strong>创建于:</strong> 2023-04-08 01:13:24</li>
+        
+            <li>
+                <strong>更新于:</strong> 2023-04-06 17:46:13
+            </li>
+        
+        <li>
+            <strong>链接:</strong> https://redefine.ohevan.com/2023/04/08/java RMI/
+        </li>
+        <li>
+            <strong>版权声明:</strong> 本文章采用 <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a> 进行许可。
+        </li>
+    </ul>
+</div>
+
+                </div>
+            
+
+            
+
+            
+
+            
+                <div class="article-nav">
+                    
+                    
+                        <div class="article-next">
+                            <a class="next"
+                            rel="next"
+                            href="/2023/04/07/1/"
+                            >
+                                <span class="title flex-center">
+                                    <span class="post-nav-title-item">1</span>
+                                    <span class="post-nav-item">下一篇</span>
+                                </span>
+                                <span class="right arrow-icon flex-center">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </span>
+                            </a>
+                        </div>
+                    
+                </div>
+            
+
+
+            
+                <div class="comment-container">
+                    <div class="comments-container">
+    <div id="comment-anchor"></div>
+    <div class="comment-area-title">
+        <i class="fa-solid fa-comments"></i>&nbsp;评论
+    </div>
+    
+
+        
+            
+ 
+    <div id="waline"></div>
+    <script type="module"  data-pjax>
+        import { init } from 'https://evan.beee.top/js/waline.mjs';
+
+        function loadWaline() {
+            init({
+                el: '#waline',
+                serverURL: 'https://example.example.com',
+                lang: 'zh-CN',
+                dark: 'body[class~="dark-mode"]',
+                requiredMeta: ['nick','mail'], // cannot customize by theme config, change it yourself
+            });
+        }
+
+        if ('true') {
+            const loadWalineTimeout = setTimeout(() => {
+                loadWaline();
+                clearTimeout(loadWalineTimeout);
+            }, 1000);
+        } else {
+            window.addEventListener('DOMContentLoaded', loadWaline);
+        }
+        
+    </script>
+
+
+
+        
+    
+</div>
+
+                </div>
+            
+        </div>
+
+        
+            <div class="toc-content-container">
+                <div class="post-toc-wrap">
+    <div class="post-toc">
+        <div class="toc-title">此页目录</div>
+        <div class="page-title"></div>
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#JAVA-RMI"><span class="nav-text">JAVA RMI</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF-RMI"><span class="nav-text">一、什么是 RMI</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81RMI%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90"><span class="nav-text">二、RMI原理分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81RMI%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="nav-text">三、RMI代码实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E5%85%B3%E4%BA%8ERMI%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%A0%81%E5%92%8CRMI%E6%9C%BA%E5%88%B6%E7%9A%84%E5%AF%B9%E7%85%A7%E3%80%82"><span class="nav-text">四、关于RMI实现代码和RMI机制的对照。</span></a></li></ol></li></ol>
+
+    </div>
+</div>
+            </div>
+        
+    </div>
+</div>
+
+
+                
+
+            </div>
+            
+            
+
+        </div>
+
+        <div class="main-content-footer">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info">
+            &copy;
+            
+              <span>2023</span>
+              -
+            
+            2023&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">GTL-JU</a>
+        </div>
+        
+            <script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv" class="busuanzi_container_site_uv">
+                        访问人数&nbsp;<span id="busuanzi_value_site_uv" class="busuanzi_value_site_uv"></span>
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv" class="busuanzi_container_site_pv">
+                        总访问量&nbsp;<span id="busuanzi_value_site_pv" class="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            <span class="powered-by-container">由 <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" href="https://hexo.io">Hexo</a> 驱动</span>
+                <br>
+            <span class="theme-version-container">主题&nbsp;<a class="theme-version" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.1.0</a>
+        </div>
+        
+        
+        
+            <div id="start_div" style="display:none">
+                2023/4/8 0:0:0
+            </div>
+            <div>
+                博客已运行 <span class="odometer" id="runtime_days" ></span> 天 <span class="odometer" id="runtime_hours"></span> 小时 <span class="odometer" id="runtime_minutes"></span> 分钟 <span class="odometer" id="runtime_seconds"></span> 秒
+            </div>
+        
+        
+        
+            <script async data-pjax>
+                try {
+                    function odometer_init() {
+                    const elements = document.querySelectorAll('.odometer');
+                    elements.forEach(el => {
+                        new Odometer({
+                            el,
+                            format: '( ddd).dd',
+                            duration: 200
+                        });
+                    });
+                    }
+                    odometer_init();
+                } catch (error) {}
+            </script>
+        
+        
+        
+    </div>  
+</footer>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="article-tools-list">
+        <!-- TOC aside toggle -->
+        
+            <li class="right-bottom-tools page-aside-toggle">
+                <i class="fa-regular fa-outdent"></i>
+            </li>
+        
+
+        <!-- go comment -->
+        
+            <li class="go-comment">
+                <i class="fa-regular fa-comments"></i>
+            </li>
+        
+    </ul>
+</div>
+
+        </div>
+    
+
+    <div class="right-side-tools-container">
+        <div class="side-tools-container">
+    <ul class="hidden-tools-list">
+        <li class="right-bottom-tools tool-font-adjust-plus flex-center">
+            <i class="fa-regular fa-magnifying-glass-plus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-font-adjust-minus flex-center">
+            <i class="fa-regular fa-magnifying-glass-minus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-expand-width flex-center">
+            <i class="fa-regular fa-expand"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-dark-light-toggle flex-center">
+            <i class="fa-regular fa-moon"></i>
+        </li>
+
+        <!-- rss -->
+        
+
+        
+
+        <li class="right-bottom-tools tool-scroll-to-bottom flex-center">
+            <i class="fa-regular fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="visible-tools-list">
+        <li class="right-bottom-tools toggle-tools-list flex-center">
+            <i class="fa-regular fa-cog fa-spin"></i>
+        </li>
+        
+            <li class="right-bottom-tools tool-scroll-to-top flex-center">
+                <i class="arrow-up fas fa-arrow-up"></i>
+                <span class="percent"></span>
+            </li>
+        
+    </ul>
+</div>
+
+    </div>
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
+
+
+    
+        <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+          <span class="search-input-field-pre">
+            <i class="fa-solid fa-keyboard"></i>
+          </span>
+            <div class="search-input-container">
+                <input autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="off"
+                       placeholder="搜索..."
+                       spellcheck="false"
+                       type="search"
+                       class="search-input"
+                >
+            </div>
+            <span class="popup-btn-close">
+                <i class="fa-solid fa-times"></i>
+            </span>
+        </div>
+        <div id="search-result">
+            <div id="no-result">
+                <i class="fa-solid fa-spinner fa-spin-pulse fa-5x fa-fw"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+
+
+</main>
+
+
+
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/layouts/navbarShrink.js"></script>
+
+<script src="/js/tools/scrollTopBottom.js"></script>
+
+<script src="/js/tools/lightDarkSwitch.js"></script>
+
+
+
+    
+<script src="/js/tools/localSearch.js"></script>
+
+
+
+
+    
+<script src="/js/tools/codeBlock.js"></script>
+
+
+
+
+    
+<script src="/js/layouts/lazyload.js"></script>
+
+
+
+
+    
+<script src="/js/tools/runtime.js"></script>
+
+    
+<script src="/js/layouts/odometer.min.js"></script>
+
+    
+<link rel="stylesheet" href="/assets/odometer-theme-minimal.css">
+
+
+
+
+  
+<script src="/js/libs/Typed.min.js"></script>
+
+  
+<script src="/js/plugins/typed.js"></script>
+
+
+
+
+
+
+
+<div class="post-scripts pjax">
+    
+        
+<script src="/js/tools/tocToggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/layouts/toc.js"></script>
+
+<script src="/js/plugins/tabs.js"></script>
+
+    
+</div>
+
+
+    
+<script src="/js/libs/pjax.min.js"></script>
+
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        window.pjax = new Pjax({
+            selectors: [
+                'head title',
+                '.page-container',
+                '.pjax'
+            ],
+            history: true,
+            debug: false,
+            cacheBust: false,
+            timeout: 0,
+            analytics: false,
+            currentUrlFullReload: false,
+            scrollRestoration: false,
+            // scrollTo: true,
+        });
+
+        document.addEventListener('pjax:send', () => {
+            Global.utils.pjaxProgressBarStart();
+        });
+
+        document.addEventListener('pjax:complete', () => {
+            Global.utils.pjaxProgressBarEnd();
+            window.pjax.executeScripts(document.querySelectorAll('script[data-pjax], .pjax script'));
+            Global.refresh();
+        });
+    });
+</script>
+
+
+
+
+</body>
+</html>

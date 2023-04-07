@@ -28,4 +28,96 @@
     <url>/2023/04/07/%E6%96%87%E7%AB%A0/</url>
     <content><![CDATA[]]></content>
   </entry>
+  <entry>
+    <title></title>
+    <url>/2023/04/08/java%20RMI/</url>
+    <content><![CDATA[<h2 id="JAVA-RMI"><a href="#JAVA-RMI" class="headerlink" title="JAVA RMI"></a>JAVA RMI</h2><h3 id="一、什么是-RMI"><a href="#一、什么是-RMI" class="headerlink" title="一、什么是 RMI"></a>一、什么是 RMI</h3><p>RMI是远程方法调用，RMI技术可以使一个java虚拟机中的对象去调用另一个java虚拟中的对象方法并获取调用结果。也就是说RMI实现了客户端调用服务端的对象方法像调用本地的对象方法。</p>
+<h3 id="二、RMI原理分析"><a href="#二、RMI原理分析" class="headerlink" title="二、RMI原理分析"></a>二、RMI原理分析</h3><p>既然是解决远程调用的问题，那么肯定要有client(客户端)和服务端(server)，也就是方法的调用者和被调用者，从客户端-服务器模型来看，客户端程序之间调用服务端，两者之间是通过JRMP协议实现的。</p>
+<p>这里简单了解一下JRMP协议，类似于HTTP协议，规定了客户端和服务端要满足的规范：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">JRMP（Java远程方法协议）可以定义为特定于Java的，基于流的协议，该协议查找并引用远程对象。它要求客户端和服务器都使用Java对象。它是线级协议，在RMI下和TCP / IP上运行。</span><br></pre></td></tr></table></figure></div>
+
+<p>下面通过流程图去进行RMI原理的分析：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202303/2794407-20230331150932626-442742960.png"
+                      alt="image-20230331150932629"
+                ></p>
+<p> RMI 客户端在调用远程方法时会先创建一个stub(sun.rmi.registry.RegistryImpl_Stub)也称为存根,Stub是RMI client的代理对象，Stub的主要功能是请求远程方法时构造一个信息块，然后通过RMI机制发送给客户端。</p>
+<p>stub构造的信息块由几个部分组成：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.远程对象标识符</span><br><span class="line">2.调用的方法描述</span><br><span class="line">3.编组后的参数值</span><br></pre></td></tr></table></figure></div>
+
+<p>Stub会Remote对象传递给客户端的远程引用层（java.rmi.server.RemoteRef）并创建远程调用对象（java.rmi.server.RemoteCall）</p>
+<p>Remotecall会对RMI的服务名称和Remote进行序列化，然后通过Socket连接的方式传输到服务端的远程应用层</p>
+<p>在上面我们看到client有一个stub构造信息块发送到服务端，那么在Skeleton就是在服务端接收这个信息的对象。</p>
+<p>Skeleton在接收到client传递来的信息块后调用Remotecall反序列化RMI客户端传过来的序列化</p>
+<p>然后Skeleton会处理客户端请求，调用相应服务端的对象进行调用，并将方法的返回值打包成响应消息并发送回客户端</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Skeleton 接收到客户端请求后，会调用远程对象方法并返回方法的执行结果。客户端不会直接访问远程对象，而是通过 Skeleton 间接访问远程对象。Skeleton 的作用是隐藏远程对象的实现细节，使客户端可以像调用本地对象一样调用远程对象。</span><br><span class="line">需要注意的是，当远程对象方法抛出异常时，Skeleton 会将异常打包成响应消息并发送回客户端。客户端需要处理这些异常，并根据需要采取相应的措施。</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="三、RMI代码实现"><a href="#三、RMI代码实现" class="headerlink" title="三、RMI代码实现"></a>三、RMI代码实现</h3><p>1、RMI服务端注册服务代码</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">package com.anbai.sec.rmi;</span><br><span class="line"></span><br><span class="line">import java.rmi.Naming;</span><br><span class="line">import java.rmi.registry.LocateRegistry;</span><br><span class="line"></span><br><span class="line">public class RMIServerTest &#123;</span><br><span class="line"></span><br><span class="line">    // RMI服务器IP地址</span><br><span class="line">    public static final String RMI_HOST = &quot;127.0.0.1&quot;;</span><br><span class="line"></span><br><span class="line">    // RMI服务端口</span><br><span class="line">    public static final int RMI_PORT = 9527;</span><br><span class="line"></span><br><span class="line">    // RMI服务名称</span><br><span class="line">    public static final String RMI_NAME = &quot;rmi://&quot; + RMI_HOST + &quot;:&quot; + RMI_PORT + &quot;/test&quot;;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            // 注册RMI端口</span><br><span class="line">            LocateRegistry.createRegistry(RMI_PORT);</span><br><span class="line"></span><br><span class="line">            // 绑定Remote对象</span><br><span class="line">            Naming.bind(RMI_NAME, new RMITestImpl());</span><br><span class="line"></span><br><span class="line">            System.out.println(&quot;RMI服务启动成功,服务地址:&quot; + RMI_NAME);</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();//createRegistry() 或 bind() 方法抛出异常，则会在控制台上输出异常信息。</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>前几行代码定义了RMI服务的ip，端口以及名字</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">LocateRegistry.createRegistry(RMI_PORT);</span><br></pre></td></tr></table></figure></div>
+
+<p><code>LocateRegistry.createRegistry(RMI_PORT)</code> 是在 Java RMI 中创建 RMI 注册表的方法。它将在指定的 RMI 端口上启动 RMI 注册表，并返回一个对该注册表的远程引用。</p>
+<p>在JAVA RMI中RMI注册表是一种服务，在 RMI 中，客户端必须知道远程对象的位置（主机名和端口号），才能与之通信。RMI 注册表提供了一种机制，使客户端可以通过名称查找远程对象，而不必知道其位置。</p>
+<p>当你在 RMI 中启动一个远程对象时，你需要将其注册到 RMI  注册表中，以便客户端可以查找和访问它。这个注册代表着将远程对象绑定到一个名称上，这个名称可以被客户端用来查找远程对象。在 Java RMI  中，这个名称通常是一个字符串，被称为绑定名称 (binding name)。</p>
+<p>当客户端需要访问远程对象时，它可以使用 RMI 注册表来查找该对象。客户端使用绑定名称向 RMI 注册表发出请求，RMI 注册表会返回绑定名称所对应的远程对象的引用。然后客户端可以使用该引用来调用远程对象的方法。</p>
+<p>如果 RMI 注册表已经在指定的端口上运行，那么 <code>createRegistry()</code> 方法将不会创建新的注册表，而是返回对现有注册表的引用。如果你希望在另一个虚拟机上创建 RMI 注册表，可以使用 <code>LocateRegistry.getRegistry(host, port)</code> 方法来获取对远程 RMI 注册表的引用。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Naming.bind(RMI_NAME, new RMITestImpl());</span><br></pre></td></tr></table></figure></div>
+
+<p><code>Naming.bind()</code> 是 Java RMI 中用于将远程对象绑定到指定名称的方法。具体来说，它会将指定的远程对象绑定到一个指定的名称上，并将这个名称注册到 RMI 注册表中。这个名称可以用来在客户端中查找远程对象。</p>
+<p>使用 <code>Naming.bind()</code> 方法绑定远程对象时，需要指定一个 URL，该 URL 包含了 RMI 注册表的主机名、端口号和绑定名称。</p>
+<p>代码运行：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202304/2794407-20230406172913133-1458454200.png"
+                      alt="image-20230406172910934"
+                ></p>
+<p>2、RMITestImpl()类的实现</p>
+<p>在javaRMI中如果想将一个对象作为远程对象暴露给客户端使用，这个对象必须要满足以下要求：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">1、实现一个远程接口(即扩展java.rmi,Remote接口)</span><br><span class="line">2、必须是可序列化(即实现java.serializable接口)</span><br><span class="line">3、必须扩展 UnicastRemoteObject 类或 Activatable 类之一。</span><br></pre></td></tr></table></figure></div>
+
+<p><code>UnicastRemoteObject</code> 是一个抽象类，它实现了 <code>Remote</code> 接口，并提供了一些默认的远程方法实现。当一个类继承了 <code>UnicastRemoteObject</code> 类后，它就可以直接暴露为远程对象，客户端可以通过 RMI 协议访问这个对象。</p>
+<p>RMITestImpl()类代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">package com.anbai.sec.rmi;</span><br><span class="line"></span><br><span class="line">import java.rmi.RemoteException;</span><br><span class="line">import java.rmi.server.UnicastRemoteObject;</span><br><span class="line"></span><br><span class="line">public class RMITestImpl extends UnicastRemoteObject implements RMITestInterface &#123;</span><br><span class="line"></span><br><span class="line">    private static final long serialVersionUID = 1L;</span><br><span class="line"></span><br><span class="line">    protected RMITestImpl() throws RemoteException &#123;</span><br><span class="line">        super();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * RMI测试方法</span><br><span class="line">     *</span><br><span class="line">     * @return 返回测试字符串</span><br><span class="line">     */</span><br><span class="line">    @Override</span><br><span class="line">    public String test() throws RemoteException &#123;</span><br><span class="line">        return &quot;Hello RMI~&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>远程接口RMITestInterface代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">package com.anbai.sec.rmi;</span><br><span class="line"></span><br><span class="line">import java.rmi.Remote;</span><br><span class="line">import java.rmi.RemoteException;</span><br><span class="line"></span><br><span class="line">/**</span><br><span class="line"> * RMI测试接口</span><br><span class="line"> */</span><br><span class="line">public interface RMITestInterface extends Remote &#123;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * RMI测试方法</span><br><span class="line">     *</span><br><span class="line">     * @return 返回测试字符串</span><br><span class="line">     */</span><br><span class="line">    String test() throws RemoteException;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>在RMITestImpl 这段代码中，定义了一个RMITestImpl类，并实现了一个RMITestInterface接口，这个类的作用是将test()方法暴露为远程方法，以便客户端可以通过RMI协议调用它。在这个类中我们重写了<code>RMITestInterface</code> 接口中的 <code>test()</code> 方法，该方法返回了一个字符串hello Rmi 。由于这个类继承了UnicastRemoteObject 因此它可以直接暴露为远程对象，客户端可以通过 RMI 协议访问它。</p>
+<p>那么为什么要继承<code>UnicastRemoteObject</code> 类呢？</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">	1、这是因为 RMI 通过序列化和反序列化对象来进行远程通信。当客户端调用远程对象的方法时，它实际上是在向远程对象发送序列化后的方法调用请求。而远程对象接收到请求后，需要将序列化后的数据反序列化成方法调用，并执行这个方法。如果远程对象没有实现 UnicastRemoteObject 类，那么 RMI 将无法序列化和传输这个对象，也就无法将它暴露为远程对象。</span><br><span class="line">2、因此，为了让一个对象可以作为远程对象暴露给客户端使用，必须将它的类继承 UnicastRemoteObject 类，并实现一个远程接口。这样，RMI 就可以将这个对象序列化并传输到客户端，客户端就可以通过 RMI 协议访问这个对象了。</span><br><span class="line"></span><br><span class="line">3、UnicastRemoteObject 是一个抽象类，它实现了 Remote 接口，并提供了一些默认的远程方法实现。当一个类继承了 UnicastRemoteObject 类后，它就可以直接暴露为远程对象，客户端可以通过 RMI 协议访问这个对象。</span><br></pre></td></tr></table></figure></div>
+
+<p>由上面我们可以知道</p>
+<p>在 Java RMI 中，如果要将一个对象暴露为远程对象，这个对象必须实现一个远程接口。这个远程接口必须继承 <code>Remote</code> 接口，并且其中的所有方法都必须声明抛出 <code>RemoteException</code> 异常。这个远程接口定义了客户端可以通过 RMI 协议调用的方法。</p>
+<p>在这个示例代码中，<code>RMITestImpl</code> 类实现了一个名为 <code>RMITestInterface</code> 的远程接口。这个接口中只有一个方法 <code>test()</code>，它声明了抛出 <code>RemoteException</code> 异常。由于 <code>RMITestImpl</code> 类实现了 <code>RMITestInterface</code> 接口，因此它必须实现 <code>test()</code> 方法，并且在方法声明中也必须声明抛出 <code>RemoteException</code> 异常。</p>
+<p>3、客户端代码实现</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">package com.anbai.sec.rmi;</span><br><span class="line"></span><br><span class="line">import java.rmi.Naming;</span><br><span class="line"></span><br><span class="line">import static com.anbai.sec.rmi.RMIServerTest.RMI_NAME;</span><br><span class="line"></span><br><span class="line">public class RMIClientTest &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            // 查找远程RMI服务</span><br><span class="line">            RMITestInterface rt = (RMITestInterface) Naming.lookup(RMI_NAME);</span><br><span class="line"></span><br><span class="line">            // 调用远程接口RMITestInterface类的test方法</span><br><span class="line">            String result = rt.test();</span><br><span class="line"></span><br><span class="line">            // 输出RMI方法调用结果</span><br><span class="line">            System.out.println(result);</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<ol>
+<li>在 <code>RMIClientTest</code> 类中定义了一个 <code>main</code> 方法，用于启动客户端程序。</li>
+<li>在 <code>main</code> 方法中，通过调用 <code>Naming.lookup</code> 方法查找指定名称的远程对象，该名称在常量 <code>RMI_NAME</code> 中定义。</li>
+<li>通过将 <code>Naming.lookup</code> 方法的返回结果转换为 <code>RMITestInterface</code> 类型，获取了远程接口对象的引用 <code>rt</code>。</li>
+<li>通过调用 <code>rt</code> 对象的 <code>test</code> 方法，执行了远程接口的方法调用。</li>
+<li>将远程方法调用的返回值打印到控制台。</li>
+<li>在代码中使用了 <code>try-catch</code> 语句来捕获可能发生的异常，比如在远程调用时可能发生的 <code>RemoteException</code> 异常等。</li>
+</ol>
+<p>代码运行：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202304/2794407-20230406172955540-213647078.png"
+                      alt="image-20230406172954315"
+                ></p>
+<h3 id="四、关于RMI实现代码和RMI机制的对照。"><a href="#四、关于RMI实现代码和RMI机制的对照。" class="headerlink" title="四、关于RMI实现代码和RMI机制的对照。"></a>四、关于RMI实现代码和RMI机制的对照。</h3><p>通过上面的学习我们可以知道Skeleton是RMI 服务器端用于接收远程方法地调用请求并将其转发到相应远程对象地中间件，skeleton通过解组远程方法调用请求，调用相应地远程对象方法，然后将结果打包发送回客户端。</p>
+<p>RMI 注册表是用于维护对象引用的中心存储库。客户端通过查找注册表来获取对远程对象的引用。在 RMI 服务器端，Skeleton 和注册表通常是一起使用的，以便为客户端提供完整的远程方法调用服务。</p>
+<p>具体来说，当 RMI 服务器端接收到客户端的远程方法调用请求时，Skeleton  会解组该请求并确定调用哪个远程对象的方法。然后，Skeleton  会调用相应的远程对象方法，并将结果打包成一个响应并发送回客户端。在这个过程中，Skeleton 可能需要查找注册表来获取对远程对象的引用。</p>
+<p>因此，可以说 Skeleton 和 RMI 注册表是 RMI 服务器端的两个核心组件，它们共同协作以提供完整的远程方法调用服务。</p>
+<p>客户端通过 Stub 对象来调用远程对象的方法。在 Java RMI 中，Stub 是客户端用于调用远程方法的代理对象，它封装了与远程对象的通信细节，使得客户端可以像调用本地对象一样调用远程对象的方法。</p>
+<p>当客户端需要调用远程对象的方法时，它会首先从 RMI 注册表中查找远程对象的引用。然后，客户端使用引用来获取远程对象的 Stub  对象。客户端使用 Stub 对象来调用远程对象的方法，就好像调用本地对象的方法一样。当客户端调用远程方法时，Stub  对象会将方法调用打包成一个请求并发送到 RMI 服务器端。RMI 服务器端接收到请求后，会使用 Skeleton  对象来解组请求并调用相应的远程对象方法，然后将结果打包成一个响应并发送回客户端。客户端接收到响应后，Stub  对象会将响应解包并返回给客户端调用方。</p>
+]]></content>
+  </entry>
 </search>
