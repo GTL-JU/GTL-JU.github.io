@@ -30,7 +30,7 @@
   </entry>
   <entry>
     <title></title>
-    <url>/2023/04/08/java%20RMI/</url>
+    <url>/2023/04/08/RMI/</url>
     <content><![CDATA[<h2 id="JAVA-RMI"><a href="#JAVA-RMI" class="headerlink" title="JAVA RMI"></a>JAVA RMI</h2><h3 id="一、什么是-RMI"><a href="#一、什么是-RMI" class="headerlink" title="一、什么是 RMI"></a>一、什么是 RMI</h3><p>RMI是远程方法调用，RMI技术可以使一个java虚拟机中的对象去调用另一个java虚拟中的对象方法并获取调用结果。也就是说RMI实现了客户端调用服务端的对象方法像调用本地的对象方法。</p>
 <h3 id="二、RMI原理分析"><a href="#二、RMI原理分析" class="headerlink" title="二、RMI原理分析"></a>二、RMI原理分析</h3><p>既然是解决远程调用的问题，那么肯定要有client(客户端)和服务端(server)，也就是方法的调用者和被调用者，从客户端-服务器模型来看，客户端程序之间调用服务端，两者之间是通过JRMP协议实现的。</p>
 <p>这里简单了解一下JRMP协议，类似于HTTP协议，规定了客户端和服务端要满足的规范：</p>
