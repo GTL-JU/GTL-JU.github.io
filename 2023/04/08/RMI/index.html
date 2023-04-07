@@ -19,19 +19,20 @@
     <meta name="googlebot" content="index,follow">
     <meta name="revisit-after" content="1 days">
     
-        <meta name="description" content="1title: JAVA RMI    一、什么是 RMIRMI是远程方法调用，RMI技术可以使一个java虚拟机中的对象去调用另一个java虚拟中的对象方法并获取调用结果。也就是说RMI实现了客户端调用服务端的对象方法像调用本地的对象方法。 二、RMI原理分析既然是解决远程调用的问题，那么肯定要有client(客户端)和服务端(server)，也就是方法的调用者和被调用者，从客户端-服务器模型来">
+        <meta name="description" content="一、什么是 RMIRMI是远程方法调用，RMI技术可以使一个java虚拟机中的对象去调用另一个java虚拟中的对象方法并获取调用结果。也就是说RMI实现了客户端调用服务端的对象方法像调用本地的对象方法。 二、RMI原理分析既然是解决远程调用的问题，那么肯定要有client(客户端)和服务端(server)，也就是方法的调用者和被调用者，从客户端-服务器模型来看，客户端程序之间调用服务端，两者之间是">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo">
+<meta property="og:title" content="JAVA RMI">
 <meta property="og:url" content="http://example.com/2023/04/08/RMI/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="1title: JAVA RMI    一、什么是 RMIRMI是远程方法调用，RMI技术可以使一个java虚拟机中的对象去调用另一个java虚拟中的对象方法并获取调用结果。也就是说RMI实现了客户端调用服务端的对象方法像调用本地的对象方法。 二、RMI原理分析既然是解决远程调用的问题，那么肯定要有client(客户端)和服务端(server)，也就是方法的调用者和被调用者，从客户端-服务器模型来">
+<meta property="og:description" content="一、什么是 RMIRMI是远程方法调用，RMI技术可以使一个java虚拟机中的对象去调用另一个java虚拟中的对象方法并获取调用结果。也就是说RMI实现了客户端调用服务端的对象方法像调用本地的对象方法。 二、RMI原理分析既然是解决远程调用的问题，那么肯定要有client(客户端)和服务端(server)，也就是方法的调用者和被调用者，从客户端-服务器模型来看，客户端程序之间调用服务端，两者之间是">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202303/2794407-20230331150932626-442742960.png">
 <meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202304/2794407-20230406172913133-1458454200.png">
 <meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202304/2794407-20230406172955540-213647078.png">
-<meta property="article:published_time" content="2023-04-07T17:13:24.741Z">
-<meta property="article:modified_time" content="2023-04-07T17:18:11.670Z">
+<meta property="article:published_time" content="2023-04-07T17:28:24.000Z">
+<meta property="article:modified_time" content="2023-04-07T17:28:47.916Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="JAVA">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://img2023.cnblogs.com/blog/2794407/202303/2794407-20230331150932626-442742960.png">
     
@@ -43,6 +44,8 @@
     <!--- Page Info-->
     
     <title>
+        
+            JAVA RMI -
         
         JU blog
     </title>
@@ -371,7 +374,7 @@
             
             
                 <div class="article-title">
-                    <h1 class="article-title-regular"></h1>
+                    <h1 class="article-title-regular">JAVA RMI</h1>
                 </div>
             
                 
@@ -393,20 +396,31 @@
                             <div class="article-meta-info">
     <span class="article-date article-meta-item">
         <i class="fa-regular fa-pen-fancy"></i>&nbsp;
-        <span class="desktop">2023-04-08 01:13:24</span>
-        <span class="mobile">2023-04-08 01:13</span>
+        <span class="desktop">2023-04-08 01:28:24</span>
+        <span class="mobile">2023-04-08 01:28</span>
         <span class="hover-info">创建</span>
     </span>
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2023-04-08 01:18:11</span>
-            <span class="mobile">2023-04-08 01:18</span>
+            <span class="desktop">2023-04-08 01:28:47</span>
+            <span class="mobile">2023-04-08 01:28</span>
             <span class="hover-info">更新</span>
         </span>
     
 
     
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/JAVA/">JAVA</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
     
 
     
@@ -429,11 +443,7 @@
             
 
             <div class="article-content markdown-body">
-                <div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">title: JAVA RMI</span><br></pre></td></tr></table></figure></div>
-
-
-
-<h3 id="一、什么是-RMI"><a href="#一、什么是-RMI" class="headerlink" title="一、什么是 RMI"></a>一、什么是 RMI</h3><p>RMI是远程方法调用，RMI技术可以使一个java虚拟机中的对象去调用另一个java虚拟中的对象方法并获取调用结果。也就是说RMI实现了客户端调用服务端的对象方法像调用本地的对象方法。</p>
+                <h3 id="一、什么是-RMI"><a href="#一、什么是-RMI" class="headerlink" title="一、什么是 RMI"></a>一、什么是 RMI</h3><p>RMI是远程方法调用，RMI技术可以使一个java虚拟机中的对象去调用另一个java虚拟中的对象方法并获取调用结果。也就是说RMI实现了客户端调用服务端的对象方法像调用本地的对象方法。</p>
 <h3 id="二、RMI原理分析"><a href="#二、RMI原理分析" class="headerlink" title="二、RMI原理分析"></a>二、RMI原理分析</h3><p>既然是解决远程调用的问题，那么肯定要有client(客户端)和服务端(server)，也就是方法的调用者和被调用者，从客户端-服务器模型来看，客户端程序之间调用服务端，两者之间是通过JRMP协议实现的。</p>
 <p>这里简单了解一下JRMP协议，类似于HTTP协议，规定了客户端和服务端要满足的规范：</p>
 <div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">JRMP（Java远程方法协议）可以定义为特定于Java的，基于流的协议，该协议查找并引用远程对象。它要求客户端和服务器都使用Java对象。它是线级协议，在RMI下和TCP / IP上运行。</span><br></pre></td></tr></table></figure></div>
@@ -527,12 +537,12 @@
                 <div class="post-copyright-info">
                     <div class="article-copyright-info-container">
     <ul>
-        <li><strong>标题:</strong> </li>
+        <li><strong>标题:</strong> JAVA RMI</li>
         <li><strong>作者:</strong> GTL-JU</li>
-        <li><strong>创建于:</strong> 2023-04-08 01:13:24</li>
+        <li><strong>创建于:</strong> 2023-04-08 01:28:24</li>
         
             <li>
-                <strong>更新于:</strong> 2023-04-08 01:18:11
+                <strong>更新于:</strong> 2023-04-08 01:28:47
             </li>
         
         <li>
@@ -548,9 +558,37 @@
             
 
             
+                <ul class="post-tags-box">
+                    
+                        <li class="tag-item">
+                            <a href="/tags/JAVA/">#JAVA</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            
 
             
 
+            
+                <div class="article-nav">
+                    
+                    
+                        <div class="article-next">
+                            <a class="next"
+                            rel="next"
+                            href="/2023/04/08/JAVA-RMI/"
+                            >
+                                <span class="title flex-center">
+                                    <span class="post-nav-title-item">JAVA RMI</span>
+                                    <span class="post-nav-item">下一篇</span>
+                                </span>
+                                <span class="right arrow-icon flex-center">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </span>
+                            </a>
+                        </div>
+                    
+                </div>
             
 
 
@@ -606,7 +644,7 @@
                 <div class="post-toc-wrap">
     <div class="post-toc">
         <div class="toc-title">此页目录</div>
-        <div class="page-title"></div>
+        <div class="page-title">JAVA RMI</div>
         <ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF-RMI"><span class="nav-text">一、什么是 RMI</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81RMI%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90"><span class="nav-text">二、RMI原理分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81RMI%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="nav-text">三、RMI代码实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E5%85%B3%E4%BA%8ERMI%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%A0%81%E5%92%8CRMI%E6%9C%BA%E5%88%B6%E7%9A%84%E5%AF%B9%E7%85%A7%E3%80%82"><span class="nav-text">四、关于RMI实现代码和RMI机制的对照。</span></a></li></ol>
 
     </div>
