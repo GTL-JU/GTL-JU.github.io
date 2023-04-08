@@ -26,27 +26,27 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="一、hash长度攻击的简要介绍1、首先什么是hash长度拓展攻击？ 简单来说，由于hash的生成机制原因，使得我们可以认为的在原先明文数据的基础上添加新的拓展字符，使得原本的加密链变长，进而控制加密链的最后一节，使得我们得以控制最终结果。 也就是说当我们知道hash(secret+data)的值以及secret的长度的情况下，我们就可以推算出hash(secret+data||padding||a">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225145219625-1440618184.png">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225150941043-1957370559.png">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226120409339-1591078397.png">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225153857754-2115571783.png">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226120429029-1609748710.png">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225231719455-581312355.png">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225232048100-1772008931.png">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225232735328-883346498.png">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225234731691-1474411680.png">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225234847533-283931689.png">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225406773-1972064902.png">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225415944-1485959466.png">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225430591-1723384646.png">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226001051474-1347763831.png">
-<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226001236185-100270824.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225145219625-1440618184.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225150941043-1957370559.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230226120409339-1591078397.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225153857754-2115571783.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230226120429029-1609748710.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225231719455-581312355.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225232048100-1772008931.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225232735328-883346498.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225234731691-1474411680.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225234847533-283931689.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230227225406773-1972064902.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230227225415944-1485959466.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230227225430591-1723384646.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230226001051474-1347763831.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230226001236185-100270824.png">
 <meta property="article:published_time" content="2023-04-08T08:12:24.000Z">
-<meta property="article:modified_time" content="2023-04-08T08:12:18.762Z">
+<meta property="article:modified_time" content="2023-04-08T08:17:15.604Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="JAVA">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225145219625-1440618184.png">
+<meta name="twitter:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225145219625-1440618184.png">
     
     <!--- Icon Part-->
     <link rel="icon" type="image/png" href="/images/logo.png" sizes="192x192">
@@ -415,8 +415,8 @@
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2023-04-08 16:12:18</span>
-            <span class="mobile">2023-04-08 16:12</span>
+            <span class="desktop">2023-04-08 16:17:15</span>
+            <span class="mobile">2023-04-08 16:17</span>
             <span class="hover-info">更新</span>
         </span>
     
@@ -473,7 +473,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225145219625-1440618184.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225145219625-1440618184.png"
                       alt="image-20230225145218735"
                 ></p>
 <p>这里的80是16进制，其代表的是二进制下面的10000000，那么这里就是补一个1和若干0，把消息补位到56个字节，也就是448bit.</p>
@@ -486,7 +486,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225150941043-1957370559.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225150941043-1957370559.png"
                       alt="image-20230225150939934"
                 ></p>
 <p>3、初始化状态</p>
@@ -500,7 +500,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226120409339-1591078397.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230226120409339-1591078397.png"
                       alt="image-20230226120409357"
                 ></p>
 <p>5、结果的输出</p>
@@ -519,14 +519,14 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225153857754-2115571783.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225153857754-2115571783.png"
                       alt="image-20230225153856884"
                 ></p>
 <p>下面是我按自己的理解搞得一个流程图：</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226120429029-1609748710.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230226120429029-1609748710.png"
                       alt="image-20230226120429193"
                 ></p>
 <h2 id="三、hash长度拓展攻击逻辑分析"><a href="#三、hash长度拓展攻击逻辑分析" class="headerlink" title="三、hash长度拓展攻击逻辑分析"></a>三、hash长度拓展攻击逻辑分析</h2><p>上面我们对md5的加密流程进行了大概的分析</p>
@@ -545,7 +545,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225231719455-581312355.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225231719455-581312355.png"
                       alt="image-20230225231719067"
                 ></p>
 <p>可以得到hash(secert+guest)的值为382441859bb6709d0d9fa11ef3c255b9，secert的长度为13</p>
@@ -554,14 +554,14 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225232048100-1772008931.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225232048100-1772008931.png"
                       alt="image-20230225232048215"
                 ></p>
 <p>然后进行原始消息数据填充</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225232735328-883346498.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225232735328-883346498.png"
                       alt="image-20230225232735247"
                 ></p>
 <p>18个字符，144byte 转换为16进制表示为0x90</p>
@@ -576,14 +576,14 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225234731691-1474411680.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225234731691-1474411680.png"
                       alt="image-20230225234731479"
                 ></p>
 <p>根据md5填充规则进行填充：</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225234847533-283931689.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225234847533-283931689.png"
                       alt="image-20230225234847560"
                 ></p>
 <p>去掉前面的我们假设的secret给去除掉，可以得到</p>
@@ -607,19 +607,19 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225406773-1972064902.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230227225406773-1972064902.png"
                       alt="image-20230227225406242"
                 ></p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225415944-1485959466.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230227225415944-1485959466.png"
                       alt="image-20230227225415932"
                 ></p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225430591-1723384646.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230227225430591-1723384646.png"
                       alt="image-20230227225430350"
                 ></p>
 <h2 id="四、hashpump工具的安装与使用"><a href="#四、hashpump工具的安装与使用" class="headerlink" title="四、hashpump工具的安装与使用"></a>四、hashpump工具的安装与使用</h2><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/bwall/HashPump</span><br><span class="line">apt-get install g++ libssl-dev</span><br><span class="line">cd HashPump</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure></div>
@@ -628,7 +628,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226001051474-1347763831.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230226001051474-1347763831.png"
                       alt="image-20230226001051157"
                 ></p>
 <p>那么我们回到题目进行验证：</p>
@@ -638,7 +638,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226001236185-100270824.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230226001236185-100270824.png"
                       alt="image-20230226001235963"
                 ></p>
 <p>可以看到以及攻击成功了。</p>
@@ -656,7 +656,7 @@
         <li><strong>创建于:</strong> 2023-04-08 16:12:24</li>
         
             <li>
-                <strong>更新于:</strong> 2023-04-08 16:12:18
+                <strong>更新于:</strong> 2023-04-08 16:17:15
             </li>
         
         <li>

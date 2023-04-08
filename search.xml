@@ -116,7 +116,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225145219625-1440618184.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225145219625-1440618184.png"
                       alt="image-20230225145218735"
                 ></p>
 <p>这里的80是16进制，其代表的是二进制下面的10000000，那么这里就是补一个1和若干0，把消息补位到56个字节，也就是448bit.</p>
@@ -129,7 +129,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225150941043-1957370559.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225150941043-1957370559.png"
                       alt="image-20230225150939934"
                 ></p>
 <p>3、初始化状态</p>
@@ -143,7 +143,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226120409339-1591078397.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230226120409339-1591078397.png"
                       alt="image-20230226120409357"
                 ></p>
 <p>5、结果的输出</p>
@@ -162,14 +162,14 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225153857754-2115571783.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225153857754-2115571783.png"
                       alt="image-20230225153856884"
                 ></p>
 <p>下面是我按自己的理解搞得一个流程图：</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226120429029-1609748710.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230226120429029-1609748710.png"
                       alt="image-20230226120429193"
                 ></p>
 <h2 id="三、hash长度拓展攻击逻辑分析"><a href="#三、hash长度拓展攻击逻辑分析" class="headerlink" title="三、hash长度拓展攻击逻辑分析"></a>三、hash长度拓展攻击逻辑分析</h2><p>上面我们对md5的加密流程进行了大概的分析</p>
@@ -188,7 +188,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225231719455-581312355.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225231719455-581312355.png"
                       alt="image-20230225231719067"
                 ></p>
 <p>可以得到hash(secert+guest)的值为382441859bb6709d0d9fa11ef3c255b9，secert的长度为13</p>
@@ -197,14 +197,14 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225232048100-1772008931.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225232048100-1772008931.png"
                       alt="image-20230225232048215"
                 ></p>
 <p>然后进行原始消息数据填充</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225232735328-883346498.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225232735328-883346498.png"
                       alt="image-20230225232735247"
                 ></p>
 <p>18个字符，144byte 转换为16进制表示为0x90</p>
@@ -219,14 +219,14 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225234731691-1474411680.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225234731691-1474411680.png"
                       alt="image-20230225234731479"
                 ></p>
 <p>根据md5填充规则进行填充：</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225234847533-283931689.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230225234847533-283931689.png"
                       alt="image-20230225234847560"
                 ></p>
 <p>去掉前面的我们假设的secret给去除掉，可以得到</p>
@@ -250,19 +250,19 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225406773-1972064902.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230227225406773-1972064902.png"
                       alt="image-20230227225406242"
                 ></p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225415944-1485959466.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230227225415944-1485959466.png"
                       alt="image-20230227225415932"
                 ></p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225430591-1723384646.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230227225430591-1723384646.png"
                       alt="image-20230227225430350"
                 ></p>
 <h2 id="四、hashpump工具的安装与使用"><a href="#四、hashpump工具的安装与使用" class="headerlink" title="四、hashpump工具的安装与使用"></a>四、hashpump工具的安装与使用</h2><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/bwall/HashPump</span><br><span class="line">apt-get install g++ libssl-dev</span><br><span class="line">cd HashPump</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure></div>
@@ -271,7 +271,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226001051474-1347763831.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230226001051474-1347763831.png"
                       alt="image-20230226001051157"
                 ></p>
 <p>那么我们回到题目进行验证：</p>
@@ -281,7 +281,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226001236185-100270824.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230226001236185-100270824.png"
                       alt="image-20230226001235963"
                 ></p>
 <p>可以看到以及攻击成功了。</p>
