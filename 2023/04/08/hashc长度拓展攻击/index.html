@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="Hexo Theme Redefine">
+    <meta name="description" content="Hexo Theme Redefine">
+    <meta name="author" content="GTL-JU">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-redefine.png">
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://evan.beee.top" crossorigin>
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="http://example.com/2023/04/08/hashc长度拓展攻击/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+        <meta name="description" content="一、hash长度攻击的简要介绍1、首先什么是hash长度拓展攻击？ 简单来说，由于hash的生成机制原因，使得我们可以认为的在原先明文数据的基础上添加新的拓展字符，使得原本的加密链变长，进而控制加密链的最后一节，使得我们得以控制最终结果。 也就是说当我们知道hash(secret+data)的值以及secret的长度的情况下，我们就可以推算出hash(secret+data||padding||a">
+<meta property="og:type" content="article">
+<meta property="og:title" content="hash长度拓展攻击">
+<meta property="og:url" content="http://example.com/2023/04/08/hashc%E9%95%BF%E5%BA%A6%E6%8B%93%E5%B1%95%E6%94%BB%E5%87%BB/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="一、hash长度攻击的简要介绍1、首先什么是hash长度拓展攻击？ 简单来说，由于hash的生成机制原因，使得我们可以认为的在原先明文数据的基础上添加新的拓展字符，使得原本的加密链变长，进而控制加密链的最后一节，使得我们得以控制最终结果。 也就是说当我们知道hash(secret+data)的值以及secret的长度的情况下，我们就可以推算出hash(secret+data||padding||a">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225145219625-1440618184.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225150941043-1957370559.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226120409339-1591078397.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225153857754-2115571783.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226120429029-1609748710.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225231719455-581312355.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225232048100-1772008931.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225232735328-883346498.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225234731691-1474411680.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225234847533-283931689.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225406773-1972064902.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225415944-1485959466.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225430591-1723384646.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226001051474-1347763831.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226001236185-100270824.png">
+<meta property="article:published_time" content="2023-04-08T08:12:24.000Z">
+<meta property="article:modified_time" content="2023-04-08T08:12:18.762Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="JAVA">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225145219625-1440618184.png">
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="/images/logo.png" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/logo.png">
+    <meta name="theme-color" content="#A31F34">
+    <link rel="shortcut icon" href="/images/logo.png">
+    <!--- Page Info-->
+    
+    <title>
+        
+            hash长度拓展攻击 -
+        
+        JU blog
+    </title>
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<link rel="stylesheet" href="/assets/fonts.css">
+
+    <!--- Font Part-->
+    
+    
+    
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+
+    <!--- Inject Part-->
+    
+    <script id="hexo-configurations">
+    let Global = window.Global || {};
+    Global.hexo_config = {"hostname":"example.com","root":"/","language":"zh-CN","path":"search.xml"};
+    Global.theme_config = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center"},"word_count":{"enable":true,"count":true,"min2read":true},"author_label":{"enable":true,"auto":true,"list":["php","java","比赛wp","环境搭建"]},"code_block":{"copy":true,"style":"mac","font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":3,"number":false,"expand":true,"init_open":true},"copyright":true,"lazyload":true,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#A31F34","secondary":null},"global":{"fonts":{"chinese":{"enable":true,"family":"Noto Sans SC","url":"https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap"},"english":{"enable":false,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":false,"percentage":true},"busuanzi_counter":{"enable":true,"site_pv":true,"site_uv":true,"post_pv":true},"pjax":true,"open_graph":true},"home_banner":{"enable":true,"image":{"light":"/images/wallhaven-wqery6-light.webp","dark":"/images/wallhaven-wqery6-dark.webp"},"title":"JU's blog","subtitle":{"text":[],"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":true,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"links":{"github":null,"instagram":null,"zhihu":null,"twitter":null,"email":null}}},"plugins":{"feed":{"enable":false},"aplayer":{"enable":false,"audios":[{"name":null,"artist":null,"url":null,"cover":null},{"name":null,"artist":null,"url":null,"cover":null}]},"mermaid":{"enable":false,"version":"9.3.0"}},"version":"2.1.0","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"},"Archives":{"path":"/archives","icon":"fa-regular fa-archive"},"Status":{"path":"https://status.evanluo.top/","icon":"fa-regular fa-chart-bar"},"About":{"icon":"fa-regular fa-user","submenus":{"Me":"/about","Github":"https://github.com/GTL-JU","Blog":"https://www.cnblogs.com/GTL-JU/","Friends":"/friends"}},"友链":{"icon":"fa-regular fa-link","path":"/links/"}},"search":{"enable":true,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur"},"home":{"sidebar":{"enable":true,"position":"left","announcement":null,"links":{"Archives":{"path":"/archives","icon":"fa-regular fa-archive"},"Tags":{"path":"/tags","icon":"fa-regular fa-tags"},"Categories":{"path":"/categories","icon":"fa-regular fa-folder"}}},"article_date_format":"auto","categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}}};
+    Global.language_ago = {"second":"%s 秒前","minute":"%s 分钟前","hour":"%s 小时前","day":"%s 天前","week":"%s 周前","month":"%s 个月前","year":"%s 年前"};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    
+<link rel="stylesheet" href="/fontawesome/fontawesome.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/brands.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/solid.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/regular.min.css">
+
+    
+    
+    
+    
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+        <span class="pjax-progress-bar"></span>
+        <span class="pjax-progress-icon">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+        </span>
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="main-content-container">
+
+        <div class="main-content-header">
+            <header class="navbar-container">
+    
+    <div class="navbar-content">
+        <div class="left">
+            
+            <a class="logo-title" href="/">
+                
+                JU blog
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-house"></i>
+                                        
+                                        首页
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/archives"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-archive"></i>
+                                        
+                                        归档
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    target="_blank" rel="noopener" href="https://status.evanluo.top/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-chart-bar"></i>
+                                        
+                                        状态
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="has-dropdown" 
+                                    href="#" onClick="return false;">
+                                    
+                                        
+                                            <i class="fa-regular fa-user"></i>
+                                        
+                                        关于&nbsp;<i class="fa-solid fa-chevron-down"></i>
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                                    <ul class="sub-menu">
+                                    
+                                        <li>
+                                        <a href="/about">ME
+                                        </a>
+                                        </li>
+                                    
+                                        <li>
+                                        <a target="_blank" rel="noopener" href="https://github.com/GTL-JU">GITHUB
+                                        </a>
+                                        </li>
+                                    
+                                        <li>
+                                        <a target="_blank" rel="noopener" href="https://www.cnblogs.com/GTL-JU/">BLOG
+                                        </a>
+                                        </li>
+                                    
+                                        <li>
+                                        <a href="/friends">友情链接
+                                        </a>
+                                        </li>
+                                    
+                                    </ul>
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/links/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-link"></i>
+                                        
+                                        友链
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                        <li class="navbar-item search search-popup-trigger">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </li>
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                    <div class="icon-item search search-popup-trigger"><i class="fa-solid fa-magnifying-glass"></i></div>
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile drawer -->
+    <div class="navbar-drawer">
+        <ul class="drawer-navbar-list">
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/"  >
+                             
+                                
+                                    <i class="fa-regular fa-house"></i>
+                                
+                                首页
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/archives"  >
+                             
+                                
+                                    <i class="fa-regular fa-archive"></i>
+                                
+                                归档
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        target="_blank" rel="noopener" href="https://status.evanluo.top/"  >
+                             
+                                
+                                    <i class="fa-regular fa-chart-bar"></i>
+                                
+                                状态
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="has-dropdown" 
+                        href="#" onClick="return false;">
+                            
+                                
+                                    <i class="fa-regular fa-user"></i>
+                                
+                                关于&nbsp;<i class="fa-solid fa-chevron-down"></i>
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                              
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" href="/about">ME</a>
+                            </li>
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" target="_blank" rel="noopener" href="https://github.com/GTL-JU">GITHUB</a>
+                            </li>
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" target="_blank" rel="noopener" href="https://www.cnblogs.com/GTL-JU/">BLOG</a>
+                            </li>
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" href="/friends">友情链接</a>
+                            </li>
+                        
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/links/"  >
+                             
+                                
+                                    <i class="fa-regular fa-link"></i>
+                                
+                                友链
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="main-content-body">
+
+            
+
+            <div class="main-content">
+
+                
+                    <div class="fade-in-down-animation">
+    <div class="post-page-container">
+        <div class="article-content-container">
+
+            
+            
+                <div class="article-title">
+                    <h1 class="article-title-regular">hash长度拓展攻击</h1>
+                </div>
+            
+                
+            
+
+            
+                <div class="article-header">
+                    <div class="avatar">
+                        <img src="/images/logo.png">
+                    </div>
+                    <div class="info">
+                        <div class="author">
+                            <span class="name">GTL-JU</span>
+                            
+                                <span class="author-label">Lv1</span>
+                            
+                        </div>
+                        <div class="meta-info">
+                            <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2023-04-08 16:12:24</span>
+        <span class="mobile">2023-04-08 16:12</span>
+        <span class="hover-info">创建</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2023-04-08 16:12:18</span>
+            <span class="mobile">2023-04-08 16:12</span>
+            <span class="hover-info">更新</span>
+        </span>
+    
+
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/JAVA/">JAVA</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+        <span class="article-wordcount article-meta-item">
+            <i class="fa-regular fa-typewriter"></i>&nbsp;<span>4k 字</span>
+        </span>
+    
+    
+        <span class="article-min2read article-meta-item">
+            <i class="fa-regular fa-clock"></i>&nbsp;<span>18 分钟</span>
+        </span>
+    
+    
+</div>
+
+                        </div>
+                    </div>
+                </div>
+            
+
+            <div class="article-content markdown-body">
+                <h2 id="一、hash长度攻击的简要介绍"><a href="#一、hash长度攻击的简要介绍" class="headerlink" title="一、hash长度攻击的简要介绍"></a>一、hash长度攻击的简要介绍</h2><p>1、首先什么是hash长度拓展攻击？</p>
+<p>简单来说，由于hash的生成机制原因，使得我们可以认为的在原先明文数据的基础上添加新的拓展字符，使得原本的加密链变长，进而控制加密链的最后一节，使得我们得以控制最终结果。</p>
+<p>也就是说当我们知道hash(secret+data)的值以及secret的长度的情况下，我们就可以推算出hash(secret+data||padding||a）在这里padding是secret后面的填充内容，包含整个消息的长度，a可以是任何数据，我们需要知道secret的长度，这样才能够计算出padding。</p>
+<p>2、什么是hash算法？</p>
+<p>哈希算法（Hash算法）是一种将任意长度的消息压缩到固定长度的消息摘要的数学函数。哈希算法将输入消息（也称为明文）作为输入，并生成唯一的固定长度的输出，该输出称为哈希值，摘要或指纹。哈希值通常用于数字签名，数据完整性校验，数据索引和加密等安全应用中。常见的hash算法包括md5，sha-1，sha-256等。</p>
+<h2 id="二、MD5算法的加密流程"><a href="#二、MD5算法的加密流程" class="headerlink" title="二、MD5算法的加密流程"></a>二、MD5算法的加密流程</h2><p>想要搞清楚hash长度拓展攻击的逻辑，就要先理清楚hash算法的加密流程。</p>
+<p>这里以md5加密为例进行分析。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">md5的加密流程，大概分为以下几部分：</span><br><span class="line">1、填充消息</span><br><span class="line">2、添加长度信息</span><br><span class="line">3、初始化状态</span><br><span class="line">4、分组处理进行复杂函数处理</span><br><span class="line">5、输出结果</span><br></pre></td></tr></table></figure></div>
+
+<p>下面我们大概分析一下每个步骤的过程：</p>
+<p>1、填充消息</p>
+<p>将原始消息（字节序列）填充到长度为448 mod 512的位置，使得填充后的消息长度为512的整数倍。填充方式为在原始消息末尾添加一个1，后面再补0直到长度满足要求。</p>
+<p>也就是说当消息长度小于56个字节时要讲其填充到56个字节，大于等于56字节的要填充到对64取余的余数为8个字节.</p>
+<p>如下图所示：</p>
+<p>加入我们对，message进行填充：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225145219625-1440618184.png"
+                      alt="image-20230225145218735"
+                ></p>
+<p>这里的80是16进制，其代表的是二进制下面的10000000，那么这里就是补一个1和若干0，把消息补位到56个字节，也就是448bit.</p>
+<p>2、存储长度信息</p>
+<p>上面补位后，上面消息长度以及达到了56字节，从第57字节开始存储补位之前消息的长度</p>
+<p>长度是小端存储。也就是高字节存放在高地址</p>
+<p>我们还以上面的例为例：</p>
+<p>字符串message的长度为7个字母，也就是56byte 换算成16进制是0x38</p>
+<p>即：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225150941043-1957370559.png"
+                      alt="image-20230225150939934"
+                ></p>
+<p>3、初始化状态</p>
+<p>md5使用四个32为寄存器（A,B,C,D）保存中间运算结果，初始值为常量，具体来说，A,B,C,D的初始值如下：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">A = 0x67452301</span><br><span class="line">B = 0xEFCDAB89</span><br><span class="line">C = 0x98BADCFE</span><br><span class="line">D = 0x10325476</span><br></pre></td></tr></table></figure></div>
+
+<p>4、分组处理进行复杂函数处理</p>
+<p>将填充后的消息分为若干个512位的消息块。对于每个消息块，MD5算法执行四轮循环，每轮循环包含16次操作，共计64次操作。每次操作都使用一个消息块中的32位字作为输入，对寄存器A、B、C、D进行修改，最终输出新的A、B、C、D的值。</p>
+<p>也就是说第一个数据块与初始向量进行四轮循环，生成第一个新的字符串，保存在寄存器A,B,C,D中，寄存器继续与第二个数据块进行运算，直到最后一个数据块。</p>
+<p>其过程可以理解为：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226120409339-1591078397.png"
+                      alt="image-20230226120409357"
+                ></p>
+<p>5、结果的输出</p>
+<p>假设最终生成的寄存器的值是：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">A=0xab45bc01</span><br><span class="line">B=0x6a64bb53</span><br><span class="line">C=0x23ba8afe</span><br><span class="line">D=0x46847a62</span><br></pre></td></tr></table></figure></div>
+
+<p>先两两一组进行组合，得到下面的数据</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ab 45 bc 01</span><br><span class="line">6a 64 bb 53</span><br><span class="line">23 ba 8a fe</span><br><span class="line">46 84 7a 62</span><br></pre></td></tr></table></figure></div>
+
+<p>在进行高低位互换：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">01 bc 45 ab</span><br><span class="line">53 bb 64 6a</span><br></pre></td></tr></table></figure></div>
+
+<p>最终拼接在一起就能够得到md5的值</p>
+<p>这就是md5加密的大概过程</p>
+<p>下面这是网上找来的流程图：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225153857754-2115571783.png"
+                      alt="image-20230225153856884"
+                ></p>
+<p>下面是我按自己的理解搞得一个流程图：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226120429029-1609748710.png"
+                      alt="image-20230226120429193"
+                ></p>
+<h2 id="三、hash长度拓展攻击逻辑分析"><a href="#三、hash长度拓展攻击逻辑分析" class="headerlink" title="三、hash长度拓展攻击逻辑分析"></a>三、hash长度拓展攻击逻辑分析</h2><p>上面我们对md5的加密流程进行了大概的分析</p>
+<p>下面我们通过md5的加密流程对hash长度拓展攻击逻辑进行分析</p>
+<p>我们这里通过一道题目进行分析：</p>
+<p>这是22年12月举办的铁三信息安全比赛的一道原题：</p>
+<p>代码：</p>
+<div class="highlight-container" data-rel="Php"><figure class="iseeu highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"> <span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">error_reporting</span>(<span class="number">0</span>);</span><br><span class="line"><span class="keyword">include</span> <span class="string">&quot;flag.php&quot;</span>;</span><br><span class="line"><span class="variable">$user</span> = <span class="variable">$_POST</span>[<span class="string">&#x27;user&#x27;</span>];</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">encrypt</span>(<span class="params"><span class="variable">$text</span></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">global</span> <span class="variable">$key</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="title function_ invoke__">md5</span>(<span class="variable">$key</span> . <span class="variable">$text</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (<span class="title function_ invoke__">encrypt</span>(<span class="variable">$user</span>) === <span class="variable">$_COOKIE</span>[<span class="string">&#x27;verify&#x27;</span>]) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="title function_ invoke__">is_numeric</span>(<span class="title function_ invoke__">strpos</span>(<span class="variable">$user</span>, <span class="string">&#x27;root&#x27;</span>))) &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="variable">$flag</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="string">&#x27;not root！！！&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="title function_ invoke__">setcookie</span>(<span class="string">&quot;verify&quot;</span>, <span class="title function_ invoke__">encrypt</span>(<span class="string">&quot;guest&quot;</span>), <span class="title function_ invoke__">time</span>() + <span class="number">60</span> * <span class="number">60</span> * <span class="number">24</span>);</span><br><span class="line">    <span class="title function_ invoke__">setcookie</span>(<span class="string">&quot;len&quot;</span>, <span class="title function_ invoke__">strlen</span>(<span class="variable">$key</span>), <span class="title function_ invoke__">time</span>() + <span class="number">60</span> * <span class="number">60</span> * <span class="number">24</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_ invoke__">highlight_file</span>(<span class="keyword">__FILE__</span>);</span><br><span class="line"><span class="meta">?&gt;</span> </span><br></pre></td></tr></table></figure></div>
+
+<p>这里可以看到</p>
+<p>获得flag的条件：</p>
+<div class="highlight-container" data-rel="Php"><figure class="iseeu highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="title function_ invoke__">encrypt</span>(<span class="variable">$user</span>) === <span class="variable">$_COOKIE</span>[<span class="string">&#x27;verify&#x27;</span>]) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="title function_ invoke__">is_numeric</span>(<span class="title function_ invoke__">strpos</span>(<span class="variable">$user</span>, <span class="string">&#x27;root&#x27;</span>))) &#123;</span><br></pre></td></tr></table></figure></div>
+
+<p>我们输入的user经过md5加密后要与cookie里面的vefify相等，并且在输入的user里面要有root</p>
+<p>看一下响应包：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225231719455-581312355.png"
+                      alt="image-20230225231719067"
+                ></p>
+<p>可以得到hash(secert+guest)的值为382441859bb6709d0d9fa11ef3c255b9，secert的长度为13</p>
+<p>那我们这里重复一下md5加密的流程：</p>
+<p>首先是数据填充：（这里假设secret是13个A）</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225232048100-1772008931.png"
+                      alt="image-20230225232048215"
+                ></p>
+<p>然后进行原始消息数据填充</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225232735328-883346498.png"
+                      alt="image-20230225232735247"
+                ></p>
+<p>18个字符，144byte 转换为16进制表示为0x90</p>
+<p>后面就是将填充后的消息分成若干个512位的位块，然后与初始向量进行四轮循环运算，这里不再详细讲，</p>
+<p>直到最后一个数据块与寄存器中的向量值进行四轮损害运算，得到最终向量值(A’,B’,C’,D’),在经过高低位运算就可以得到最终的md5加密的hash值。</p>
+<p>那么我们回到题目，通过响应包我们可以得到hash(secret+guest)的值382441859bb6709d0d9fa11ef3c255b9</p>
+<p>那我们可以推出最后得到向量值为：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">A&#x27;=0x85412438</span><br><span class="line">B&#x27;=0x9d70b69b</span><br><span class="line">C&#x27;=0x1ea19f0d</span><br><span class="line">D&#x27;=0xb955c2f3</span><br></pre></td></tr></table></figure></div>
+
+<p>题目要求要匹配到root，但是我们并不知道secret，所以这里可以使用hash长度拓展攻击</p>
+<p>首先我们把要添加的数据添加上去</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225234731691-1474411680.png"
+                      alt="image-20230225234731479"
+                ></p>
+<p>根据md5填充规则进行填充：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225234847533-283931689.png"
+                      alt="image-20230225234847560"
+                ></p>
+<p>去掉前面的我们假设的secret给去除掉，可以得到</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">guest\0x80\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00....\0x00\0x00\0x00\0x00\0x00\0x00\0x90\0x00\0x00\0x00\0x00\0x00\0x00\0x00root</span><br></pre></td></tr></table></figure></div>
+
+<p>进行url编码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">guest%00x80%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00..x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x90%00x00%00x00%00x00%00x00%00x00%00x00%00x00root</span><br></pre></td></tr></table></figure></div>
+
+<p>这里我们虽然通过添加的方法使得字符串中有了root，但是由于我们并不知道secret，导致我们并没有办法计算出md5加密后hash值。但是由于我们实在hash(secret+guest)的hash值，但是我们这里填加了数据，所以导致还要再进行一轮运算，那么我们就可以再不知道secret的情况下计算出正确的md5加密的hash值。</p>
+<p>这里我们上面计算出了最后一轮加密的向量值为：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">A&#x27;=0x85412438</span><br><span class="line">B&#x27;=0x9d70b69b</span><br><span class="line">C&#x27;=0x1ea19f0d</span><br><span class="line">D&#x27;=0xb955c2f3</span><br></pre></td></tr></table></figure></div>
+
+<p>由于我们添加了新的字符串，导致分组时分的数据块会增加，那么hash(secret+guest)的值并不是我们最终要得到的md5值，而是做完向量串继续与后面新增加的数据块进行运算，那么这样的话我们就可以再不知道secret的情况下获得md5加密的hash值。</p>
+<p>但是这个计算式非常复杂的，我们这里使用找到的脚本进行计算：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br></pre></td><td class="code"><pre><span class="line">my_md5.py：</span><br><span class="line">#!/usr/bin/env python</span><br><span class="line"># -*- coding: utf-8 -*-</span><br><span class="line"># @Author：DshtAnger</span><br><span class="line"># theory reference:</span><br><span class="line">#   blog：</span><br><span class="line">#       http://blog.csdn.net/adidala/article/details/28677393</span><br><span class="line">#       http://blog.csdn.net/forgotaboutgirl/article/details/7258109</span><br><span class="line">#       http://blog.sina.com.cn/s/blog_6fe0eb1901014cpl.html</span><br><span class="line">#   RFC1321：</span><br><span class="line">#       https://www.rfc-editor.org/rfc/pdfrfc/rfc1321.txt.pdf</span><br><span class="line">##############################################################################</span><br><span class="line">import sys</span><br><span class="line">def genMsgLengthDescriptor(msg_bitsLenth):</span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    ---args:</span><br><span class="line">            msg_bitsLenth : the bits length of raw message</span><br><span class="line">    --return:</span><br><span class="line">            16 hex-encoded string , i.e.64bits,8bytes which used to describe the bits length of raw message added after padding</span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    return __import__(&quot;struct&quot;).pack(&quot;&gt;Q&quot;,msg_bitsLenth).encode(&quot;hex&quot;)</span><br><span class="line"></span><br><span class="line">def reverse_hex_8bytes(hex_str):</span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    --args:</span><br><span class="line">            hex_str: a hex-encoded string with length 16 , i.e.8bytes</span><br><span class="line">    --return:</span><br><span class="line">            transform raw message descriptor to little-endian </span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    hex_str = &quot;%016x&quot;%int(hex_str,16)</span><br><span class="line">    assert len(hex_str)==16    </span><br><span class="line">    return __import__(&quot;struct&quot;).pack(&quot;&lt;Q&quot;,int(hex_str,16)).encode(&quot;hex&quot;)</span><br><span class="line"></span><br><span class="line">def reverse_hex_4bytes(hex_str):</span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    --args:</span><br><span class="line">            hex_str: a hex-encoded string with length 8 , i.e.4bytes</span><br><span class="line">    --return:</span><br><span class="line">            transform 4 bytes message block to little-endian</span><br><span class="line">    &#x27;&#x27;&#x27;    </span><br><span class="line">    hex_str = &quot;%08x&quot;%int(hex_str,16)</span><br><span class="line">    assert len(hex_str)==8    </span><br><span class="line">    return __import__(&quot;struct&quot;).pack(&quot;&lt;L&quot;,int(hex_str,16)).encode(&quot;hex&quot;)</span><br><span class="line"></span><br><span class="line">def deal_rawInputMsg(input_msg):</span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    --args:</span><br><span class="line">            input_msg : inputed a ascii-encoded string</span><br><span class="line">    --return:</span><br><span class="line">            a hex-encoded string which can be inputed to mathematical transformation function.</span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    ascii_list = [x.encode(&quot;hex&quot;) for x in input_msg]</span><br><span class="line">    length_msg_bytes = len(ascii_list)</span><br><span class="line">    length_msg_bits = len(ascii_list)*8</span><br><span class="line">    #padding</span><br><span class="line">    ascii_list.append(&#x27;80&#x27;)  </span><br><span class="line">    while (len(ascii_list)*8+64)%512 != 0:  </span><br><span class="line">        ascii_list.append(&#x27;00&#x27;)</span><br><span class="line">    #add Descriptor</span><br><span class="line">    ascii_list.append(reverse_hex_8bytes(genMsgLengthDescriptor(length_msg_bits)))</span><br><span class="line">    return &quot;&quot;.join(ascii_list)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def getM16(hex_str,operatingBlockNum):</span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    --args:</span><br><span class="line">            hex_str : a hex-encoded string with length in integral multiple of 512bits</span><br><span class="line">            operatingBlockNum : message block number which is being operated , greater than 1</span><br><span class="line">    --return:</span><br><span class="line">            M : result of splited 64bytes into 4*16 message blocks with little-endian</span><br><span class="line"></span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    M = [int(reverse_hex_4bytes(hex_str[i:(i+8)]),16) for i in xrange(128*(operatingBlockNum-1),128*operatingBlockNum,8)]</span><br><span class="line">    return M</span><br><span class="line"></span><br><span class="line">#定义函数，用来产生常数T[i]，常数有可能超过32位，同样需要&amp;0xffffffff操作。注意返回的是十进制的数</span><br><span class="line">def T(i):</span><br><span class="line">    result = (int(4294967296*abs(__import__(&quot;math&quot;).sin(i))))&amp;0xffffffff</span><br><span class="line">    return result   </span><br><span class="line"></span><br><span class="line">#定义每轮中用到的函数</span><br><span class="line">#RL为循环左移，注意左移之后可能会超过32位，所以要和0xffffffff做与运算，确保结果为32位</span><br><span class="line">F = lambda x,y,z:((x&amp;y)|((~x)&amp;z))</span><br><span class="line">G = lambda x,y,z:((x&amp;z)|(y&amp;(~z)))</span><br><span class="line">H = lambda x,y,z:(x^y^z)</span><br><span class="line">I = lambda x,y,z:(y^(x|(~z)))</span><br><span class="line">RL = L = lambda x,n:(((x&lt;&lt;n)|(x&gt;&gt;(32-n)))&amp;(0xffffffff))</span><br><span class="line"></span><br><span class="line">def FF(a, b, c, d, x, s, ac):  </span><br><span class="line">    a = (a+F ((b), (c), (d)) + (x) + (ac)&amp;0xffffffff)&amp;0xffffffff;  </span><br><span class="line">    a = RL ((a), (s))&amp;0xffffffff;  </span><br><span class="line">    a = (a+b)&amp;0xffffffff  </span><br><span class="line">    return a  </span><br><span class="line">def GG(a, b, c, d, x, s, ac):  </span><br><span class="line">    a = (a+G ((b), (c), (d)) + (x) + (ac)&amp;0xffffffff)&amp;0xffffffff;  </span><br><span class="line">    a = RL ((a), (s))&amp;0xffffffff;  </span><br><span class="line">    a = (a+b)&amp;0xffffffff  </span><br><span class="line">    return a  </span><br><span class="line">def HH(a, b, c, d, x, s, ac):  </span><br><span class="line">    a = (a+H ((b), (c), (d)) + (x) + (ac)&amp;0xffffffff)&amp;0xffffffff;  </span><br><span class="line">    a = RL ((a), (s))&amp;0xffffffff;  </span><br><span class="line">    a = (a+b)&amp;0xffffffff  </span><br><span class="line">    return a  </span><br><span class="line">def II(a, b, c, d, x, s, ac):  </span><br><span class="line">    a = (a+I ((b), (c), (d)) + (x) + (ac)&amp;0xffffffff)&amp;0xffffffff;  </span><br><span class="line">    a = RL ((a), (s))&amp;0xffffffff;  </span><br><span class="line">    a = (a+b)&amp;0xffffffff  </span><br><span class="line">    return a      </span><br><span class="line"></span><br><span class="line">def show_md5(A,B,C,D):</span><br><span class="line">    return &quot;&quot;.join( [  &quot;&quot;.join(__import__(&quot;re&quot;).findall(r&quot;..&quot;,&quot;%08x&quot;%i)[::-1]) for i in (A,B,C,D)  ]  )</span><br><span class="line"></span><br><span class="line">def run_md5(A=0x67452301,B=0xefcdab89,C=0x98badcfe,D=0x10325476,readyMsg=&quot;&quot;):</span><br><span class="line"></span><br><span class="line">    a = A</span><br><span class="line">    b = B</span><br><span class="line">    c = C</span><br><span class="line">    d = D</span><br><span class="line"></span><br><span class="line">    for i in xrange(0,len(readyMsg)/128):</span><br><span class="line">        M = getM16(readyMsg,i+1)</span><br><span class="line">        for i in xrange(16):</span><br><span class="line">            exec &quot;M&quot;+str(i)+&quot;=M[&quot;+str(i)+&quot;]&quot;</span><br><span class="line">        #First round</span><br><span class="line">        a=FF(a,b,c,d,M0,7,0xd76aa478L)</span><br><span class="line">        d=FF(d,a,b,c,M1,12,0xe8c7b756L)</span><br><span class="line">        c=FF(c,d,a,b,M2,17,0x242070dbL)</span><br><span class="line">        b=FF(b,c,d,a,M3,22,0xc1bdceeeL)</span><br><span class="line">        a=FF(a,b,c,d,M4,7,0xf57c0fafL)</span><br><span class="line">        d=FF(d,a,b,c,M5,12,0x4787c62aL)</span><br><span class="line">        c=FF(c,d,a,b,M6,17,0xa8304613L)</span><br><span class="line">        b=FF(b,c,d,a,M7,22,0xfd469501L)</span><br><span class="line">        a=FF(a,b,c,d,M8,7,0x698098d8L)</span><br><span class="line">        d=FF(d,a,b,c,M9,12,0x8b44f7afL)</span><br><span class="line">        c=FF(c,d,a,b,M10,17,0xffff5bb1L)</span><br><span class="line">        b=FF(b,c,d,a,M11,22,0x895cd7beL)</span><br><span class="line">        a=FF(a,b,c,d,M12,7,0x6b901122L)</span><br><span class="line">        d=FF(d,a,b,c,M13,12,0xfd987193L)</span><br><span class="line">        c=FF(c,d,a,b,M14,17,0xa679438eL)</span><br><span class="line">        b=FF(b,c,d,a,M15,22,0x49b40821L)</span><br><span class="line">        #Second round</span><br><span class="line">        a=GG(a,b,c,d,M1,5,0xf61e2562L)</span><br><span class="line">        d=GG(d,a,b,c,M6,9,0xc040b340L)</span><br><span class="line">        c=GG(c,d,a,b,M11,14,0x265e5a51L)</span><br><span class="line">        b=GG(b,c,d,a,M0,20,0xe9b6c7aaL)</span><br><span class="line">        a=GG(a,b,c,d,M5,5,0xd62f105dL)</span><br><span class="line">        d=GG(d,a,b,c,M10,9,0x02441453L)</span><br><span class="line">        c=GG(c,d,a,b,M15,14,0xd8a1e681L)</span><br><span class="line">        b=GG(b,c,d,a,M4,20,0xe7d3fbc8L)</span><br><span class="line">        a=GG(a,b,c,d,M9,5,0x21e1cde6L)</span><br><span class="line">        d=GG(d,a,b,c,M14,9,0xc33707d6L)</span><br><span class="line">        c=GG(c,d,a,b,M3,14,0xf4d50d87L)</span><br><span class="line">        b=GG(b,c,d,a,M8,20,0x455a14edL)</span><br><span class="line">        a=GG(a,b,c,d,M13,5,0xa9e3e905L)</span><br><span class="line">        d=GG(d,a,b,c,M2,9,0xfcefa3f8L)</span><br><span class="line">        c=GG(c,d,a,b,M7,14,0x676f02d9L)</span><br><span class="line">        b=GG(b,c,d,a,M12,20,0x8d2a4c8aL)</span><br><span class="line">        #Third round</span><br><span class="line">        a=HH(a,b,c,d,M5,4,0xfffa3942L)</span><br><span class="line">        d=HH(d,a,b,c,M8,11,0x8771f681L)</span><br><span class="line">        c=HH(c,d,a,b,M11,16,0x6d9d6122L)</span><br><span class="line">        b=HH(b,c,d,a,M14,23,0xfde5380c)</span><br><span class="line">        a=HH(a,b,c,d,M1,4,0xa4beea44L)</span><br><span class="line">        d=HH(d,a,b,c,M4,11,0x4bdecfa9L)</span><br><span class="line">        c=HH(c,d,a,b,M7,16,0xf6bb4b60L)</span><br><span class="line">        b=HH(b,c,d,a,M10,23,0xbebfbc70L)</span><br><span class="line">        a=HH(a,b,c,d,M13,4,0x289b7ec6L)</span><br><span class="line">        d=HH(d,a,b,c,M0,11,0xeaa127faL)</span><br><span class="line">        c=HH(c,d,a,b,M3,16,0xd4ef3085L)</span><br><span class="line">        b=HH(b,c,d,a,M6,23,0x04881d05L)</span><br><span class="line">        a=HH(a,b,c,d,M9,4,0xd9d4d039L)</span><br><span class="line">        d=HH(d,a,b,c,M12,11,0xe6db99e5L)</span><br><span class="line">        c=HH(c,d,a,b,M15,16,0x1fa27cf8L)</span><br><span class="line">        b=HH(b,c,d,a,M2,23,0xc4ac5665L)</span><br><span class="line">        #Fourth round</span><br><span class="line">        a=II(a,b,c,d,M0,6,0xf4292244L)</span><br><span class="line">        d=II(d,a,b,c,M7,10,0x432aff97L)</span><br><span class="line">        c=II(c,d,a,b,M14,15,0xab9423a7L)</span><br><span class="line">        b=II(b,c,d,a,M5,21,0xfc93a039L)</span><br><span class="line">        a=II(a,b,c,d,M12,6,0x655b59c3L)</span><br><span class="line">        d=II(d,a,b,c,M3,10,0x8f0ccc92L)</span><br><span class="line">        c=II(c,d,a,b,M10,15,0xffeff47dL)</span><br><span class="line">        b=II(b,c,d,a,M1,21,0x85845dd1L)</span><br><span class="line">        a=II(a,b,c,d,M8,6,0x6fa87e4fL)</span><br><span class="line">        d=II(d,a,b,c,M15,10,0xfe2ce6e0L)</span><br><span class="line">        c=II(c,d,a,b,M6,15,0xa3014314L)</span><br><span class="line">        b=II(b,c,d,a,M13,21,0x4e0811a1L)</span><br><span class="line">        a=II(a,b,c,d,M4,6,0xf7537e82L)</span><br><span class="line">        d=II(d,a,b,c,M11,10,0xbd3af235L)</span><br><span class="line">        c=II(c,d,a,b,M2,15,0x2ad7d2bbL)</span><br><span class="line">        b=II(b,c,d,a,M9,21,0xeb86d391L)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        A += a</span><br><span class="line">        B += b</span><br><span class="line">        C += c</span><br><span class="line">        D += d</span><br><span class="line"></span><br><span class="line">        A = A&amp;0xffffffff</span><br><span class="line">        B = B&amp;0xffffffff</span><br><span class="line">        C = C&amp;0xffffffff</span><br><span class="line">        D = D&amp;0xffffffff</span><br><span class="line"></span><br><span class="line">        a = A</span><br><span class="line">        b = B</span><br><span class="line">        c = C</span><br><span class="line">        d = D</span><br><span class="line"></span><br><span class="line">    return show_md5(a,b,c,d)</span><br></pre></td></tr></table></figure></div>
+
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">exp.py</span><br><span class="line">#!/usr/bin/env python</span><br><span class="line"># -*- coding: utf-8 -*-</span><br><span class="line">import my_md5</span><br><span class="line">samplehash=&quot;382441859bb6709d0d9fa11ef3c255b9&quot;</span><br><span class="line">#将哈希值分为四段,并反转该四字节为小端序,作为64第二次循环的输入幻书</span><br><span class="line">s1=0x85412438</span><br><span class="line">s2=0x9d70b69b</span><br><span class="line">s3=0x1ea19f0d</span><br><span class="line">s4=0xb955c2f3</span><br><span class="line">#exp</span><br><span class="line">secret = &quot;A&quot;*13</span><br><span class="line">secret_admin = secret + &#x27;guest&#123;padding&#125;&#x27;</span><br><span class="line">padding = &#x27;\x80&#123;zero&#125;\xc8\x00\x00\x00\x00\x00\x00\x00&#x27;.format(zero=&quot;\x00&quot;*(64-15-10-1-8))</span><br><span class="line">secret_admin = secret_admin.format(padding=padding) + &#x27;root&#x27;</span><br><span class="line">r = my_md5.deal_rawInputMsg(secret_admin)</span><br><span class="line">inp = r[len(r)/2:] #我们需要截断的地方，也是我们需要控制的地方</span><br><span class="line">print &quot;getmein:&quot;+my_md5.run_md5(s1,s2,s3,s4,inp)</span><br></pre></td></tr></table></figure></div>
+
+<p>这里使用脚本没有计算出来，可能是自己哪里的配置有错误，但是脚本不知道怎么改，就只能使用其他师傅写好的工具去运算。</p>
+<p>流程图：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225406773-1972064902.png"
+                      alt="image-20230227225406242"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225415944-1485959466.png"
+                      alt="image-20230227225415932"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225430591-1723384646.png"
+                      alt="image-20230227225430350"
+                ></p>
+<h2 id="四、hashpump工具的安装与使用"><a href="#四、hashpump工具的安装与使用" class="headerlink" title="四、hashpump工具的安装与使用"></a>四、hashpump工具的安装与使用</h2><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/bwall/HashPump</span><br><span class="line">apt-get install g++ libssl-dev</span><br><span class="line">cd HashPump</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure></div>
+
+<p>使用方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226001051474-1347763831.png"
+                      alt="image-20230226001051157"
+                ></p>
+<p>那么我们回到题目进行验证：</p>
+<p>进行url编码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">guest%80%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%90%00%00%00%00%00%00%00root</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226001236185-100270824.png"
+                      alt="image-20230226001235963"
+                ></p>
+<p>可以看到以及攻击成功了。</p>
+<h2 id="五、防御方法"><a href="#五、防御方法" class="headerlink" title="五、防御方法"></a>五、防御方法</h2><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">以下是一些防御哈希长度拓展攻击的方法：</span><br><span class="line"></span><br><span class="line">    1、使用加盐（Salting）技术</span><br><span class="line"></span><br><span class="line">加盐技术是将一个随机字符串添加到原始数据之后，再进行哈希计算。由于加盐字符串是随机的，攻击者无法通过已知的哈希值推算出加盐字符串的内容，从而无法利用哈希长度拓展攻击。加盐技术是防御哈希长度拓展攻击的常见方法。</span><br><span class="line"></span><br><span class="line">    2、使用不可逆加密算法</span><br><span class="line"></span><br><span class="line">不可逆加密算法将原始数据转换为不可逆的密文，防止攻击者通过逆向计算推算出原始数据。相比哈希算法，不可逆加密算法的计算复杂度更高，从而更加安全。</span><br><span class="line"></span><br><span class="line">    3、使用HMAC技术</span><br><span class="line"></span><br><span class="line">HMAC是一种基于哈希算法的消息认证码技术，它将密钥与消息进行混合计算，生成一个认证码，以此保证消息的完整性和真实性。HMAC技术可以在保证消息认证的同时，防止哈希长度拓展攻击。</span><br><span class="line"></span><br><span class="line">    4、使用较长的哈希值</span><br><span class="line"></span><br><span class="line">较长的哈希值可以增加哈希长度拓展攻击的难度，因为攻击者需要计算更多的哈希值才能找到一个合法的哈希值。SHA-512和SHA-3等哈希算法提供了较长的哈希值选项。</span><br><span class="line"></span><br><span class="line">    5、使用加密哈希算法</span><br><span class="line"></span><br><span class="line">加密哈希算法是一种特殊的哈希算法，它在计算哈希值的同时，还将密钥混合到哈希值中，从而保证了哈希值的安全性和不可逆性。常见的加密哈希算法包括HMAC-SHA256和bcrypt等。</span><br></pre></td></tr></table></figure></div>
+
+
+            </div>
+
+            
+                <div class="post-copyright-info">
+                    <div class="article-copyright-info-container">
+    <ul>
+        <li><strong>标题:</strong> hash长度拓展攻击</li>
+        <li><strong>作者:</strong> GTL-JU</li>
+        <li><strong>创建于:</strong> 2023-04-08 16:12:24</li>
+        
+            <li>
+                <strong>更新于:</strong> 2023-04-08 16:12:18
+            </li>
+        
+        <li>
+            <strong>链接:</strong> https://redefine.ohevan.com/2023/04/08/hashc长度拓展攻击/
+        </li>
+        <li>
+            <strong>版权声明:</strong> 本文章采用 <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a> 进行许可。
+        </li>
+    </ul>
+</div>
+
+                </div>
+            
+
+            
+                <ul class="post-tags-box">
+                    
+                        <li class="tag-item">
+                            <a href="/tags/JAVA/">#JAVA</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            
+
+            
+
+            
+                <div class="article-nav">
+                    
+                    
+                        <div class="article-next">
+                            <a class="next"
+                            rel="next"
+                            href="/2023/04/08/RMI/"
+                            >
+                                <span class="title flex-center">
+                                    <span class="post-nav-title-item">JAVA RMI</span>
+                                    <span class="post-nav-item">下一篇</span>
+                                </span>
+                                <span class="right arrow-icon flex-center">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </span>
+                            </a>
+                        </div>
+                    
+                </div>
+            
+
+
+            
+        </div>
+
+        
+            <div class="toc-content-container">
+                <div class="post-toc-wrap">
+    <div class="post-toc">
+        <div class="toc-title">此页目录</div>
+        <div class="page-title">hash长度拓展攻击</div>
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81hash%E9%95%BF%E5%BA%A6%E6%94%BB%E5%87%BB%E7%9A%84%E7%AE%80%E8%A6%81%E4%BB%8B%E7%BB%8D"><span class="nav-text">一、hash长度攻击的简要介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81MD5%E7%AE%97%E6%B3%95%E7%9A%84%E5%8A%A0%E5%AF%86%E6%B5%81%E7%A8%8B"><span class="nav-text">二、MD5算法的加密流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81hash%E9%95%BF%E5%BA%A6%E6%8B%93%E5%B1%95%E6%94%BB%E5%87%BB%E9%80%BB%E8%BE%91%E5%88%86%E6%9E%90"><span class="nav-text">三、hash长度拓展攻击逻辑分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81hashpump%E5%B7%A5%E5%85%B7%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8"><span class="nav-text">四、hashpump工具的安装与使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E9%98%B2%E5%BE%A1%E6%96%B9%E6%B3%95"><span class="nav-text">五、防御方法</span></a></li></ol>
+
+    </div>
+</div>
+            </div>
+        
+    </div>
+</div>
+
+
+                
+
+            </div>
+            
+            
+
+        </div>
+
+        <div class="main-content-footer">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info">
+            &copy;
+            
+              <span>2023</span>
+              -
+            
+            2023&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">GTL-JU</a>
+        </div>
+        
+            <script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv" class="busuanzi_container_site_uv">
+                        访问人数&nbsp;<span id="busuanzi_value_site_uv" class="busuanzi_value_site_uv"></span>
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv" class="busuanzi_container_site_pv">
+                        总访问量&nbsp;<span id="busuanzi_value_site_pv" class="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            <span class="powered-by-container">由 <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" href="https://hexo.io">Hexo</a> 驱动</span>
+                <br>
+            <span class="theme-version-container">主题&nbsp;<a class="theme-version" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.1.0</a>
+        </div>
+        
+        
+        
+            <div id="start_div" style="display:none">
+                2023/4/8 0:0:0
+            </div>
+            <div>
+                博客已运行 <span class="odometer" id="runtime_days" ></span> 天 <span class="odometer" id="runtime_hours"></span> 小时 <span class="odometer" id="runtime_minutes"></span> 分钟 <span class="odometer" id="runtime_seconds"></span> 秒
+            </div>
+        
+        
+        
+            <script async data-pjax>
+                try {
+                    function odometer_init() {
+                    const elements = document.querySelectorAll('.odometer');
+                    elements.forEach(el => {
+                        new Odometer({
+                            el,
+                            format: '( ddd).dd',
+                            duration: 200
+                        });
+                    });
+                    }
+                    odometer_init();
+                } catch (error) {}
+            </script>
+        
+        
+        
+    </div>  
+</footer>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="article-tools-list">
+        <!-- TOC aside toggle -->
+        
+            <li class="right-bottom-tools page-aside-toggle">
+                <i class="fa-regular fa-outdent"></i>
+            </li>
+        
+
+        <!-- go comment -->
+        
+    </ul>
+</div>
+
+        </div>
+    
+
+    <div class="right-side-tools-container">
+        <div class="side-tools-container">
+    <ul class="hidden-tools-list">
+        <li class="right-bottom-tools tool-font-adjust-plus flex-center">
+            <i class="fa-regular fa-magnifying-glass-plus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-font-adjust-minus flex-center">
+            <i class="fa-regular fa-magnifying-glass-minus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-expand-width flex-center">
+            <i class="fa-regular fa-expand"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-dark-light-toggle flex-center">
+            <i class="fa-regular fa-moon"></i>
+        </li>
+
+        <!-- rss -->
+        
+
+        
+
+        <li class="right-bottom-tools tool-scroll-to-bottom flex-center">
+            <i class="fa-regular fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="visible-tools-list">
+        <li class="right-bottom-tools toggle-tools-list flex-center">
+            <i class="fa-regular fa-cog fa-spin"></i>
+        </li>
+        
+            <li class="right-bottom-tools tool-scroll-to-top flex-center">
+                <i class="arrow-up fas fa-arrow-up"></i>
+                <span class="percent"></span>
+            </li>
+        
+    </ul>
+</div>
+
+    </div>
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
+
+
+    
+        <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+          <span class="search-input-field-pre">
+            <i class="fa-solid fa-keyboard"></i>
+          </span>
+            <div class="search-input-container">
+                <input autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="off"
+                       placeholder="搜索..."
+                       spellcheck="false"
+                       type="search"
+                       class="search-input"
+                >
+            </div>
+            <span class="popup-btn-close">
+                <i class="fa-solid fa-times"></i>
+            </span>
+        </div>
+        <div id="search-result">
+            <div id="no-result">
+                <i class="fa-solid fa-spinner fa-spin-pulse fa-5x fa-fw"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+
+
+</main>
+
+
+
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/layouts/navbarShrink.js"></script>
+
+<script src="/js/tools/scrollTopBottom.js"></script>
+
+<script src="/js/tools/lightDarkSwitch.js"></script>
+
+
+
+    
+<script src="/js/tools/localSearch.js"></script>
+
+
+
+
+    
+<script src="/js/tools/codeBlock.js"></script>
+
+
+
+
+    
+<script src="/js/layouts/lazyload.js"></script>
+
+
+
+
+    
+<script src="/js/tools/runtime.js"></script>
+
+    
+<script src="/js/layouts/odometer.min.js"></script>
+
+    
+<link rel="stylesheet" href="/assets/odometer-theme-minimal.css">
+
+
+
+
+  
+<script src="/js/libs/Typed.min.js"></script>
+
+  
+<script src="/js/plugins/typed.js"></script>
+
+
+
+
+
+
+
+<div class="post-scripts pjax">
+    
+        
+<script src="/js/tools/tocToggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/layouts/toc.js"></script>
+
+<script src="/js/plugins/tabs.js"></script>
+
+    
+</div>
+
+
+    
+<script src="/js/libs/pjax.min.js"></script>
+
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        window.pjax = new Pjax({
+            selectors: [
+                'head title',
+                '.page-container',
+                '.pjax'
+            ],
+            history: true,
+            debug: false,
+            cacheBust: false,
+            timeout: 0,
+            analytics: false,
+            currentUrlFullReload: false,
+            scrollRestoration: false,
+            // scrollTo: true,
+        });
+
+        document.addEventListener('pjax:send', () => {
+            Global.utils.pjaxProgressBarStart();
+        });
+
+        document.addEventListener('pjax:complete', () => {
+            Global.utils.pjaxProgressBarEnd();
+            window.pjax.executeScripts(document.querySelectorAll('script[data-pjax], .pjax script'));
+            Global.refresh();
+        });
+    });
+</script>
+
+
+
+
+</body>
+</html>

@@ -95,4 +95,201 @@
         <tag>JAVA</tag>
       </tags>
   </entry>
+  <entry>
+    <title>hash长度拓展攻击</title>
+    <url>/2023/04/08/hashc%E9%95%BF%E5%BA%A6%E6%8B%93%E5%B1%95%E6%94%BB%E5%87%BB/</url>
+    <content><![CDATA[<h2 id="一、hash长度攻击的简要介绍"><a href="#一、hash长度攻击的简要介绍" class="headerlink" title="一、hash长度攻击的简要介绍"></a>一、hash长度攻击的简要介绍</h2><p>1、首先什么是hash长度拓展攻击？</p>
+<p>简单来说，由于hash的生成机制原因，使得我们可以认为的在原先明文数据的基础上添加新的拓展字符，使得原本的加密链变长，进而控制加密链的最后一节，使得我们得以控制最终结果。</p>
+<p>也就是说当我们知道hash(secret+data)的值以及secret的长度的情况下，我们就可以推算出hash(secret+data||padding||a）在这里padding是secret后面的填充内容，包含整个消息的长度，a可以是任何数据，我们需要知道secret的长度，这样才能够计算出padding。</p>
+<p>2、什么是hash算法？</p>
+<p>哈希算法（Hash算法）是一种将任意长度的消息压缩到固定长度的消息摘要的数学函数。哈希算法将输入消息（也称为明文）作为输入，并生成唯一的固定长度的输出，该输出称为哈希值，摘要或指纹。哈希值通常用于数字签名，数据完整性校验，数据索引和加密等安全应用中。常见的hash算法包括md5，sha-1，sha-256等。</p>
+<h2 id="二、MD5算法的加密流程"><a href="#二、MD5算法的加密流程" class="headerlink" title="二、MD5算法的加密流程"></a>二、MD5算法的加密流程</h2><p>想要搞清楚hash长度拓展攻击的逻辑，就要先理清楚hash算法的加密流程。</p>
+<p>这里以md5加密为例进行分析。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">md5的加密流程，大概分为以下几部分：</span><br><span class="line">1、填充消息</span><br><span class="line">2、添加长度信息</span><br><span class="line">3、初始化状态</span><br><span class="line">4、分组处理进行复杂函数处理</span><br><span class="line">5、输出结果</span><br></pre></td></tr></table></figure></div>
+
+<p>下面我们大概分析一下每个步骤的过程：</p>
+<p>1、填充消息</p>
+<p>将原始消息（字节序列）填充到长度为448 mod 512的位置，使得填充后的消息长度为512的整数倍。填充方式为在原始消息末尾添加一个1，后面再补0直到长度满足要求。</p>
+<p>也就是说当消息长度小于56个字节时要讲其填充到56个字节，大于等于56字节的要填充到对64取余的余数为8个字节.</p>
+<p>如下图所示：</p>
+<p>加入我们对，message进行填充：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225145219625-1440618184.png"
+                      alt="image-20230225145218735"
+                ></p>
+<p>这里的80是16进制，其代表的是二进制下面的10000000，那么这里就是补一个1和若干0，把消息补位到56个字节，也就是448bit.</p>
+<p>2、存储长度信息</p>
+<p>上面补位后，上面消息长度以及达到了56字节，从第57字节开始存储补位之前消息的长度</p>
+<p>长度是小端存储。也就是高字节存放在高地址</p>
+<p>我们还以上面的例为例：</p>
+<p>字符串message的长度为7个字母，也就是56byte 换算成16进制是0x38</p>
+<p>即：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225150941043-1957370559.png"
+                      alt="image-20230225150939934"
+                ></p>
+<p>3、初始化状态</p>
+<p>md5使用四个32为寄存器（A,B,C,D）保存中间运算结果，初始值为常量，具体来说，A,B,C,D的初始值如下：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">A = 0x67452301</span><br><span class="line">B = 0xEFCDAB89</span><br><span class="line">C = 0x98BADCFE</span><br><span class="line">D = 0x10325476</span><br></pre></td></tr></table></figure></div>
+
+<p>4、分组处理进行复杂函数处理</p>
+<p>将填充后的消息分为若干个512位的消息块。对于每个消息块，MD5算法执行四轮循环，每轮循环包含16次操作，共计64次操作。每次操作都使用一个消息块中的32位字作为输入，对寄存器A、B、C、D进行修改，最终输出新的A、B、C、D的值。</p>
+<p>也就是说第一个数据块与初始向量进行四轮循环，生成第一个新的字符串，保存在寄存器A,B,C,D中，寄存器继续与第二个数据块进行运算，直到最后一个数据块。</p>
+<p>其过程可以理解为：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226120409339-1591078397.png"
+                      alt="image-20230226120409357"
+                ></p>
+<p>5、结果的输出</p>
+<p>假设最终生成的寄存器的值是：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">A=0xab45bc01</span><br><span class="line">B=0x6a64bb53</span><br><span class="line">C=0x23ba8afe</span><br><span class="line">D=0x46847a62</span><br></pre></td></tr></table></figure></div>
+
+<p>先两两一组进行组合，得到下面的数据</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">ab 45 bc 01</span><br><span class="line">6a 64 bb 53</span><br><span class="line">23 ba 8a fe</span><br><span class="line">46 84 7a 62</span><br></pre></td></tr></table></figure></div>
+
+<p>在进行高低位互换：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">01 bc 45 ab</span><br><span class="line">53 bb 64 6a</span><br></pre></td></tr></table></figure></div>
+
+<p>最终拼接在一起就能够得到md5的值</p>
+<p>这就是md5加密的大概过程</p>
+<p>下面这是网上找来的流程图：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225153857754-2115571783.png"
+                      alt="image-20230225153856884"
+                ></p>
+<p>下面是我按自己的理解搞得一个流程图：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226120429029-1609748710.png"
+                      alt="image-20230226120429193"
+                ></p>
+<h2 id="三、hash长度拓展攻击逻辑分析"><a href="#三、hash长度拓展攻击逻辑分析" class="headerlink" title="三、hash长度拓展攻击逻辑分析"></a>三、hash长度拓展攻击逻辑分析</h2><p>上面我们对md5的加密流程进行了大概的分析</p>
+<p>下面我们通过md5的加密流程对hash长度拓展攻击逻辑进行分析</p>
+<p>我们这里通过一道题目进行分析：</p>
+<p>这是22年12月举办的铁三信息安全比赛的一道原题：</p>
+<p>代码：</p>
+<div class="highlight-container" data-rel="Php"><figure class="iseeu highlight php"><table><tr><td class="code"><pre><span class="line"> <span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">error_reporting</span>(<span class="number">0</span>);</span><br><span class="line"><span class="keyword">include</span> <span class="string">&quot;flag.php&quot;</span>;</span><br><span class="line"><span class="variable">$user</span> = <span class="variable">$_POST</span>[<span class="string">&#x27;user&#x27;</span>];</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">encrypt</span>(<span class="params"><span class="variable">$text</span></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">global</span> <span class="variable">$key</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="title function_ invoke__">md5</span>(<span class="variable">$key</span> . <span class="variable">$text</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (<span class="title function_ invoke__">encrypt</span>(<span class="variable">$user</span>) === <span class="variable">$_COOKIE</span>[<span class="string">&#x27;verify&#x27;</span>]) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="title function_ invoke__">is_numeric</span>(<span class="title function_ invoke__">strpos</span>(<span class="variable">$user</span>, <span class="string">&#x27;root&#x27;</span>))) &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="variable">$flag</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="string">&#x27;not root！！！&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="title function_ invoke__">setcookie</span>(<span class="string">&quot;verify&quot;</span>, <span class="title function_ invoke__">encrypt</span>(<span class="string">&quot;guest&quot;</span>), <span class="title function_ invoke__">time</span>() + <span class="number">60</span> * <span class="number">60</span> * <span class="number">24</span>);</span><br><span class="line">    <span class="title function_ invoke__">setcookie</span>(<span class="string">&quot;len&quot;</span>, <span class="title function_ invoke__">strlen</span>(<span class="variable">$key</span>), <span class="title function_ invoke__">time</span>() + <span class="number">60</span> * <span class="number">60</span> * <span class="number">24</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_ invoke__">highlight_file</span>(<span class="keyword">__FILE__</span>);</span><br><span class="line"><span class="meta">?&gt;</span> </span><br></pre></td></tr></table></figure></div>
+
+<p>这里可以看到</p>
+<p>获得flag的条件：</p>
+<div class="highlight-container" data-rel="Php"><figure class="iseeu highlight php"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="title function_ invoke__">encrypt</span>(<span class="variable">$user</span>) === <span class="variable">$_COOKIE</span>[<span class="string">&#x27;verify&#x27;</span>]) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="title function_ invoke__">is_numeric</span>(<span class="title function_ invoke__">strpos</span>(<span class="variable">$user</span>, <span class="string">&#x27;root&#x27;</span>))) &#123;</span><br></pre></td></tr></table></figure></div>
+
+<p>我们输入的user经过md5加密后要与cookie里面的vefify相等，并且在输入的user里面要有root</p>
+<p>看一下响应包：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225231719455-581312355.png"
+                      alt="image-20230225231719067"
+                ></p>
+<p>可以得到hash(secert+guest)的值为382441859bb6709d0d9fa11ef3c255b9，secert的长度为13</p>
+<p>那我们这里重复一下md5加密的流程：</p>
+<p>首先是数据填充：（这里假设secret是13个A）</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225232048100-1772008931.png"
+                      alt="image-20230225232048215"
+                ></p>
+<p>然后进行原始消息数据填充</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225232735328-883346498.png"
+                      alt="image-20230225232735247"
+                ></p>
+<p>18个字符，144byte 转换为16进制表示为0x90</p>
+<p>后面就是将填充后的消息分成若干个512位的位块，然后与初始向量进行四轮循环运算，这里不再详细讲，</p>
+<p>直到最后一个数据块与寄存器中的向量值进行四轮损害运算，得到最终向量值(A’,B’,C’,D’),在经过高低位运算就可以得到最终的md5加密的hash值。</p>
+<p>那么我们回到题目，通过响应包我们可以得到hash(secret+guest)的值382441859bb6709d0d9fa11ef3c255b9</p>
+<p>那我们可以推出最后得到向量值为：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">A&#x27;=0x85412438</span><br><span class="line">B&#x27;=0x9d70b69b</span><br><span class="line">C&#x27;=0x1ea19f0d</span><br><span class="line">D&#x27;=0xb955c2f3</span><br></pre></td></tr></table></figure></div>
+
+<p>题目要求要匹配到root，但是我们并不知道secret，所以这里可以使用hash长度拓展攻击</p>
+<p>首先我们把要添加的数据添加上去</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225234731691-1474411680.png"
+                      alt="image-20230225234731479"
+                ></p>
+<p>根据md5填充规则进行填充：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230225234847533-283931689.png"
+                      alt="image-20230225234847560"
+                ></p>
+<p>去掉前面的我们假设的secret给去除掉，可以得到</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">guest\0x80\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00\0x00....\0x00\0x00\0x00\0x00\0x00\0x00\0x90\0x00\0x00\0x00\0x00\0x00\0x00\0x00root</span><br></pre></td></tr></table></figure></div>
+
+<p>进行url编码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">guest%00x80%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00..x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x00%00x90%00x00%00x00%00x00%00x00%00x00%00x00%00x00root</span><br></pre></td></tr></table></figure></div>
+
+<p>这里我们虽然通过添加的方法使得字符串中有了root，但是由于我们并不知道secret，导致我们并没有办法计算出md5加密后hash值。但是由于我们实在hash(secret+guest)的hash值，但是我们这里填加了数据，所以导致还要再进行一轮运算，那么我们就可以再不知道secret的情况下计算出正确的md5加密的hash值。</p>
+<p>这里我们上面计算出了最后一轮加密的向量值为：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">A&#x27;=0x85412438</span><br><span class="line">B&#x27;=0x9d70b69b</span><br><span class="line">C&#x27;=0x1ea19f0d</span><br><span class="line">D&#x27;=0xb955c2f3</span><br></pre></td></tr></table></figure></div>
+
+<p>由于我们添加了新的字符串，导致分组时分的数据块会增加，那么hash(secret+guest)的值并不是我们最终要得到的md5值，而是做完向量串继续与后面新增加的数据块进行运算，那么这样的话我们就可以再不知道secret的情况下获得md5加密的hash值。</p>
+<p>但是这个计算式非常复杂的，我们这里使用找到的脚本进行计算：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">my_md5.py：</span><br><span class="line">#!/usr/bin/env python</span><br><span class="line"># -*- coding: utf-8 -*-</span><br><span class="line"># @Author：DshtAnger</span><br><span class="line"># theory reference:</span><br><span class="line">#   blog：</span><br><span class="line">#       http://blog.csdn.net/adidala/article/details/28677393</span><br><span class="line">#       http://blog.csdn.net/forgotaboutgirl/article/details/7258109</span><br><span class="line">#       http://blog.sina.com.cn/s/blog_6fe0eb1901014cpl.html</span><br><span class="line">#   RFC1321：</span><br><span class="line">#       https://www.rfc-editor.org/rfc/pdfrfc/rfc1321.txt.pdf</span><br><span class="line">##############################################################################</span><br><span class="line">import sys</span><br><span class="line">def genMsgLengthDescriptor(msg_bitsLenth):</span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    ---args:</span><br><span class="line">            msg_bitsLenth : the bits length of raw message</span><br><span class="line">    --return:</span><br><span class="line">            16 hex-encoded string , i.e.64bits,8bytes which used to describe the bits length of raw message added after padding</span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    return __import__(&quot;struct&quot;).pack(&quot;&gt;Q&quot;,msg_bitsLenth).encode(&quot;hex&quot;)</span><br><span class="line"></span><br><span class="line">def reverse_hex_8bytes(hex_str):</span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    --args:</span><br><span class="line">            hex_str: a hex-encoded string with length 16 , i.e.8bytes</span><br><span class="line">    --return:</span><br><span class="line">            transform raw message descriptor to little-endian </span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    hex_str = &quot;%016x&quot;%int(hex_str,16)</span><br><span class="line">    assert len(hex_str)==16    </span><br><span class="line">    return __import__(&quot;struct&quot;).pack(&quot;&lt;Q&quot;,int(hex_str,16)).encode(&quot;hex&quot;)</span><br><span class="line"></span><br><span class="line">def reverse_hex_4bytes(hex_str):</span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    --args:</span><br><span class="line">            hex_str: a hex-encoded string with length 8 , i.e.4bytes</span><br><span class="line">    --return:</span><br><span class="line">            transform 4 bytes message block to little-endian</span><br><span class="line">    &#x27;&#x27;&#x27;    </span><br><span class="line">    hex_str = &quot;%08x&quot;%int(hex_str,16)</span><br><span class="line">    assert len(hex_str)==8    </span><br><span class="line">    return __import__(&quot;struct&quot;).pack(&quot;&lt;L&quot;,int(hex_str,16)).encode(&quot;hex&quot;)</span><br><span class="line"></span><br><span class="line">def deal_rawInputMsg(input_msg):</span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    --args:</span><br><span class="line">            input_msg : inputed a ascii-encoded string</span><br><span class="line">    --return:</span><br><span class="line">            a hex-encoded string which can be inputed to mathematical transformation function.</span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    ascii_list = [x.encode(&quot;hex&quot;) for x in input_msg]</span><br><span class="line">    length_msg_bytes = len(ascii_list)</span><br><span class="line">    length_msg_bits = len(ascii_list)*8</span><br><span class="line">    #padding</span><br><span class="line">    ascii_list.append(&#x27;80&#x27;)  </span><br><span class="line">    while (len(ascii_list)*8+64)%512 != 0:  </span><br><span class="line">        ascii_list.append(&#x27;00&#x27;)</span><br><span class="line">    #add Descriptor</span><br><span class="line">    ascii_list.append(reverse_hex_8bytes(genMsgLengthDescriptor(length_msg_bits)))</span><br><span class="line">    return &quot;&quot;.join(ascii_list)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def getM16(hex_str,operatingBlockNum):</span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    --args:</span><br><span class="line">            hex_str : a hex-encoded string with length in integral multiple of 512bits</span><br><span class="line">            operatingBlockNum : message block number which is being operated , greater than 1</span><br><span class="line">    --return:</span><br><span class="line">            M : result of splited 64bytes into 4*16 message blocks with little-endian</span><br><span class="line"></span><br><span class="line">    &#x27;&#x27;&#x27;</span><br><span class="line">    M = [int(reverse_hex_4bytes(hex_str[i:(i+8)]),16) for i in xrange(128*(operatingBlockNum-1),128*operatingBlockNum,8)]</span><br><span class="line">    return M</span><br><span class="line"></span><br><span class="line">#定义函数，用来产生常数T[i]，常数有可能超过32位，同样需要&amp;0xffffffff操作。注意返回的是十进制的数</span><br><span class="line">def T(i):</span><br><span class="line">    result = (int(4294967296*abs(__import__(&quot;math&quot;).sin(i))))&amp;0xffffffff</span><br><span class="line">    return result   </span><br><span class="line"></span><br><span class="line">#定义每轮中用到的函数</span><br><span class="line">#RL为循环左移，注意左移之后可能会超过32位，所以要和0xffffffff做与运算，确保结果为32位</span><br><span class="line">F = lambda x,y,z:((x&amp;y)|((~x)&amp;z))</span><br><span class="line">G = lambda x,y,z:((x&amp;z)|(y&amp;(~z)))</span><br><span class="line">H = lambda x,y,z:(x^y^z)</span><br><span class="line">I = lambda x,y,z:(y^(x|(~z)))</span><br><span class="line">RL = L = lambda x,n:(((x&lt;&lt;n)|(x&gt;&gt;(32-n)))&amp;(0xffffffff))</span><br><span class="line"></span><br><span class="line">def FF(a, b, c, d, x, s, ac):  </span><br><span class="line">    a = (a+F ((b), (c), (d)) + (x) + (ac)&amp;0xffffffff)&amp;0xffffffff;  </span><br><span class="line">    a = RL ((a), (s))&amp;0xffffffff;  </span><br><span class="line">    a = (a+b)&amp;0xffffffff  </span><br><span class="line">    return a  </span><br><span class="line">def GG(a, b, c, d, x, s, ac):  </span><br><span class="line">    a = (a+G ((b), (c), (d)) + (x) + (ac)&amp;0xffffffff)&amp;0xffffffff;  </span><br><span class="line">    a = RL ((a), (s))&amp;0xffffffff;  </span><br><span class="line">    a = (a+b)&amp;0xffffffff  </span><br><span class="line">    return a  </span><br><span class="line">def HH(a, b, c, d, x, s, ac):  </span><br><span class="line">    a = (a+H ((b), (c), (d)) + (x) + (ac)&amp;0xffffffff)&amp;0xffffffff;  </span><br><span class="line">    a = RL ((a), (s))&amp;0xffffffff;  </span><br><span class="line">    a = (a+b)&amp;0xffffffff  </span><br><span class="line">    return a  </span><br><span class="line">def II(a, b, c, d, x, s, ac):  </span><br><span class="line">    a = (a+I ((b), (c), (d)) + (x) + (ac)&amp;0xffffffff)&amp;0xffffffff;  </span><br><span class="line">    a = RL ((a), (s))&amp;0xffffffff;  </span><br><span class="line">    a = (a+b)&amp;0xffffffff  </span><br><span class="line">    return a      </span><br><span class="line"></span><br><span class="line">def show_md5(A,B,C,D):</span><br><span class="line">    return &quot;&quot;.join( [  &quot;&quot;.join(__import__(&quot;re&quot;).findall(r&quot;..&quot;,&quot;%08x&quot;%i)[::-1]) for i in (A,B,C,D)  ]  )</span><br><span class="line"></span><br><span class="line">def run_md5(A=0x67452301,B=0xefcdab89,C=0x98badcfe,D=0x10325476,readyMsg=&quot;&quot;):</span><br><span class="line"></span><br><span class="line">    a = A</span><br><span class="line">    b = B</span><br><span class="line">    c = C</span><br><span class="line">    d = D</span><br><span class="line"></span><br><span class="line">    for i in xrange(0,len(readyMsg)/128):</span><br><span class="line">        M = getM16(readyMsg,i+1)</span><br><span class="line">        for i in xrange(16):</span><br><span class="line">            exec &quot;M&quot;+str(i)+&quot;=M[&quot;+str(i)+&quot;]&quot;</span><br><span class="line">        #First round</span><br><span class="line">        a=FF(a,b,c,d,M0,7,0xd76aa478L)</span><br><span class="line">        d=FF(d,a,b,c,M1,12,0xe8c7b756L)</span><br><span class="line">        c=FF(c,d,a,b,M2,17,0x242070dbL)</span><br><span class="line">        b=FF(b,c,d,a,M3,22,0xc1bdceeeL)</span><br><span class="line">        a=FF(a,b,c,d,M4,7,0xf57c0fafL)</span><br><span class="line">        d=FF(d,a,b,c,M5,12,0x4787c62aL)</span><br><span class="line">        c=FF(c,d,a,b,M6,17,0xa8304613L)</span><br><span class="line">        b=FF(b,c,d,a,M7,22,0xfd469501L)</span><br><span class="line">        a=FF(a,b,c,d,M8,7,0x698098d8L)</span><br><span class="line">        d=FF(d,a,b,c,M9,12,0x8b44f7afL)</span><br><span class="line">        c=FF(c,d,a,b,M10,17,0xffff5bb1L)</span><br><span class="line">        b=FF(b,c,d,a,M11,22,0x895cd7beL)</span><br><span class="line">        a=FF(a,b,c,d,M12,7,0x6b901122L)</span><br><span class="line">        d=FF(d,a,b,c,M13,12,0xfd987193L)</span><br><span class="line">        c=FF(c,d,a,b,M14,17,0xa679438eL)</span><br><span class="line">        b=FF(b,c,d,a,M15,22,0x49b40821L)</span><br><span class="line">        #Second round</span><br><span class="line">        a=GG(a,b,c,d,M1,5,0xf61e2562L)</span><br><span class="line">        d=GG(d,a,b,c,M6,9,0xc040b340L)</span><br><span class="line">        c=GG(c,d,a,b,M11,14,0x265e5a51L)</span><br><span class="line">        b=GG(b,c,d,a,M0,20,0xe9b6c7aaL)</span><br><span class="line">        a=GG(a,b,c,d,M5,5,0xd62f105dL)</span><br><span class="line">        d=GG(d,a,b,c,M10,9,0x02441453L)</span><br><span class="line">        c=GG(c,d,a,b,M15,14,0xd8a1e681L)</span><br><span class="line">        b=GG(b,c,d,a,M4,20,0xe7d3fbc8L)</span><br><span class="line">        a=GG(a,b,c,d,M9,5,0x21e1cde6L)</span><br><span class="line">        d=GG(d,a,b,c,M14,9,0xc33707d6L)</span><br><span class="line">        c=GG(c,d,a,b,M3,14,0xf4d50d87L)</span><br><span class="line">        b=GG(b,c,d,a,M8,20,0x455a14edL)</span><br><span class="line">        a=GG(a,b,c,d,M13,5,0xa9e3e905L)</span><br><span class="line">        d=GG(d,a,b,c,M2,9,0xfcefa3f8L)</span><br><span class="line">        c=GG(c,d,a,b,M7,14,0x676f02d9L)</span><br><span class="line">        b=GG(b,c,d,a,M12,20,0x8d2a4c8aL)</span><br><span class="line">        #Third round</span><br><span class="line">        a=HH(a,b,c,d,M5,4,0xfffa3942L)</span><br><span class="line">        d=HH(d,a,b,c,M8,11,0x8771f681L)</span><br><span class="line">        c=HH(c,d,a,b,M11,16,0x6d9d6122L)</span><br><span class="line">        b=HH(b,c,d,a,M14,23,0xfde5380c)</span><br><span class="line">        a=HH(a,b,c,d,M1,4,0xa4beea44L)</span><br><span class="line">        d=HH(d,a,b,c,M4,11,0x4bdecfa9L)</span><br><span class="line">        c=HH(c,d,a,b,M7,16,0xf6bb4b60L)</span><br><span class="line">        b=HH(b,c,d,a,M10,23,0xbebfbc70L)</span><br><span class="line">        a=HH(a,b,c,d,M13,4,0x289b7ec6L)</span><br><span class="line">        d=HH(d,a,b,c,M0,11,0xeaa127faL)</span><br><span class="line">        c=HH(c,d,a,b,M3,16,0xd4ef3085L)</span><br><span class="line">        b=HH(b,c,d,a,M6,23,0x04881d05L)</span><br><span class="line">        a=HH(a,b,c,d,M9,4,0xd9d4d039L)</span><br><span class="line">        d=HH(d,a,b,c,M12,11,0xe6db99e5L)</span><br><span class="line">        c=HH(c,d,a,b,M15,16,0x1fa27cf8L)</span><br><span class="line">        b=HH(b,c,d,a,M2,23,0xc4ac5665L)</span><br><span class="line">        #Fourth round</span><br><span class="line">        a=II(a,b,c,d,M0,6,0xf4292244L)</span><br><span class="line">        d=II(d,a,b,c,M7,10,0x432aff97L)</span><br><span class="line">        c=II(c,d,a,b,M14,15,0xab9423a7L)</span><br><span class="line">        b=II(b,c,d,a,M5,21,0xfc93a039L)</span><br><span class="line">        a=II(a,b,c,d,M12,6,0x655b59c3L)</span><br><span class="line">        d=II(d,a,b,c,M3,10,0x8f0ccc92L)</span><br><span class="line">        c=II(c,d,a,b,M10,15,0xffeff47dL)</span><br><span class="line">        b=II(b,c,d,a,M1,21,0x85845dd1L)</span><br><span class="line">        a=II(a,b,c,d,M8,6,0x6fa87e4fL)</span><br><span class="line">        d=II(d,a,b,c,M15,10,0xfe2ce6e0L)</span><br><span class="line">        c=II(c,d,a,b,M6,15,0xa3014314L)</span><br><span class="line">        b=II(b,c,d,a,M13,21,0x4e0811a1L)</span><br><span class="line">        a=II(a,b,c,d,M4,6,0xf7537e82L)</span><br><span class="line">        d=II(d,a,b,c,M11,10,0xbd3af235L)</span><br><span class="line">        c=II(c,d,a,b,M2,15,0x2ad7d2bbL)</span><br><span class="line">        b=II(b,c,d,a,M9,21,0xeb86d391L)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        A += a</span><br><span class="line">        B += b</span><br><span class="line">        C += c</span><br><span class="line">        D += d</span><br><span class="line"></span><br><span class="line">        A = A&amp;0xffffffff</span><br><span class="line">        B = B&amp;0xffffffff</span><br><span class="line">        C = C&amp;0xffffffff</span><br><span class="line">        D = D&amp;0xffffffff</span><br><span class="line"></span><br><span class="line">        a = A</span><br><span class="line">        b = B</span><br><span class="line">        c = C</span><br><span class="line">        d = D</span><br><span class="line"></span><br><span class="line">    return show_md5(a,b,c,d)</span><br></pre></td></tr></table></figure></div>
+
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">exp.py</span><br><span class="line">#!/usr/bin/env python</span><br><span class="line"># -*- coding: utf-8 -*-</span><br><span class="line">import my_md5</span><br><span class="line">samplehash=&quot;382441859bb6709d0d9fa11ef3c255b9&quot;</span><br><span class="line">#将哈希值分为四段,并反转该四字节为小端序,作为64第二次循环的输入幻书</span><br><span class="line">s1=0x85412438</span><br><span class="line">s2=0x9d70b69b</span><br><span class="line">s3=0x1ea19f0d</span><br><span class="line">s4=0xb955c2f3</span><br><span class="line">#exp</span><br><span class="line">secret = &quot;A&quot;*13</span><br><span class="line">secret_admin = secret + &#x27;guest&#123;padding&#125;&#x27;</span><br><span class="line">padding = &#x27;\x80&#123;zero&#125;\xc8\x00\x00\x00\x00\x00\x00\x00&#x27;.format(zero=&quot;\x00&quot;*(64-15-10-1-8))</span><br><span class="line">secret_admin = secret_admin.format(padding=padding) + &#x27;root&#x27;</span><br><span class="line">r = my_md5.deal_rawInputMsg(secret_admin)</span><br><span class="line">inp = r[len(r)/2:] #我们需要截断的地方，也是我们需要控制的地方</span><br><span class="line">print &quot;getmein:&quot;+my_md5.run_md5(s1,s2,s3,s4,inp)</span><br></pre></td></tr></table></figure></div>
+
+<p>这里使用脚本没有计算出来，可能是自己哪里的配置有错误，但是脚本不知道怎么改，就只能使用其他师傅写好的工具去运算。</p>
+<p>流程图：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225406773-1972064902.png"
+                      alt="image-20230227225406242"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225415944-1485959466.png"
+                      alt="image-20230227225415932"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230227225430591-1723384646.png"
+                      alt="image-20230227225430350"
+                ></p>
+<h2 id="四、hashpump工具的安装与使用"><a href="#四、hashpump工具的安装与使用" class="headerlink" title="四、hashpump工具的安装与使用"></a>四、hashpump工具的安装与使用</h2><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/bwall/HashPump</span><br><span class="line">apt-get install g++ libssl-dev</span><br><span class="line">cd HashPump</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure></div>
+
+<p>使用方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226001051474-1347763831.png"
+                      alt="image-20230226001051157"
+                ></p>
+<p>那么我们回到题目进行验证：</p>
+<p>进行url编码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">guest%80%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%90%00%00%00%00%00%00%00root</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://img2023.cnblogs.com/blog/2794407/202302/2794407-20230226001236185-100270824.png"
+                      alt="image-20230226001235963"
+                ></p>
+<p>可以看到以及攻击成功了。</p>
+<h2 id="五、防御方法"><a href="#五、防御方法" class="headerlink" title="五、防御方法"></a>五、防御方法</h2><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">以下是一些防御哈希长度拓展攻击的方法：</span><br><span class="line"></span><br><span class="line">    1、使用加盐（Salting）技术</span><br><span class="line"></span><br><span class="line">加盐技术是将一个随机字符串添加到原始数据之后，再进行哈希计算。由于加盐字符串是随机的，攻击者无法通过已知的哈希值推算出加盐字符串的内容，从而无法利用哈希长度拓展攻击。加盐技术是防御哈希长度拓展攻击的常见方法。</span><br><span class="line"></span><br><span class="line">    2、使用不可逆加密算法</span><br><span class="line"></span><br><span class="line">不可逆加密算法将原始数据转换为不可逆的密文，防止攻击者通过逆向计算推算出原始数据。相比哈希算法，不可逆加密算法的计算复杂度更高，从而更加安全。</span><br><span class="line"></span><br><span class="line">    3、使用HMAC技术</span><br><span class="line"></span><br><span class="line">HMAC是一种基于哈希算法的消息认证码技术，它将密钥与消息进行混合计算，生成一个认证码，以此保证消息的完整性和真实性。HMAC技术可以在保证消息认证的同时，防止哈希长度拓展攻击。</span><br><span class="line"></span><br><span class="line">    4、使用较长的哈希值</span><br><span class="line"></span><br><span class="line">较长的哈希值可以增加哈希长度拓展攻击的难度，因为攻击者需要计算更多的哈希值才能找到一个合法的哈希值。SHA-512和SHA-3等哈希算法提供了较长的哈希值选项。</span><br><span class="line"></span><br><span class="line">    5、使用加密哈希算法</span><br><span class="line"></span><br><span class="line">加密哈希算法是一种特殊的哈希算法，它在计算哈希值的同时，还将密钥混合到哈希值中，从而保证了哈希值的安全性和不可逆性。常见的加密哈希算法包括HMAC-SHA256和bcrypt等。</span><br></pre></td></tr></table></figure></div>
+
+]]></content>
+      <tags>
+        <tag>JAVA</tag>
+      </tags>
+  </entry>
 </search>
