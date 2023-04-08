@@ -12,7 +12,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202303/2794407-20230331150932626-442742960.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230331150932626-442742960.png"
                       alt="image-20230331150932629"
                 ></p>
 <p> RMI 客户端在调用远程方法时会先创建一个stub(sun.rmi.registry.RegistryImpl_Stub)也称为存根,Stub是RMI client的代理对象，Stub的主要功能是请求远程方法时构造一个信息块，然后通过RMI机制发送给客户端。</p>
@@ -45,7 +45,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202304/2794407-20230406172913133-1458454200.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230406172913133-1458454200.png"
                       alt="image-20230406172910934"
                 ></p>
 <p>2、RMITestImpl()类的实现</p>
@@ -81,7 +81,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://img2023.cnblogs.com/blog/2794407/202304/2794407-20230406172955540-213647078.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230406172955540-213647078.png"
                       alt="image-20230406172954315"
                 ></p>
 <h3 id="四、关于RMI实现代码和RMI机制的对照。"><a href="#四、关于RMI实现代码和RMI机制的对照。" class="headerlink" title="四、关于RMI实现代码和RMI机制的对照。"></a>四、关于RMI实现代码和RMI机制的对照。</h3><p>通过上面的学习我们可以知道Skeleton是RMI 服务器端用于接收远程方法地调用请求并将其转发到相应远程对象地中间件，skeleton通过解组远程方法调用请求，调用相应地远程对象方法，然后将结果打包发送回客户端。</p>
@@ -99,26 +99,6 @@
     <title>JAVA RMI</title>
     <url>/2023/04/08/JAVA-RMI/</url>
     <content><![CDATA[]]></content>
-      <tags>
-        <tag>JAVA</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>test</title>
-    <url>/2023/04/08/test/</url>
-    <content><![CDATA[<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230408132441638.png"
-                      alt="image-20230408132441638"
-                ></p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230408142514248.png"
-                      alt="image-20230408142514248"
-                ></p>
-]]></content>
       <tags>
         <tag>JAVA</tag>
       </tags>
