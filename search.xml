@@ -509,7 +509,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230707140718684.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230707140718684.png"
                       alt="image-20230707140718684"
                 ></p>
 <p>由上面例子我们可以得到实例化对象f.__proto__和F.prototype，是相等的，都是等于object</p>
