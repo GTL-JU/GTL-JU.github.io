@@ -358,7 +358,7 @@
   <entry>
     <title>从Javascript原型链污染到python原型链污染1</title>
     <url>/2023/07/10/%E4%BB%8EJavascript%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%B0python%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%931/</url>
-    <content><![CDATA[<h3 id="一、javascript原型链污染"><a href="#一、javascript原型链污染" class="headerlink" title="一、javascript原型链污染"></a>一、javascript原型链污染</h3><h4 id="1、proto-和-prototype"><a href="#1、proto-和-prototype" class="headerlink" title="1、proto 和 prototype"></a>1、<strong>proto</strong> 和 prototype</h4><p>关于proto和prototype是javascript中两个重要的属性，我们要想要搞明白javascript的原型链污染，首先要明白proto和prototype。</p>
+    <content><![CDATA[<h4 id="一、javascript原型链污染"><a href="#一、javascript原型链污染" class="headerlink" title="一、javascript原型链污染"></a>一、javascript原型链污染</h4><h4 id="1、proto-和-prototype"><a href="#1、proto-和-prototype" class="headerlink" title="1、proto 和 prototype"></a>1、<strong>proto</strong> 和 prototype</h4><p>关于proto和prototype是javascript中两个重要的属性，我们要想要搞明白javascript的原型链污染，首先要明白proto和prototype。</p>
 <p>这里粘一张图，帮助大家更好理解：</p>
 <p><img  
                      lazyload
