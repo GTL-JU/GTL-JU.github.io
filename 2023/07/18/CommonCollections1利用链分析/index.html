@@ -26,51 +26,52 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="一、前言前面分析了URLDNS利用链，cc1这条链的难度与urldns相比真的难了很多，从开始分析到写完这篇文章花了三四天的时间，但是这条链相比与urldns学到了更多。 Apache Commons Collections是一个第三方的基础类库，它提供了许多功能强大的数据结构类型，并实现了各种集合工具类。作为Apache开源项目的重要组件，CommonsCollections1是指反序列化攻击中">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718200432685.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718200900265.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718200937261.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717104959679.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717105102698.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717105219304.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717105237111.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717110046541.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717113328116.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717121345208.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717162322837.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717162734633.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717163607591.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717165156184.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717165225350.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717165241778.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717165931967.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717172439183.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717182239367.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717182857346.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717203423697.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717210035063.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718101622716.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718101940622.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718102530567.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718103552703.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718103719820.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718110327568.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718110424089.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718115431082.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718121037838.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718121215884.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718121513387.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718121636115.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718122743403.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718122921778.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718123411905.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718175625223.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718194203547.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718200432685.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718200900265.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718200937261.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717104959679.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717105102698.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717105219304.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717105237111.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717110046541.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717113328116.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717121345208.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717162322837.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717162734633.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717163607591.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717165156184.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717165225350.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717165241778.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717165931967.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717172439183.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717182239367.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717182857346.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717203423697.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717210035063.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718101622716.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718101940622.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718102530567.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718103552703.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718103719820.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718110327568.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718110424089.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718115431082.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718121037838.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718121215884.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718121513387.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718121636115.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718122743403.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718122921778.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718123411905.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718175625223.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718194203547.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718202413139.png">
 <meta property="article:published_time" content="2023-07-18T12:16:39.000Z">
-<meta property="article:modified_time" content="2023-07-18T12:17:13.337Z">
+<meta property="article:modified_time" content="2023-07-18T12:24:54.083Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="java">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718200432685.png">
+<meta name="twitter:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718200432685.png">
     
     <!--- Icon Part-->
     <link rel="icon" type="image/png" href="/images/logo.png" sizes="192x192">
@@ -439,8 +440,8 @@
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2023-07-18 20:17:13</span>
-            <span class="mobile">2023-07-18 20:17</span>
+            <span class="desktop">2023-07-18 20:24:54</span>
+            <span class="mobile">2023-07-18 20:24</span>
             <span class="hover-info">更新</span>
         </span>
     
@@ -462,7 +463,7 @@
     
     
         <span class="article-wordcount article-meta-item">
-            <i class="fa-regular fa-typewriter"></i>&nbsp;<span>7.1k 字</span>
+            <i class="fa-regular fa-typewriter"></i>&nbsp;<span>7.2k 字</span>
         </span>
     
     
@@ -487,7 +488,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718200432685.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718200432685.png"
                       alt="image-20230718200432685"
                 ></p>
 <p>我们这里分析的都是反编译的代码，在Java中有一部分文件的源码是无法看到的，只能查看该文件的class文件，这里就可以用开源java代码进行替换</p>
@@ -497,14 +498,14 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718200900265.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718200900265.png"
                       alt="image-20230718200900265"
                 ></p>
 <p>然后打开项目结构-&gt;sdk</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718200937261.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718200937261.png"
                       alt="image-20230718200937261"
                 ></p>
 <p>将源码添加进去</p>
@@ -532,7 +533,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717104959679.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717104959679.png"
                       alt="image-20230717104959679"
                 ></p>
 <p>可以看到正常执行了运行计算器程序的命令</p>
@@ -540,7 +541,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717105102698.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717105102698.png"
                       alt="image-20230717105102698"
                 ></p>
 <p>首先是InvokerTransformer类的构造方法接受我们传进去的参数然后进行赋值</p>
@@ -556,14 +557,14 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717105219304.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717105219304.png"
                       alt="image-20230717105219304"
                 ></p>
 <p>变量值：</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717105237111.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717105237111.png"
                       alt="image-20230717105237111"
                 ></p>
 <p>通过这个变量值我们可以看到这里同样是获取到类对象，然后获取相应的方法，然后调用invoke去执行打开计算器的命令。</p>
@@ -573,7 +574,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717110046541.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717110046541.png"
                       alt="image-20230717110046541"
                 ></p>
 <p>通过查找调用我们可以看到很多方法里面都调用了transform方法</p>
@@ -599,7 +600,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717113328116.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717113328116.png"
                       alt="image-20230717113328116"
                 ></p>
 <p>那么按照上面的分析我们可以写出我们这部分的POC：</p>
@@ -611,7 +612,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717121345208.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717121345208.png"
                       alt="image-20230717121345208"
                 ></p>
 <p>可以看到这个只有AbstractInputCheckedMapDecorator类中的 setValue方法符合我们的要求</p>
@@ -619,7 +620,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717162322837.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717162322837.png"
                       alt="image-20230717162322837"
                 ></p>
 <p>跟进setValue方法</p>
@@ -630,7 +631,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717162734633.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717162734633.png"
                       alt="image-20230717162734633"
                 ></p>
 <p>在前面我们通过decorate这个静态方法装饰了我们定义的map对象，那么我们只要遍历这个装饰过的map获得map.entry对象，就可以调用setvalue方法，那我们调用了setValue方法就能够执行checksetvalue的调用</p>
@@ -648,7 +649,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717163607591.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717163607591.png"
                       alt="image-20230717163607591"
                 ></p>
 <p>当我们获取到map.entry对象时，调用即执行到entry.setvalue()时，这里的entry是我们获取到的一个对象，其实就是我们经过装饰的transformedMap对象，但是transformedMap没有setvalue方法，那么就会调用父类里面的setvalue方法</p>
@@ -656,21 +657,21 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717165156184.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717165156184.png"
                       alt="image-20230717165156184"
                 ></p>
 <p>然后调用checkSetValue方法</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717165225350.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717165225350.png"
                       alt="image-20230717165225350"
                 ></p>
 <p>继续跟进：</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717165241778.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717165241778.png"
                       alt="image-20230717165241778"
                 ></p>
 <p>可以看到最终来到了transform进行命令执行</p>
@@ -679,7 +680,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717165931967.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717165931967.png"
                       alt="image-20230717165931967"
                 ></p>
 <p>可以看到我们在AnnotationInvocationHandler里面的readobject方法里面找到了对setValue的调用</p>
@@ -704,7 +705,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717172439183.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717172439183.png"
                       alt="image-20230717172439183"
                 ></p>
 <p>经过上面我们已经将构造的transformedMap传进了AnnotationInvocationHandler的实例化对象中</p>
@@ -719,7 +720,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717182239367.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717182239367.png"
                       alt="image-20230717182239367"
                 ></p>
 <p>没有实现序列化接口说明这里不能够进行序列化</p>
@@ -729,7 +730,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717182857346.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717182857346.png"
                       alt="image-20230717182857346"
                 ></p>
 <p>我们可以看到这个是可以实例化的，他继承了序列化接口</p>
@@ -747,7 +748,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717203423697.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717203423697.png"
                       alt="image-20230717203423697"
                 ></p>
 <p>那么通过ChainedTransformer()实现就是：</p>
@@ -760,7 +761,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717210035063.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230717210035063.png"
                       alt="image-20230717210035063"
                 ></p>
 <p>可以看到第一个if要求memberType不为空，但是根据变量值我们可以看到这里的memberType的值是空的，那么说明我们根本就没有走到setvalue</p>
@@ -779,14 +780,14 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718101622716.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718101622716.png"
                       alt="image-20230718101622716"
                 ></p>
 <p>那么我们想要memberType不为空，那么我输入的hashmap中的key要在注解中存在。</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718101940622.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718101940622.png"
                       alt="image-20230718101940622"
                 ></p>
 <p>那么我们这里可以使用@Retention注解</p>
@@ -802,7 +803,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718102530567.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718102530567.png"
                       alt="image-20230718102530567"
                 ></p>
 <p>我们修改后的hashmap中的key值在注解中存在。那获取注解键值对对应的值就不会为空了。</p>
@@ -815,7 +816,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718103552703.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718103552703.png"
                       alt="image-20230718103552703"
                 ></p>
 <h3 id="解决setValue传入值不可控问题"><a href="#解决setValue传入值不可控问题" class="headerlink" title="解决setValue传入值不可控问题"></a>解决setValue传入值不可控问题</h3><p>出现报错的原因就是因为我们前面说的setvalue传入值不可控的问题</p>
@@ -823,7 +824,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718103719820.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718103719820.png"
                       alt="image-20230718103719820"
                 ></p>
 <p>但是这里我们明显是不可控的</p>
@@ -847,14 +848,14 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718110327568.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718110327568.png"
                       alt="image-20230718110327568"
                 ></p>
 <p>这里传入一个对象并赋值给 <code>iConstant</code></p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718110424089.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718110424089.png"
                       alt="image-20230718110424089"
                 ></p>
 <p>第二个方法<code>transform</code> ，接收一个对象，然后直接返回 <code>iConstant</code>。</p>
@@ -870,7 +871,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718115431082.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718115431082.png"
                       alt="image-20230718115431082"
                 ></p>
 <p>计算机程序打开成功了，那么到这里我们这条链就已经构造完了</p>
@@ -884,14 +885,14 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718121037838.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718121037838.png"
                       alt="image-20230718121037838"
                 ></p>
 <p>跟进到LazyMap的get方法</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718121215884.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718121215884.png"
                       alt="image-20230718121215884"
                 ></p>
 <p>我们可以看到这里factory调用了transform方法，key是get方法传入的，是可控的</p>
@@ -899,7 +900,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718121513387.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718121513387.png"
                       alt="image-20230718121513387"
                 ></p>
 <p>在LazyMap的构造方法中找到了factory的传参</p>
@@ -908,7 +909,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718121636115.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718121636115.png"
                       alt="image-20230718121636115"
                 ></p>
 <p>可以看到这里有一个静态方法decorate调用了Lazymap的构造方法，，并且参数完全可控</p>
@@ -922,14 +923,14 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718122743403.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718122743403.png"
                       alt="image-20230718122743403"
                 ></p>
 <p>在很对类中都调用了get方法，我们这条链用的是AnnotationInvocationHandler类中的invoke方法</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718122921778.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718122921778.png"
                       alt="image-20230718122921778"
                 ></p>
 <p>这里的memberValues调用了get方法</p>
@@ -940,7 +941,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718123411905.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718123411905.png"
                       alt="image-20230718123411905"
                 ></p>
 <p>可以发现这里并没有调用关系，找到的都是其他类里面的实现方法</p>
@@ -965,7 +966,7 @@
 <h3 id="Poc构造："><a href="#Poc构造：" class="headerlink" title="Poc构造："></a>Poc构造：</h3><p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718175625223.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718175625223.png"
                       alt="image-20230718175625223"
                 ></p>
 <p>AnnotationInvocationHandler类以及实现了InvocationHandler接口，那我们可以使用动态代理去代理LazMap对象，因为动态代理类都需要传入一个实现了InvocationHandler接口的类，并且这个类要重写一个<code>invoke()</code>方法，而当动态代理类的代理对象调用任意方法的时候，就会进入到这个实现了InvocationHandler接口的类中的<code>invoke()</code>方法。</p>
@@ -984,9 +985,16 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718194203547.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718194203547.png"
                       alt="image-20230718194203547"
                 ></p>
+<p>最后在这里贴一张两条链的利用链的流程图做一个总结吧。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230718202413139.png"
+                      alt="image-20230718202413139"
+                >)</p>
 
             </div>
 
@@ -999,7 +1007,7 @@
         <li><strong>创建于:</strong> 2023-07-18 20:16:39</li>
         
             <li>
-                <strong>更新于:</strong> 2023-07-18 20:17:13
+                <strong>更新于:</strong> 2023-07-18 20:24:54
             </li>
         
         <li>
