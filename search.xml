@@ -2611,7 +2611,8 @@
   <entry>
     <title>python沙箱逃逸</title>
     <url>/2023/07/20/python%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/</url>
-    <content><![CDATA[<h1 id="python沙箱逃逸"><a href="#python沙箱逃逸" class="headerlink" title="python沙箱逃逸"></a>python沙箱逃逸</h1><h1 id="一、关于沙箱逃逸"><a href="#一、关于沙箱逃逸" class="headerlink" title="一、关于沙箱逃逸"></a>一、关于沙箱逃逸</h1><p>我们先了解一下什么是沙箱？</p>
+    <content><![CDATA[<h1 id="python沙箱逃逸"><a href="#python沙箱逃逸" class="headerlink" title="python沙箱逃逸"></a>python沙箱逃逸</h1><p>在国赛线下赛遇到了python沙箱逃逸的题目，之前在python这块接触的不是很多，这篇文章算是对python沙箱逃逸进行了学习，对着网上师傅的文章进行了复现和学习。文章链接放在文章末了。</p>
+<h1 id="一、关于沙箱逃逸"><a href="#一、关于沙箱逃逸" class="headerlink" title="一、关于沙箱逃逸"></a>一、关于沙箱逃逸</h1><p>我们先了解一下什么是沙箱？</p>
 <p>沙箱是一种安全机制，用于隔离和限制应用程序或代码的行为。它创建了一个受限的环境，以防止恶意代码对系统造成损害。沙箱通常用于执行不受信任的代码，如浏览器中的JavaScript或其他不受信任的应用程序。它们限制了代码的权限和访问能力，以确保其不能对底层系统或其他应用程序造成危害。</p>
 <p>所以说沙箱逃逸就是要突破沙箱，绕过各种过滤和限制，最终可以执行系统任意命令，写文件或者读取文件。</p>
 <h1 id="二、如何沙箱逃逸"><a href="#二、如何沙箱逃逸" class="headerlink" title="二、如何沙箱逃逸"></a>二、如何沙箱逃逸</h1><h2 id="导入模块"><a href="#导入模块" class="headerlink" title="导入模块"></a>导入模块</h2><p>我们先了解一下python导入模块的机制：</p>
@@ -2656,7 +2657,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720094745117.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720094745117.png"
                       alt="image-20230720094745117"
                 ></p>
 <p>当然我们也可以通过这种方法导入os模块</p>
@@ -2665,7 +2666,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720100115779.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720100115779.png"
                       alt="image-20230720100115779"
                 ></p>
 <p>但是这种方法只能在python2中使用python3中删除了这个函数</p>
@@ -2678,7 +2679,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720100721603.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720100721603.png"
                       alt="image-20230720100721603"
                 ></p>
 <p>这种方法实在python2和python3中都适用的</p>
@@ -2695,7 +2696,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720103821930.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720103821930.png"
                       alt="image-20230720103821930"
                 ></p>
 <p>这样来通过一个例子来进行演示：</p>
@@ -2704,7 +2705,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720104027703.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720104027703.png"
                       alt="image-20230720104027703"
                 ></p>
 <p>可以看到我们成功突破了沙箱的限制</p>
@@ -2714,7 +2715,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720104348087.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720104348087.png"
                       alt="image-20230720104348087"
                 ></p>
 <p>当然我们也可以逆序配合eval和exec来使用</p>
@@ -2732,7 +2733,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720114616897.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720114616897.png"
                       alt="image-20230720114616897"
                 ></p>
 <p>那这种方式我们几乎所有的字符串都可以构造</p>
@@ -2758,7 +2759,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720194250429.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720194250429.png"
                       alt="image-20230720194250429"
                 ></p>
 <h3 id="过滤数字"><a href="#过滤数字" class="headerlink" title="过滤数字"></a>过滤数字</h3><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">0:int(bool([]))、Flase、len([])、any(())</span><br><span class="line">1:int(bool([&quot;&quot;]))、True、all(())、int(list(list(dict(a၁=())).pop()).pop())</span><br><span class="line"></span><br><span class="line">len(str(&#123;&#125;.keys)) 但是需要找长度合适的字符串</span><br><span class="line"></span><br><span class="line">1.0 float(True)</span><br><span class="line"></span><br><span class="line">-1：~0</span><br><span class="line">其实通过0就可以构造出所有</span><br><span class="line">0 ** 0 == 1</span><br><span class="line">1 + 1 == 2</span><br><span class="line">2 + 1 == 3</span><br><span class="line">2 ** 2 == 4</span><br></pre></td></tr></table></figure></div>
@@ -2775,7 +2776,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720122459683.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720122459683.png"
                       alt="image-20230720122459683"
                 ></p>
 <p>上面我们用的是替换模块值，那我们这里直接用del删除了试试</p>
@@ -2785,7 +2786,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720122635251.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720122635251.png"
                       alt="image-20230720122635251"
                 ></p>
 <p>根据运行结果我们可以看到我们用了del sys.modules[‘os’] 命令可以执行成功</p>
@@ -2819,7 +2820,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720124505474.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720124505474.png"
                       alt="image-20230720124505474"
                 ></p>
 <p>那么这样的话，我们也可以通过这个手法来逃逸对import有限制的沙箱</p>
@@ -2839,7 +2840,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720151933663.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720151933663.png"
                       alt="image-20230720151933663"
                 ></p>
 <p>可以看到在这里面存在<code>__import__</code>、eval这些危险函数</p>
@@ -2855,7 +2856,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720153018926.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720153018926.png"
                       alt="image-20230720153018926"
                 ></p>
 <p>那么这样我们可以看到这个内置模块的存在很多危险函数</p>
@@ -2884,13 +2885,13 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720155649453.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720155649453.png"
                       alt="image-20230720155649453"
                 ></p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720155737200.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720155737200.png"
                       alt="image-20230720155737200"
                 ></p>
 <p>那么只要我们能够引入site，那么我们就可以使用os</p>
@@ -2899,7 +2900,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720160914809.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720160914809.png"
                       alt="image-20230720160914809"
                 ></p>
 <p>我们上面说了，所有类都继承于object类</p>
@@ -2913,7 +2914,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720161651311.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720161651311.png"
                       alt="image-20230720161651311"
                 ></p>
 <p>我们可以看到site也在里面</p>
@@ -2939,7 +2940,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720172906065.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720172906065.png"
                       alt="image-20230720172906065"
                 ></p>
 <p>我们可用通过多重寻找的方法获取os</p>
@@ -2950,7 +2951,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720173705814.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720173705814.png"
                       alt="image-20230720173705814"
                 ></p>
 <p>构造逃逸链POC：</p>
@@ -2959,7 +2960,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720174914294.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720174914294.png"
                       alt="image-20230720174914294"
                 ></p>
 <p>但是上面说的都是在python2中才能使用，python 3<code>warnings</code>中的<code>linecache</code>被删除了</p>
@@ -2968,7 +2969,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230720180216542.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230720180216542.png"
                       alt="image-20230720180216542"
                 ></p>
 <p>而且还存在一个os._wrap_close</p>
