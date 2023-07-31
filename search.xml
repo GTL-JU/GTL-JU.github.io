@@ -3253,7 +3253,7 @@
   <entry>
     <title>java动态加载字节码</title>
     <url>/2023/07/31/java%E5%8A%A8%E6%80%81%E5%8A%A0%E8%BD%BD%E5%AD%97%E8%8A%82%E7%A0%81/</url>
-    <content><![CDATA[<h1 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h1><p>在前面分析CC1和CC6利用链的时候，都是通过transform之间之间执行命令，但是在cc3中是通过动态类加载来实现自动执行恶意类的代码。然后这里在对cc3利用链分析前，先对java动态加载字节码进行一个学习。</p>
+    <content><![CDATA[<h1 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h1><p>在前面分析CC1和CC6利用链的时候，都是通过transform直接执行命令，但是在cc3中是通过动态类加载字节码来实现自动执行恶意类的代码。然后这里在对cc3利用链分析前，先对java动态加载字节码进行一个学习。</p>
 <h1 id="二、java字节码"><a href="#二、java字节码" class="headerlink" title="二、java字节码"></a>二、java字节码</h1><p>java字节码是java程序源代码经过编译器(javac)编译生成的中间代码，严格来说，它并不是本地机器代码，而是一种与平台无关的低级指令集。这些指令由java虚拟机（JVM）解释执行，使得java程序可以一次编写，随处执行。使得上层开发者只需将自己的代码编译一次，就可以运行在不同平台的JVM虚拟机中。</p>
 <p>我们写的java(.java)程序通过编译器编译成的就是字节码文件(.class)。</p>
 <div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class helloworld &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        System.out.println(&quot;hello,world&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
