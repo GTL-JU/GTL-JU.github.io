@@ -4099,7 +4099,7 @@
       </tags>
   </entry>
   <entry>
-    <title>CommonCollections4与CommonCollections利用链分析</title>
+    <title>CommonCollections4与CommonCollections2利用链分析</title>
     <url>/2023/09/08/cc4-cc2%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/</url>
     <content><![CDATA[<h1 id="CommonsCollections4"><a href="#CommonsCollections4" class="headerlink" title="CommonsCollections4"></a>CommonsCollections4</h1><h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>CC4这条利用链与前面不同的是用到了新的Commons-Collections4依赖库，我们在前面分析的CC1,3.6用的都是Commons-Collections库3.2.1的版本</p>
 <div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;commons-collections&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;commons-collections&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;3.2.1&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.apache.commons&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;commons-collections4&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;4.0&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure></div>
