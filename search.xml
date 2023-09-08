@@ -4100,7 +4100,7 @@
   </entry>
   <entry>
     <title>CommonCollections4与CommonCollections2利用链分析</title>
-    <url>/2023/09/08/cc4-cc2%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/</url>
+    <url>/2023/09/08/CommonCollections4%E4%B8%8ECommonCollections2%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/</url>
     <content><![CDATA[<h1 id="CommonsCollections4"><a href="#CommonsCollections4" class="headerlink" title="CommonsCollections4"></a>CommonsCollections4</h1><h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>CC4这条利用链与前面不同的是用到了新的Commons-Collections4依赖库，我们在前面分析的CC1,3.6用的都是Commons-Collections库3.2.1的版本</p>
 <div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;commons-collections&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;commons-collections&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;3.2.1&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.apache.commons&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;commons-collections4&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;4.0&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure></div>
 
@@ -4436,7 +4436,7 @@
   </entry>
   <entry>
     <title>zico2靶机打靶记录</title>
-    <url>/2023/09/08/zico2%20/</url>
+    <url>/2023/09/08/zico2%E9%9D%B6%E6%9C%BA%E6%89%93%E9%9D%B6%E8%AE%B0%E5%BD%95/</url>
     <content><![CDATA[<h2 id="一、漏洞平台搭建"><a href="#一、漏洞平台搭建" class="headerlink" title="一、漏洞平台搭建"></a>一、漏洞平台搭建</h2><p>我们下载得到的是一个ova后缀的文件，OVA 文件是一种打包格式，它将虚拟机的相关文件（如虚拟磁盘映像、虚拟机配置信息、操作系统镜像等）打包成一个单独的文件，以便于传输、分享和部署虚拟机。</p>
 <p>我这里可以直接通过kali导入这个靶场</p>
 <p><img  
