@@ -5146,7 +5146,7 @@
       </tags>
   </entry>
   <entry>
-    <title>DC-1打靶记录</title>
+    <title>DC-1靶机打靶记录</title>
     <url>/2023/09/09/DC-1%E6%89%93%E9%9D%B6%E8%AE%B0%E5%BD%95/</url>
     <content><![CDATA[<h1 id="一、靶机搭建"><a href="#一、靶机搭建" class="headerlink" title="一、靶机搭建"></a>一、靶机搭建</h1><p>靶机下载地址：<a class="link"   href="https://www.vulnhub.com/entry/dc-1,292/" >https://www.vulnhub.com/entry/dc-1,292/ <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
 <p>下载得到是一个ova文件</p>
