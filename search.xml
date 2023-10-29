@@ -6564,4 +6564,546 @@
         <tag>渗透-靶机-nezuko系列</tag>
       </tags>
   </entry>
+  <entry>
+    <title>jackson反序列化原理学习</title>
+    <url>/2023/10/29/jackson%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/</url>
+    <content><![CDATA[<h1 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h1><p>在之前的buu月赛中，遇到了一道使用jackson依赖打内存马的题，由于并没有学习过jackson反序列化漏洞，这里对这个漏洞进行学习，以便于后面的题目复现。</p>
+<h1 id="二、关于jackson"><a href="#二、关于jackson" class="headerlink" title="二、关于jackson"></a>二、关于jackson</h1><h2 id="1、jackson的介绍"><a href="#1、jackson的介绍" class="headerlink" title="1、jackson的介绍"></a>1、jackson的介绍</h2><p>Java生态圈中有很多处理JSON和XML格式化的类库， 常见的解析器：Jsonlib，Gson，fastjson，Jackson。Jackson是其中比较著名的一个，可以将Java对象序列化为XML或JSON格式的字符串，以及将XML或JSON格式的字符串反序列化为Java对象。并且jacksun的使用比较简单，速度快，且不依赖除JDK外的其他库。</p>
+<p>使用的依赖</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;com.fasterxml.jackson.core&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;jackson-databind&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;2.7.9&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;com.fasterxml.jackson.core&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;jackson-core&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;2.7.9&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;com.fasterxml.jackson.core&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;jackson-annotations&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;2.7.9&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure></div>
+
+<h2 id="2、使用jackson进行序列化和反序列化"><a href="#2、使用jackson进行序列化和反序列化" class="headerlink" title="2、使用jackson进行序列化和反序列化"></a>2、使用jackson进行序列化和反序列化</h2><p>在jackson中提供了<code>ObjectMapper.writeValueAsString()</code>和<code>ObjectMapper.readValue()</code>两个方法来进行序列化和反序列化，通过<code>ObjectMapper.writeValueAsString()</code>方法将java对象序列化为json格式数据，通过<code>ObjectMapper.readValue()</code>方法将json格式数据反序列化成java对象。</p>
+<p>下面我们通过一个demo来演示：</p>
+<p>定义一个Product类：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class Product &#123;</span><br><span class="line">    private String name;</span><br><span class="line">    private double price;</span><br><span class="line">    private String description;</span><br><span class="line"></span><br><span class="line">    public Product(String name, double price, String description) &#123;</span><br><span class="line">        this.name = name;</span><br><span class="line">        this.price = price;</span><br><span class="line">        this.description = description;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public  Product()&#123;&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    // Getters and Setters for the class properties</span><br><span class="line">    public String getName() &#123;</span><br><span class="line">        return name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setName(String name) &#123;</span><br><span class="line">        this.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public double getPrice() &#123;</span><br><span class="line">        return price;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setPrice(double price) &#123;</span><br><span class="line">        this.price = price;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return description;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setDescription(String description) &#123;</span><br><span class="line">        this.description = description;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String toString() &#123;</span><br><span class="line">        return &quot;Product&#123;&quot; +</span><br><span class="line">                &quot;name=&#x27;&quot; + name + &#x27;\&#x27;&#x27; +</span><br><span class="line">                &quot;, price=&quot; + price +</span><br><span class="line">                &quot;, description=&#x27;&quot; + description + &#x27;\&#x27;&#x27; +</span><br><span class="line">                &#x27;&#125;&#x27;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>测试类：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class test &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Product product=new Product(&quot;苹果&quot;,10,&quot;优质&quot;);</span><br><span class="line">        ObjectMapper objectMapper =new ObjectMapper();</span><br><span class="line">        String w = objectMapper.writeValueAsString(product);</span><br><span class="line">        System.out.println(&quot;这里是序列化:&quot;);</span><br><span class="line">        System.out.println(w);</span><br><span class="line">        Product r=objectMapper.readValue(w, Product.class);</span><br><span class="line">        System.out.println(&quot;这里是反序列化&quot;);</span><br><span class="line">        System.out.println(r);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231026153730007.png"
+                      alt="image-20231026153730007"
+                ></p>
+<h2 id="3、jackson中的多态问题"><a href="#3、jackson中的多态问题" class="headerlink" title="3、jackson中的多态问题"></a>3、jackson中的多态问题</h2><p>我们这里先了解一些java中的多态：</p>
+<p>多态是同一个行为具有多个不同表现形式或形态的能力。</p>
+<p>我们可以理解为同一个接口，使用不同的实例而执行不同操作。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2DAC601E-70D8-4B3C-86CC-7E4972FC2466.jpg"
+                      alt="img"
+                ></p>
+<p>这里以菜鸟教程的一个demo来更好的说明：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class Test &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">      show(new Cat());  // 以 Cat 对象调用 show 方法</span><br><span class="line">      show(new Dog());  // 以 Dog 对象调用 show 方法</span><br><span class="line">                </span><br><span class="line">      Animal a = new Cat();  // 向上转型  </span><br><span class="line">      a.eat();               // 调用的是 Cat 的 eat</span><br><span class="line">      Cat c = (Cat)a;        // 向下转型  </span><br><span class="line">      c.work();        // 调用的是 Cat 的 work</span><br><span class="line">  &#125;  </span><br><span class="line">            </span><br><span class="line">    public static void show(Animal a)  &#123;</span><br><span class="line">      a.eat();  </span><br><span class="line">        // 类型判断</span><br><span class="line">        if (a instanceof Cat)  &#123;  // 猫做的事情 </span><br><span class="line">            Cat c = (Cat)a;  </span><br><span class="line">            c.work();  </span><br><span class="line">        &#125; else if (a instanceof Dog) &#123; // 狗做的事情 </span><br><span class="line">            Dog c = (Dog)a;  </span><br><span class="line">            c.work();  </span><br><span class="line">        &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">abstract class Animal &#123;  </span><br><span class="line">    abstract void eat();  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line">class Cat extends Animal &#123;  </span><br><span class="line">    public void eat() &#123;  </span><br><span class="line">        System.out.println(&quot;吃鱼&quot;);  </span><br><span class="line">    &#125;  </span><br><span class="line">    public void work() &#123;  </span><br><span class="line">        System.out.println(&quot;抓老鼠&quot;);  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line">class Dog extends Animal &#123;  </span><br><span class="line">    public void eat() &#123;  </span><br><span class="line">        System.out.println(&quot;吃骨头&quot;);  </span><br><span class="line">    &#125;  </span><br><span class="line">    public void work() &#123;  </span><br><span class="line">        System.out.println(&quot;看家&quot;);  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>可以看到我们在主函数中都调用了show方法，但是输出的结果却不一样</p>
+<p>这也就是我们说的同一个接口，使用不同的实例而执行不同操作。</p>
+<h2 id="4、JacksonPolymorphicDeserialization机制解决jackson的多态问题"><a href="#4、JacksonPolymorphicDeserialization机制解决jackson的多态问题" class="headerlink" title="4、JacksonPolymorphicDeserialization机制解决jackson的多态问题"></a>4、<code>JacksonPolymorphicDeserialization</code>机制解决<code>jackson</code>的多态问题</h2><p>我们上面说了多态就是使用同一个接口，使用不同的实例实现不同的操作</p>
+<p>那么现在就出现了一个问题，我们如果在对多态类的某一个子类实例在进行序列化后反序列化，那么反序列化出来的实例是我们想要的那个子类的实例吗，会不会反序列化出其他子类的实例。</p>
+<p>然后jackson就是通过<code>JacksonPolymorphicDeserialization</code>机制这个机制来解决这个问题的。</p>
+<p><code>JacksonPolymorphicDeserialization</code>在反序列化某个类对象的过程中，如果这个类的对象不是具体的类型，例如object，接口或者抽象类，那么我们就可以在json字符串中指定其具体类型。这样jackson就可以生成具体类型的实例。</p>
+<p><code>JacksonPolymorphicDeserialization</code>机制就是将具体的子类信息绑定在序列化的内容中，从而在后续进行反序列化的时候直接得到目标子类对象。</p>
+<p><code>JacksonPolymorphicDeserialization</code>机制有两种方法来解决这个问题：<code>DefaultTyping</code>和<code>@JsonTypeInfo</code>注解。</p>
+<h3 id="DefaultTyping"><a href="#DefaultTyping" class="headerlink" title="DefaultTyping"></a>DefaultTyping</h3><p>jackson提供一个<code>enableDefaultTyping</code>设置</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231026202037268.png"
+                      alt="image-20231026202037268"
+                ></p>
+<p>包含四个值</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231026202104524.png"
+                      alt="image-20231026202104524"
+                ></p>
+<p>在默认情况下，也就是<code>enableDefaultTyping</code>在无参数的情况下，默认选择<code>OBJECT_AND_NON_CONCRETE</code></p>
+<p>我们下面结合我们上面的demo详细分析一下：</p>
+<h4 id="JAVA-LANG-OBJECT"><a href="#JAVA-LANG-OBJECT" class="headerlink" title="JAVA_LANG_OBJECT"></a>JAVA_LANG_OBJECT</h4><p>我们这里添加一个类：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class hacker &#123;</span><br><span class="line">    public String skill = &quot;hacker&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>修改 Product类添加一个Object属性</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class Product &#123;</span><br><span class="line">    private String name;</span><br><span class="line">    private double price;</span><br><span class="line">    private String description;</span><br><span class="line">    public Object object;</span><br><span class="line"></span><br><span class="line">    public Product(String name, double price, String description,Object object) &#123;</span><br><span class="line">        this.name = name;</span><br><span class="line">        this.price = price;</span><br><span class="line">        this.description = description;</span><br><span class="line">        this.object=object;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public  Product()&#123;&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    // Getters and Setters for the class properties</span><br><span class="line">    public String getName() &#123;</span><br><span class="line">        return name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setName(String name) &#123;</span><br><span class="line">        this.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public double getPrice() &#123;</span><br><span class="line">        return price;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setPrice(double price) &#123;</span><br><span class="line">        this.price = price;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return description;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setDescription(String description) &#123;</span><br><span class="line">        this.description = description;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String toString() &#123;</span><br><span class="line">        return &quot;Product&#123;&quot; +</span><br><span class="line">                &quot;name=&#x27;&quot; + name + &#x27;\&#x27;&#x27; +</span><br><span class="line">                &quot;, price=&quot; + price +</span><br><span class="line">                &quot;, description=&#x27;&quot; + description + &#x27;\&#x27;&#x27; +</span><br><span class="line">                &quot;, object=&quot; + object +</span><br><span class="line">                &#x27;&#125;&#x27;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>修改测试类，添加<code>enableDefaultTyping()</code>并设置为JAVA_LANG_OBJECT：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class test &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Product product=new Product(&quot;苹果&quot;,10,&quot;优质&quot;,new hacker());</span><br><span class="line">        ObjectMapper objectMapper =new ObjectMapper();</span><br><span class="line">        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT);</span><br><span class="line">        String w = objectMapper.writeValueAsString(product);</span><br><span class="line">        System.out.println(&quot;这里是序列化:&quot;);</span><br><span class="line">        System.out.println(w);</span><br><span class="line">        Product r=objectMapper.readValue(w, Product.class);</span><br><span class="line">        System.out.println(&quot;这里是反序列化&quot;);</span><br><span class="line">        System.out.println(r);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行测试：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">这里是序列化:</span><br><span class="line">&#123;&quot;name&quot;:&quot;苹果&quot;,&quot;price&quot;:10.0,&quot;description&quot;:&quot;优质&quot;,&quot;object&quot;:[&quot;blog.hacker&quot;,&#123;&quot;skill&quot;:&quot;hacker&quot;&#125;]&#125;</span><br><span class="line">这里是反序列化</span><br><span class="line">Product&#123;name=&#x27;苹果&#x27;, price=10.0, description=&#x27;优质&#x27;, object=blog.hacker@5dfcfece&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>注释掉<code>enableDefaultTyping()</code>：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">这里是序列化:</span><br><span class="line">&#123;&quot;name&quot;:&quot;苹果&quot;,&quot;price&quot;:10.0,&quot;description&quot;:&quot;优质&quot;,&quot;object&quot;:&#123;&quot;skill&quot;:&quot;hacker&quot;&#125;&#125;</span><br><span class="line">这里是反序列化</span><br><span class="line">Product&#123;name=&#x27;苹果&#x27;, price=10.0, description=&#x27;优质&#x27;, object=&#123;skill=hacker&#125;&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>通过上面是否添加<code>enableDefaultTyping()</code>并设置<code>JAVA_LANG_OBJECT</code>对比可以看到，添加后会在序列化的时候多输出hacke的类名，并且在反序列化的时候，添加了<code>enableDefaultTyping()</code>的只会输出hacker类对象。那么这里就是说对Object同时进行了序列化和反序列化操作。</p>
+<h4 id="OBJECT-AND-NON-CONCRETE"><a href="#OBJECT-AND-NON-CONCRETE" class="headerlink" title="OBJECT_AND_NON_CONCRETE"></a>OBJECT_AND_NON_CONCRETE</h4><p><code>OBJECT_AND_NON_CONCRETE</code>除了<code>JAVA_LANG_OBJECT</code>的可以对Object对象进行序列化和反序列化，当类里面有接口，抽象类的时候，对其进行序列化和反序列化。而且<code>enableDefaultTyping()</code>默认无参数的情况下的设置就是这个选项。</p>
+<p>我们这里通过实现一个接口来进行测试：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public interface productjie &#123;</span><br><span class="line">    public void setprice(int price);</span><br><span class="line">    public int getprice();</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>写一个类继承这个接口</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class myproductjie implements productjie &#123;</span><br><span class="line">    int price;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void setprice(int price) &#123;</span><br><span class="line">        this.price=price;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int getprice() &#123;</span><br><span class="line">        return price;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>修改一下product类：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class Product &#123;</span><br><span class="line">    private String name;</span><br><span class="line">    private double price;</span><br><span class="line">    private String description;</span><br><span class="line">    public Object object;</span><br><span class="line">    public productjie productjie;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public Product(String name, double price, String description,Object object,productjie productjie) &#123;</span><br><span class="line">        this.name = name;</span><br><span class="line">        this.price = price;</span><br><span class="line">        this.description = description;</span><br><span class="line">        this.object=object;</span><br><span class="line">        this.productjie=productjie;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public  Product()&#123;&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    // Getters and Setters for the class properties</span><br><span class="line">    public String getName() &#123;</span><br><span class="line">        return name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setName(String name) &#123;</span><br><span class="line">        this.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public double getPrice() &#123;</span><br><span class="line">        return price;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setPrice(double price) &#123;</span><br><span class="line">        this.price = price;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        return description;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setDescription(String description) &#123;</span><br><span class="line">        this.description = description;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String toString() &#123;</span><br><span class="line">        return &quot;Product&#123;&quot; +</span><br><span class="line">                &quot;name=&#x27;&quot; + name + &#x27;\&#x27;&#x27; +</span><br><span class="line">                &quot;, price=&quot; + price +</span><br><span class="line">                &quot;, description=&#x27;&quot; + description + &#x27;\&#x27;&#x27; +</span><br><span class="line">                &quot;, object=&quot; + object +</span><br><span class="line">                &quot;, productjie=&quot; + productjie +</span><br><span class="line">                &#x27;&#125;&#x27;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>修改测试类：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class test &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Product product=new Product(&quot;苹果&quot;,10,&quot;优质&quot;,new hacker(),new myproductjie());</span><br><span class="line">        ObjectMapper objectMapper =new ObjectMapper();</span><br><span class="line">        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.OBJECT_AND_NON_CONCRETE);</span><br><span class="line">        String w = objectMapper.writeValueAsString(product);</span><br><span class="line">        System.out.println(&quot;这里是序列化:&quot;);</span><br><span class="line">        System.out.println(w);</span><br><span class="line">        Product r=objectMapper.readValue(w, Product.class);</span><br><span class="line">        System.out.println(&quot;这里是反序列化&quot;);</span><br><span class="line">        System.out.println(r);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">这里是序列化:</span><br><span class="line">&#123;&quot;name&quot;:&quot;苹果&quot;,&quot;price&quot;:10.0,&quot;description&quot;:&quot;优质&quot;,&quot;object&quot;:[&quot;blog.hacker&quot;,&#123;&quot;skill&quot;:&quot;hacker&quot;&#125;],&quot;productjie&quot;:[&quot;blog.myproductjie&quot;,&#123;&quot;price&quot;:0&#125;]&#125;</span><br><span class="line">这里是反序列化</span><br><span class="line">Product&#123;name=&#x27;苹果&#x27;, price=10.0, description=&#x27;优质&#x27;, object=blog.hacker@6cc4c815, productjie=blog.myproductjie@3a82f6ef&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>我们这里可以看到我们定义的接口属性被成功序列化和反序列化了</p>
+<p>那我们如果还是用上面那个<code>JAVA_LANG_OBJECT</code>设置值来测试一下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028170023175.png"
+                      alt="image-20231028170023175"
+                ></p>
+<p>我们可以看到我们替换为<code>JAVA_LANG_OBJECT</code>的时候在进行反序列化的时候产生了报错。</p>
+<p>抛出了一个异常这个异常的根本原因是 Jackson 在反序列化时遇到了一个抽象类型或接口类型，而无法确定如何实例化它，因为抽象类型不能直接实例化。</p>
+<h4 id="NON-CONCRETE-AND-ARRAYS"><a href="#NON-CONCRETE-AND-ARRAYS" class="headerlink" title="NON_CONCRETE_AND_ARRAYS"></a>NON_CONCRETE_AND_ARRAYS</h4><p><code>NON_CONCRETE_AND_ARRAYS</code>除了上面的Object，接口，抽象类型可以被序列化和反序列化，还支持Array类型</p>
+<p>这里直接将测试代码中的hacker对象修改为数组类型的就行l</p>
+<p>修个测试代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class test &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        hacker[] hacker = new hacker[2];</span><br><span class="line">        hacker[0]=new hacker();</span><br><span class="line">        hacker[1]=new hacker();</span><br><span class="line">        Product product=new Product(&quot;苹果&quot;,10,&quot;优质&quot;,hacker,new myproductjie());</span><br><span class="line">        ObjectMapper objectMapper =new ObjectMapper();</span><br><span class="line">        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_CONCRETE_AND_ARRAYS);</span><br><span class="line">        String w = objectMapper.writeValueAsString(product);</span><br><span class="line">        System.out.println(&quot;这里是序列化:&quot;);</span><br><span class="line">        System.out.println(w);</span><br><span class="line">        Product r=objectMapper.readValue(w, Product.class);</span><br><span class="line">        System.out.println(&quot;这里是反序列化&quot;);</span><br><span class="line">        System.out.println(r);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">这里是序列化:</span><br><span class="line">&#123;&quot;name&quot;:&quot;苹果&quot;,&quot;price&quot;:10.0,&quot;description&quot;:&quot;优质&quot;,&quot;object&quot;:[&quot;[Lblog.hacker;&quot;,[&#123;&quot;skill&quot;:&quot;hacker&quot;&#125;,&#123;&quot;skill&quot;:&quot;hacker&quot;&#125;]],&quot;productjie&quot;:[&quot;blog.myproductjie&quot;,&#123;&quot;price&quot;:0&#125;]&#125;</span><br><span class="line">这里是反序列化</span><br><span class="line">Product&#123;name=&#x27;苹果&#x27;, price=10.0, description=&#x27;优质&#x27;, object=[Lblog.hacker;@20e2cbe0, productjie=blog.myproductjie@68be2bc2&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>同样的我们将这个设置值换成前面的尝试运行：</p>
+<p>这里更换为<code>JAVA_LANG_OBJECT</code>测试</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028171147939.png"
+                      alt="image-20231028171147939"
+                ></p>
+<p>但是这里经过测试发现 <code>OBJECT_AND_NON_CONCRETE</code>也可也正常序列化和反序列化数组</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028171424097.png"
+                      alt="image-20231028171424097"
+                ></p>
+<h4 id="NON-FINAL"><a href="#NON-FINAL" class="headerlink" title="NON_FINAL"></a>NON_FINAL</h4><p>NON_FINAL：除了前面的所有特征外，包含即将被序列化的类里的全部、非final的属性，也就是相当于整个类、除final外的属性信息都需要被序列化和反序列化。</p>
+<p>这里就修改一些test代码的中的属性设置值就可以了</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028172015428.png"
+                      alt="image-20231028172015428"
+                ></p>
+<h3 id="JsonTypeInfo注解"><a href="#JsonTypeInfo注解" class="headerlink" title="@JsonTypeInfo注解"></a>@JsonTypeInfo注解</h3><p><code>@JsonTypeInfo</code> 注解是 Jackson 库中的一个重要注解，用于在序列化和反序列化 JSON 数据时指定类型信息。它允许你为类的字段或属性添加类型信息，以便 Jackson 可以正确地识别和处理多态类型的数据。</p>
+<p><strong>使用 <code>JsonTypeInfo.Id</code> 枚举：</strong> 可以指定 <code>use</code> 属性为 <code>JsonTypeInfo.Id</code> 枚举值之一，以确定类型信息的使用方式。常见的枚举值包括：</p>
+<p>​    <code>JsonTypeInfo.Id.NONE</code> </p>
+<ul>
+<li><p><code>JsonTypeInfo.Id.CLASS</code>：使用类名作为类型信息。</p>
+</li>
+<li><p><code>JsonTypeInfo.Id.MINIMAL_CLASS</code>：使用类名的简短版本。</p>
+</li>
+<li><p><code>JsonTypeInfo.Id.NAME</code>：使用自定义的类型名称。</p>
+</li>
+<li><p><code>JsonTypeInfo.Id.CUSTOM</code>自定义处理器处理</p>
+</li>
+</ul>
+<h4 id="JsonTypeInfo-Id-NONE"><a href="#JsonTypeInfo-Id-NONE" class="headerlink" title="JsonTypeInfo.Id.NONE"></a>JsonTypeInfo.Id.NONE</h4><p>这里简化一下代码方便修改测试：</p>
+<p>在object属性上面添加<code>@JsonTypeInfo</code>注解，并指定为<code>JsonTypeInfo.Id.NONE</code></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">import com.fasterxml.jackson.annotation.JsonTypeInfo;</span><br><span class="line"></span><br><span class="line">public class product &#123;</span><br><span class="line">    public int price;</span><br><span class="line">    public String name;</span><br><span class="line">    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)</span><br><span class="line">    public Object object;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String toString() &#123;</span><br><span class="line">        return String.format(&quot;Person.age=%d, Person.name=%s, %s&quot;, price, name, object == null ? &quot;null&quot; : object);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>test类</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class test &#123;</span><br><span class="line">    public static void main(String[] args) throws IOException &#123;</span><br><span class="line">        Product product = new Product();</span><br><span class="line">        product.price=10;</span><br><span class="line">        product.name=&quot;苹果&quot;;</span><br><span class="line">        product.object=new hacker();</span><br><span class="line">        ObjectMapper mapper = new ObjectMapper();</span><br><span class="line"></span><br><span class="line">        String json = mapper.writeValueAsString(product);</span><br><span class="line">        System.out.println(json);</span><br><span class="line"></span><br><span class="line">         Product p2 = mapper.readValue(json, Product.class);</span><br><span class="line">        System.out.println(p2);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;&quot;price&quot;:10,&quot;name&quot;:&quot;苹果&quot;,&quot;object&quot;:&#123;&quot;skill&quot;:&quot;hacker&quot;&#125;&#125;</span><br><span class="line">Person.age=10, Person.name=苹果, &#123;skill=hacker&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>我们这里把注解给注释掉：</p>
+<p>再次运行</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028175109573.png"
+                      alt="image-20231028175109573"
+                ></p>
+<p>可以看到两个结果是一样的，所以<code>JsonTypeInfo.Id.NONE</code>时没有任何处理的，和没有使用注解的效果是一样的。</p>
+<h4 id="JsonTypeInfo-Id-CLASS"><a href="#JsonTypeInfo-Id-CLASS" class="headerlink" title="JsonTypeInfo.Id.CLASS"></a>JsonTypeInfo.Id.CLASS</h4><p>修改注解的值为<code>JsonTypeInfo.Id.CLASS</code></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;&quot;price&quot;:10,&quot;name&quot;:&quot;苹果&quot;,&quot;object&quot;:&#123;&quot;@class&quot;:&quot;blog.hacker&quot;,&quot;skill&quot;:&quot;hacker&quot;&#125;&#125;</span><br><span class="line">Person.age=10, Person.name=苹果, blog.hacker@4b9e13df</span><br></pre></td></tr></table></figure></div>
+
+<p>可以看到与上面的输出相比多了<code>&quot;@class&quot;:&quot;blog.hacker&quot;</code>，包含了具体的类的信息。可以对指定的类进行序列化和反序列化，我们根据输出结果可以看到成功对object属性的hacker类进行了序列化和反序列化。</p>
+<h4 id="JsonTypeInfo-Id-MINIMAL-CLASS"><a href="#JsonTypeInfo-Id-MINIMAL-CLASS" class="headerlink" title="JsonTypeInfo.Id.MINIMAL_CLASS"></a>JsonTypeInfo.Id.MINIMAL_CLASS</h4><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;&quot;price&quot;:10,&quot;name&quot;:&quot;苹果&quot;,&quot;object&quot;:&#123;&quot;@c&quot;:&quot;blog.hacker&quot;,&quot;skill&quot;:&quot;hacker&quot;&#125;&#125;</span><br><span class="line">Person.age=10, Person.name=苹果, blog.hacker@475530b9</span><br></pre></td></tr></table></figure></div>
+
+<p>与上面的输出做对比可以看到基本产不多但是@class换成了@c，官方描述缩短了相关类名，但是真实效果和<code>JsonTypeInfo.Id.CLASS</code></p>
+<p>是一样的，能够成功对我们指定的类型进行序列化和反序列化。</p>
+<h4 id="JsonTypeInfo-Id-NAME"><a href="#JsonTypeInfo-Id-NAME" class="headerlink" title="JsonTypeInfo.Id.NAME"></a>JsonTypeInfo.Id.NAME</h4><p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028180747834.png"
+                      alt="image-20231028180747834"
+                ></p>
+<p>可以看到在序列化输出的json对象中多了一个@type，但是具体的包名，类名却没有，这导致在后面反序列化的时候抛出了异常，无法正常反序列化。那么根据这个结果我们可以知道这个值是不能在反序列化利用的。</p>
+<h4 id="JsonTypeInfo-Id-CUSTOM"><a href="#JsonTypeInfo-Id-CUSTOM" class="headerlink" title="JsonTypeInfo.Id.CUSTOM"></a>JsonTypeInfo.Id.CUSTOM</h4><p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028181918781.png"
+                      alt="image-20231028181918781"
+                ></p>
+<p>这个值在进行序列化的时候就抛出了异常。因为这个值是提供给用户自定义的，没有办法直接使用，需要手动写一个解析器才能配合使用这个值，直接调用就会抛出异常。</p>
+<p>那这里其实根据我们前面的测试，，当@JsonTypeInfo注解设置为如下值之一并且修饰的是Object类型的属性时，我们可以使用<code>JsonTypeInfo.Id.CLASS</code>，<code>JsonTypeInfo.Id.MINIMAL_CLASS</code>可以利用来触发jackson反序列化漏洞。</p>
+<h2 id="5、jackson反序列化中类属性方法的调用"><a href="#5、jackson反序列化中类属性方法的调用" class="headerlink" title="5、jackson反序列化中类属性方法的调用"></a>5、jackson反序列化中类属性方法的调用</h2><p>在上面我们学习了jackson是如何通过<code>JacksonPolymorphicDeserialization</code>机制下的多态的序列化和反序列化</p>
+<p>然后我们这里来看一下jackson在<code>JacksonPolymorphicDeserialization</code>机制下类属性方法的调用。</p>
+<h3 id="DefaultTyping场景下："><a href="#DefaultTyping场景下：" class="headerlink" title="DefaultTyping场景下："></a>DefaultTyping场景下：</h3><p>这里对Product代码稍微做一个修改，每个类方法属性都加上一个输出语句，便于我们判断是否调用</p>
+<p>Product类：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">package blog;</span><br><span class="line"></span><br><span class="line">public class Product &#123;</span><br><span class="line">    private String name;</span><br><span class="line">    private double price;</span><br><span class="line">    private String description;</span><br><span class="line">    public Object object;</span><br><span class="line">    public productjie productjie;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public Product(String name, double price, String description,Object object,productjie productjie) &#123;</span><br><span class="line">        this.name = name;</span><br><span class="line">        this.price = price;</span><br><span class="line">        this.description = description;</span><br><span class="line">        this.object=object;</span><br><span class="line">        this.productjie=productjie;</span><br><span class="line">        System.out.println(&quot;这里是有参构造&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public  Product()&#123;</span><br><span class="line"></span><br><span class="line">        System.out.println(&quot;这里是无参构造&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    // Getters and Setters for the class properties</span><br><span class="line">    public String getName() &#123;</span><br><span class="line">        System.out.println(&quot;这里是getname方法&quot;);</span><br><span class="line">        return name;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setName(String name) &#123;</span><br><span class="line">        this.name = name;</span><br><span class="line">        System.out.println(&quot;这里调用了setname方法&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public double getPrice() &#123;</span><br><span class="line">        System.out.println(&quot;这里调用了getprice方法&quot;);</span><br><span class="line">        return price;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setPrice(double price) &#123;</span><br><span class="line">        System.out.println(&quot;这里调用了setprice方法&quot;);</span><br><span class="line">        this.price = price;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        System.out.println(&quot;这里调用了getdescripition方法&quot;);</span><br><span class="line">        return description;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setDescription(String description) &#123;</span><br><span class="line">        System.out.println(&quot;这里调用了setdescripition方法&quot;);</span><br><span class="line"></span><br><span class="line">        this.description = description;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String toString() &#123;</span><br><span class="line">        return &quot;Product&#123;&quot; +</span><br><span class="line">                &quot;name=&#x27;&quot; + name + &#x27;\&#x27;&#x27; +</span><br><span class="line">                &quot;, price=&quot; + price +</span><br><span class="line">                &quot;, description=&#x27;&quot; + description + &#x27;\&#x27;&#x27; +</span><br><span class="line">                &quot;, object=&quot; + object +</span><br><span class="line">                &quot;, productjie=&quot; + productjie +</span><br><span class="line">                &#x27;&#125;&#x27;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>测试类：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">import com.fasterxml.jackson.databind.ObjectMapper;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">public class test &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        hacker[] hacker = new hacker[2];</span><br><span class="line">        hacker[0]=new hacker();</span><br><span class="line">        hacker[1]=new hacker();</span><br><span class="line">        Product product=new Product(&quot;苹果&quot;,10,&quot;优质&quot;,new hacker(),new myproductjie());</span><br><span class="line">        ObjectMapper objectMapper =new ObjectMapper();</span><br><span class="line">        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_CONCRETE_AND_ARRAYS);</span><br><span class="line">        String w = objectMapper.writeValueAsString(product);</span><br><span class="line">        System.out.println(&quot;这里是序列化:&quot;);</span><br><span class="line">        System.out.println(w);</span><br><span class="line">        Product r=objectMapper.readValue(w, Product.class);</span><br><span class="line">        System.out.println(&quot;这里是反序列化&quot;);</span><br><span class="line">        System.out.println(r);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">这里是有参构造</span><br><span class="line">这里是getname方法</span><br><span class="line">这里调用了getprice方法</span><br><span class="line">这里调用了getdescripition方法</span><br><span class="line">这里是序列化:</span><br><span class="line">&#123;&quot;name&quot;:&quot;苹果&quot;,&quot;price&quot;:10.0,&quot;description&quot;:&quot;优质&quot;,&quot;object&quot;:[&quot;blog.hacker&quot;,&#123;&quot;skill&quot;:&quot;hacker&quot;&#125;],&quot;productjie&quot;:[&quot;blog.myproductjie&quot;,&#123;&quot;price&quot;:0&#125;]&#125;</span><br><span class="line">这里是无参构造</span><br><span class="line">这里调用了setname方法</span><br><span class="line">这里调用了setprice方法</span><br><span class="line">这里调用了setdescripition方法</span><br><span class="line">这里是反序列化</span><br><span class="line">Product&#123;name=&#x27;苹果&#x27;, price=10.0, description=&#x27;优质&#x27;, object=blog.hacker@6cc4c815, productjie=blog.myproductjie@3a82f6ef&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>根据上面运行结果的输出，我们可以看到在序列化的时候调用了构造函数和get方法</p>
+<p>但是在反序列化的时候调用了构造方法和set方法</p>
+<p>我们继续分析在使用注解的情况下:</p>
+<h3 id="JsonTypeInfo注解场景下："><a href="#JsonTypeInfo注解场景下：" class="headerlink" title="@JsonTypeInfo注解场景下："></a>@JsonTypeInfo注解场景下：</h3><p>修改Product代码在productjie属性上面添加注解属性</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">package blog;</span><br><span class="line"></span><br><span class="line">import com.fasterxml.jackson.annotation.JsonTypeInfo;</span><br><span class="line"></span><br><span class="line">public class Product &#123;</span><br><span class="line">    private String name;</span><br><span class="line">    private double price;</span><br><span class="line">    private String description;</span><br><span class="line">    public Object object;</span><br><span class="line">    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)</span><br><span class="line">    public productjie productjie;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public Product(String name, double price, String description,Object object,productjie productjie) &#123;</span><br><span class="line">        this.name = name;</span><br><span class="line">        this.price = price;</span><br><span class="line">        this.description = description;</span><br><span class="line">        this.object=object;</span><br><span class="line">        this.productjie=productjie;</span><br><span class="line">        System.out.println(&quot;这里是有参构造&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public  Product()&#123;</span><br><span class="line"></span><br><span class="line">        System.out.println(&quot;这里是无参构造&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    // Getters and Setters for the class properties</span><br><span class="line">    public String getName() &#123;</span><br><span class="line">        System.out.println(&quot;这里是getname方法&quot;);</span><br><span class="line">        return name;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setName(String name) &#123;</span><br><span class="line">        this.name = name;</span><br><span class="line">        System.out.println(&quot;这里调用了setname方法&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public double getPrice() &#123;</span><br><span class="line">        System.out.println(&quot;这里调用了getprice方法&quot;);</span><br><span class="line">        return price;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setPrice(double price) &#123;</span><br><span class="line">        System.out.println(&quot;这里调用了setprice方法&quot;);</span><br><span class="line">        this.price = price;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String getDescription() &#123;</span><br><span class="line">        System.out.println(&quot;这里调用了getdescripition方法&quot;);</span><br><span class="line">        return description;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setDescription(String description) &#123;</span><br><span class="line">        System.out.println(&quot;这里调用了setdescripition方法&quot;);</span><br><span class="line"></span><br><span class="line">        this.description = description;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String toString() &#123;</span><br><span class="line">        return &quot;Product&#123;&quot; +</span><br><span class="line">                &quot;name=&#x27;&quot; + name + &#x27;\&#x27;&#x27; +</span><br><span class="line">                &quot;, price=&quot; + price +</span><br><span class="line">                &quot;, description=&#x27;&quot; + description + &#x27;\&#x27;&#x27; +</span><br><span class="line">                &quot;, object=&quot; + object +</span><br><span class="line">                &quot;, productjie=&quot; + productjie +</span><br><span class="line">                &#x27;&#125;&#x27;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>测试类：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class test &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Product product=new Product(&quot;苹果&quot;,10,&quot;优质&quot;,new hacker(),new myproductjie());</span><br><span class="line">        ObjectMapper objectMapper =new ObjectMapper();</span><br><span class="line">        String w = objectMapper.writeValueAsString(product);</span><br><span class="line">        System.out.println(&quot;这里是序列化:&quot;);</span><br><span class="line">        System.out.println(w);</span><br><span class="line">        Product r=objectMapper.readValue(w, Product.class);</span><br><span class="line">        System.out.println(&quot;这里是反序列化&quot;);</span><br><span class="line">        System.out.println(r);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">这里是有参构造</span><br><span class="line">这里是getname方法</span><br><span class="line">这里调用了getprice方法</span><br><span class="line">这里调用了getdescripition方法</span><br><span class="line">这里是序列化:</span><br><span class="line">&#123;&quot;name&quot;:&quot;苹果&quot;,&quot;price&quot;:10.0,&quot;description&quot;:&quot;优质&quot;,&quot;object&quot;:&#123;&quot;skill&quot;:&quot;hacker&quot;&#125;,&quot;productjie&quot;:&#123;&quot;@class&quot;:&quot;blog.myproductjie&quot;,&quot;price&quot;:0&#125;&#125;</span><br><span class="line">这里是无参构造</span><br><span class="line">这里调用了setname方法</span><br><span class="line">这里调用了setprice方法</span><br><span class="line">这里调用了setdescripition方法</span><br><span class="line">这里是反序列化</span><br><span class="line">Product&#123;name=&#x27;苹果&#x27;, price=10.0, description=&#x27;优质&#x27;, object=&#123;skill=hacker&#125;, productjie=blog.myproductjie@6767c1fc&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>我们看到这里调用的类属性方法是和上面在DefaultTyping场景下的结果是一样的。</p>
+<h3 id="动态调试"><a href="#动态调试" class="headerlink" title="动态调试"></a>动态调试</h3><p>那么根据上面的测试，jackson在进行反序列化的过程中首先是通过构造函数生成实列，然后调用调用set方法设置实例的属性值，我们这里打断点动态调试一下这个过程</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028185954048.png"
+                      alt="image-20231028185954048"
+                ></p>
+<p>前面一部分代码都是读取json数据对象</p>
+<p>然后调用deserialize方法对json对象进行反序列化操作</p>
+<p>我们这里跟进去分析一下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028190131938.png"
+                      alt="image-20231028190131938"
+                ></p>
+<p>首先通过<code>p.isExpectedStartObjectToken()</code>检查是否是在处理一个json对象</p>
+<p>然后调用<code>vanillaDeserialize</code>进行处理</p>
+<p>跟进这个方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028191511962.png"
+                      alt="image-20231028191511962"
+                ></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">final Object bean = _valueInstantiator.createUsingDefault(ctxt);</span><br></pre></td></tr></table></figure></div>
+
+<p>首先这里是先通过<code>createUsingDefault</code>这个方法来调用指定类的无参构造函数来生成类实例</p>
+<p>那么到这里我们也就知道了无参构造函数在jackson反序列化的调用过程</p>
+<p>跟进这个方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028191805282.png"
+                      alt="image-20231028191805282"
+                ></p>
+<p>这里调用了call方法</p>
+<p>跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028191910654.png"
+                      alt="image-20231028191910654"
+                ></p>
+<p>进入call方法我们可以看到调用了newInstace()方法对<code>_constructor</code>进行实例化，这里的<code>_constructor</code>我们根据调试信息可以看到就是我们定义的product类</p>
+<p>那么根据上面的调试分析我们可以知道实例化的过程</p>
+<p>然后跳出createUsingDefault方法进行向下分析代码</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028192743317.png"
+                      alt="image-20231028192743317"
+                ></p>
+<p>我们这里简单分析一些代码</p>
+<p><code>if (p.hasTokenId(JsonTokenId.ID_FIELD_NAME))</code>: 这个条件检查 JSON 标记（token）是否是字段名。在 JSON 中，字段名是一个字符串，例如 <code>&quot;name&quot;: &quot;John&quot;</code> 中的 <code>&quot;name&quot;</code> 就是字段名。</p>
+<p><code>String propName = p.getCurrentName();</code>: 如果 JSON 标记是字段名，那么这一行代码会获取当前字段名，并将其存储在 <code>propName</code> 变量中。</p>
+<p>然后可以看到是一个dowhile循环用于处理对象的各个属性。在每次迭代中，它会获取下一个字段名，并继续处理，直到没有更多字段名为止。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028193012521.png"
+                      alt="image-20231028193012521"
+                ></p>
+<p>如果找到了与字段名匹配的属性，那么它会进入这个条件块。在这个块中，它尝试使用属性的 <code>deserializeAndSet</code> 方法来将 JSON 数据中的值设置到 Java 对象的属性上。</p>
+<p>我们这里跟进到这个deserializeAndSet方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028193106651.png"
+                      alt="image-20231028193106651"
+                ></p>
+<p>可以看到这里也调用了deserialize方法</p>
+<p>跟进到这个deserialize方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028193708798.png"
+                      alt="image-20231028193708798"
+                ></p>
+<p>可以看到这里有两个处理逻辑</p>
+<p>第一个逻辑用于处理 JSON 中属性值为 null 的情况，将其映射为 Java 对象的属性值为 null。</p>
+<p>第二个if判断</p>
+<p>首先，它检查 <code>_valueTypeDeserializer</code> 是否为非空，即是否存在类型信息。如果存在类型信息，说明该属性值包含了类型信息。</p>
+<p>如果存在类型信息，它会调用 <code>_valueDeserializer.deserializeWithType(p, ctxt, _valueTypeDeserializer)</code> 来执行反序列化操作。这个方法传递了当前的 JSON 解析器 <code>p</code>、反序列化上下文 <code>ctxt</code> 以及类型信息 <code>_valueTypeDeserializer</code>。</p>
+<p>如果 <code>_valueTypeDeserializer</code> 为空，说明属性值不包含类型信息，它将简单地调用 <code>_valueDeserializer.deserialize(p, ctxt)</code> 来执行属性值的反序列化。这将根据属性值的实际类型执行反序列化。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028194113889.png"
+                      alt="image-20231028194113889"
+                ></p>
+<p>我们的第一个属性是name，所以可以看到这里调用的是StringDeserializerl来获取name属性的值</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028194312205.png"
+                      alt="image-20231028194312205"
+                ></p>
+<p>当获取到属性值后回到<code>deserializeAndSet</code>方法调用属性的setter方法来对实例的属性值进行设置。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028194416544.png"
+                      alt="image-20231028194416544"
+                ></p>
+<p>后面就还是进行dowhile设置 后面price和description的值。</p>
+<p>但是hacker是一个包含类名的数组</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028205254249.png"
+                      alt="image-20231028205254249"
+                ></p>
+<p>可以看到这里的类型不为空，也就是<code>_valueTypeDeserializer</code>的值不为空</p>
+<p>然后这里调用了<code>_valueDeserializer.deserializeWithType(p, ctxt, _valueTypeDeserializer);</code></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028205552322.png"
+                      alt="image-20231028205552322"
+                ></p>
+<p>跟进去这个处理函数</p>
+<p>一直跟进到调用_deserialize方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028205819239.png"
+                      alt="image-20231028205819239"
+                ></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">tring typeId = _locateTypeId(p, ctxt);</span><br></pre></td></tr></table></figure></div>
+
+<p>在这里可以看到调用<code>_locateTypeId()</code>函数获取到了类型为：blog.hacker</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028210008938.png"
+                      alt="image-20231028210008938"
+                ></p>
+<p>然后这里根据取到的类型<code>_findDeserializer</code>方法来寻找对应的反序列化器</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028210326672.png"
+                      alt="image-20231028210326672"
+                ></p>
+<p>我们跟进去获取到了反序列化器并返回</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231028210635389.png"
+                      alt="image-20231028210635389"
+                ></p>
+<p>这里其实就是获取到了反序列化器</p>
+<p>我们这里跟进去看一下</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029143031810.png"
+                      alt="image-20231029143031810"
+                ></p>
+<p>我们这次处理的序列化对象Object是有类型信息的，所以这里会调用<code>_valueDeserializer.deserializeWithType</code>进行处理</p>
+<p>跟进到<code>deserializeWithType</code>方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029143803433.png"
+                      alt="image-20231029143803433"
+                ></p>
+<p>这里就是jackson用于处理多态对象的地方，<code>typeDeserializer</code>会检查JSON数据中的类型信息，然后选择正确的Java类进行反序列化。这允许在JSON中表示多态数据结构，以便将其准确地还原为Java对象。</p>
+<p>我们继续跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029143946516.png"
+                      alt="image-20231029143946516"
+                ></p>
+<p>然后继续调用 _deserialize进行反序列化处理</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029144113333.png"
+                      alt="image-20231029144113333"
+                ></p>
+<p>具体的反序列化还是调用这个deserialize方法，然后将反序列化的值返回</p>
+<p>继续跟进到这个deserialize方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029144253448.png"
+                      alt="image-20231029144253448"
+                ></p>
+<p>可以看到又重新跳回了deserialize调用了<code>vanillaDeserialize</code>方法来解析数组内的内容</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029144347375.png"
+                      alt="image-20231029144347375"
+                ></p>
+<p>其中调用createUsingDefault()函数的时候会调用到hakcer类的无参构造函数来新建hacker类对象</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029144529401.png"
+                      alt="image-20231029144529401"
+                ></p>
+<p>然后再次调用deserializeAndSet()函数获取该属性值并设置到该实例中：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029144709046.png"
+                      alt="image-20231029144709046"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029144725701.png"
+                      alt="image-20231029144725701"
+                ></p>
+<p>然后通过反射获取到hacker类的属性名，然后调用set方法将值设置给hacker对象</p>
+<p>因为我在product类里面也写了一个object的set方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029144904617.png"
+                      alt="image-20231029144904617"
+                ></p>
+<p>所以会在来一次调用这个set方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029145008454.png"
+                      alt="image-20231029145008454"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029144945486.png"
+                      alt="image-20231029144945486"
+                ></p>
+<p>那么其实上面对于object类型的反序列化首先通过<code>deserializeWithType</code>方法去获取到合适的反序列化器，然后再次调用deserialize方法去进行json对象的反序列化，调用无参构造函数，然然后就是通过反射机制调用该属性的setter方法进行设置。</p>
+<p>那么根据上面的分析，我们大概可以总结一下jackson的反序列化过程:先通过无参构造类函数生成目标类的实例，然后根据属性值是否是数组，也就是是否带有类名，如果目标是一个不带有类名的就直接调用deserializeAndSet方法调用set方法将属性值设置，如果是带有类名的，也就是类似于我们上面的数组类型，会先调用deserializeWithType去寻找合适的发序列化器，进行反序列化，然后再构造对象，调用deserializeAndSet方法。</p>
+<h1 id="三、jackson反序列化漏洞"><a href="#三、jackson反序列化漏洞" class="headerlink" title="三、jackson反序列化漏洞"></a>三、jackson反序列化漏洞</h1><p>那么根据我们上面的分析，在jackson的反序列化中，若是调用了<code>enableDefaultTyping()</code>函数或使用<code>@JsonTypeInfo</code>注解指定反序列化得到的类的属性为<code>JsonTypeInfo.Id.CLASS</code>或<code>JsonTypeInfo.Id.MINIMAL_CLASS</code>就会调用该属性类的构造函数和set方法。那么现在出现了一个问题，如果我们在构造函数或者set方法中写入一些危险的操作的方法或者函数，那么当反序列化调用构造函数和set方法时就会造成危险利用。这就是我们这次要学习的漏洞jackson反序列化漏洞。</p>
+<p>根据上面的分析我们可以得到jackson反序列化的利用前提条件：（满足其一就可）</p>
+<ul>
+<li><pre><code>调用了ObjectMapper.enableDefaultTyping()函数；
+对要进行反序列化的类的属性使用了值为JsonTypeInfo.Id.CLASS或者JsonTypeInfo.Id.MINIMAL_CLASS的@JsonTypeInfo注解
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">分析到这里，我们可以知道这个漏洞的原因就是因为这个jackson在解决多态问题使用的JacksonPolymorphicDeserialization机制存在的问题，导致在反序列化时会调用构造函数和set方法。</span><br><span class="line"></span><br><span class="line">我们这里通过前面的测试代码，在set方法或者构造函数中添加一个弹出计算器的操作来演示这个操作：</span><br><span class="line"></span><br><span class="line">我们这里修改myproductjie这个继承接口的类就行，我在他的一个set方法中添加一个弹出计算器的命令：</span><br><span class="line"></span><br><span class="line">myproductjie类：</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+public class myproductjie implements productjie &#123;
+  int price;
+  public myproductjie()&#123;
+      System.out.println(&quot;这里调用了myproductjie的无参构造方法&quot;);
+  &#125;
+
+
+  @Override
+  public void setprice(int price) throws IOException &#123;
+      Runtime.getRuntime().exec(&quot;calc&quot;);
+      this.price=price;
+      System.out.println(&quot;这里是setprice&quot;);
+
+  &#125;
+
+  @Override
+  public int getprice() &#123;
+      return price;
+  &#125;
+</code></pre>
+</li>
+</ul>
+<p>}</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">productjie</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+<p>public interface productjie {<br>    public void setprice(int price) throws IOException;<br>    public int getprice();<br>}</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">运行测试：</span><br><span class="line"></span><br><span class="line">![image-20231029173820717](https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029173820717.png)</span><br><span class="line"></span><br><span class="line">可以看到成功弹出了计算器。</span><br><span class="line"></span><br><span class="line">当然我们上面打的是一个非object类的，当我们的目标属性是object类型的，那么我们的攻击面就被扩大了，因为object类型是任意类型的父类，那只需要寻找出在目标服务端环境中存在的且构造函数或setter方法存在漏洞代码的类即可进行攻击利用。</span><br><span class="line"></span><br><span class="line">那我们直接这里修改：</span><br><span class="line"></span><br><span class="line">hacker类：</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+<p>package blog1;</p>
+<p>public class hacker {<br>   public String cmd;</p>
+<p>   public  hacker(){</p>
+<p>   }<br>    public hacker(String cmd){<br>        this.cmd&#x3D;cmd;</p>
+<pre><code>&#125;
+public void setCmd(String cmd)&#123;
+    this.cmd=cmd;
+    System.out.println(&quot;122222&quot;);
+    try &#123;
+        Runtime.getRuntime().exec(this.cmd);
+    &#125; catch (Exception e) &#123;
+        e.printStackTrace();
+    &#125;
+&#125;
+</code></pre>
+<p>}</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">product类：</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+<p>package blog1;</p>
+<p>import com.fasterxml.jackson.annotation.JsonTypeInfo;</p>
+<p>public class Product {<br>    public int price;<br>    public String name;<br>    @JsonTypeInfo(use &#x3D; JsonTypeInfo.Id.MINIMAL_CLASS)<br>    public Object object;<br>    public Product() {<br>        System.out.println(“Product构造函数”);<br>    }</p>
+<pre><code>@Override
+public String toString() &#123;
+    return String.format(&quot;Prouduct.age=%d, Product.name=%s, %s&quot;, price, name, object == null ? &quot;null&quot; : object);
+&#125;
+</code></pre>
+<p>}</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">测试类：</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+<p>public class test {<br>    public static void main(String[] args) throws IOException {<br>        Product product &#x3D; new Product();<br>        product.price&#x3D;10;<br>        product.name&#x3D;”苹果”;<br>        product.object&#x3D;new hacker(“calc”);<br>        ObjectMapper mapper &#x3D; new ObjectMapper();</p>
+<pre><code>    String json = mapper.writeValueAsString(product);
+    System.out.println(json);
+
+     Product p2 = mapper.readValue(json, Product.class);
+    System.out.println(p2);
+&#125;
+
+&#125;
+</code></pre>
+<pre><code>
+运行测试：
+
+![image-20231029183331719](https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029183331719.png)
+
+也弹出来计算器。
+
+
+
+# 四、总结
+
+上面我们分析和调试了jackson反序列化漏洞产生的原因，也就是因为jackson解决多态问题反序列化的JacksonPolymorphicDeserialization机制存在问题，当调用`enableDefaultTyping()`函数或使用`@JsonTypeInfo`注解指定反序列化得到的类的属性为`JsonTypeInfo.Id.CLASS`或`JsonTypeInfo.Id.MINIMAL_CLASS`就会调用该属性类的构造函数和set方法，导致我们可以反序列化利用。
+
+但是我们上面的测试都是自己写了一个利用类，在真实环境中，是不可能留有一个可以执行命令的后门的，所以我们这里只是简单了一下jackson反序列化的原理和流程。后门我们将分析与其相关的几个cve和利用链。
+</code></pre>
+]]></content>
+      <tags>
+        <tag>java</tag>
+      </tags>
+  </entry>
 </search>
