@@ -7065,8 +7065,7 @@ public void setCmd(String cmd)&#123;
 &#125;
 </code></pre>
 <p>}</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">product类：</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
-<p>package blog1;</p>
+<p>product类：</p>
 <p>import com.fasterxml.jackson.annotation.JsonTypeInfo;</p>
 <p>public class Product {<br>    public int price;<br>    public String name;<br>    @JsonTypeInfo(use &#x3D; JsonTypeInfo.Id.MINIMAL_CLASS)<br>    public Object object;<br>    public Product() {<br>        System.out.println(“Product构造函数”);<br>    }</p>
 <pre><code>@Override
@@ -7075,8 +7074,7 @@ public String toString() &#123;
 &#125;
 </code></pre>
 <p>}</p>
-<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">测试类：</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
-<p>public class test {<br>    public static void main(String[] args) throws IOException {<br>        Product product &#x3D; new Product();<br>        product.price&#x3D;10;<br>        product.name&#x3D;”苹果”;<br>        product.object&#x3D;new hacker(“calc”);<br>        ObjectMapper mapper &#x3D; new ObjectMapper();</p>
+<p>测试类：<br>public class test {<br>    public static void main(String[] args) throws IOException {<br>        Product product &#x3D; new Product();<br>        product.price&#x3D;10;<br>        product.name&#x3D;”苹果”;<br>        product.object&#x3D;new hacker(“calc”);<br>        ObjectMapper mapper &#x3D; new ObjectMapper();</p>
 <pre><code>    String json = mapper.writeValueAsString(product);
     System.out.println(json);
 
@@ -7092,10 +7090,6 @@ public String toString() &#123;
 ![image-20231029183331719](https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231029183331719.png)
 
 也弹出来计算器。
-
-
-
-
 
 # 八、总结
 
