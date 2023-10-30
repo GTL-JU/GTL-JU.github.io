@@ -7095,6 +7095,8 @@ public String toString() &#123;
 
 
 
+
+
 # 四、总结
 
 上面我们分析和调试了jackson反序列化漏洞产生的原因，也就是因为jackson解决多态问题反序列化的JacksonPolymorphicDeserialization机制存在问题，当调用`enableDefaultTyping()`函数或使用`@JsonTypeInfo`注解指定反序列化得到的类的属性为`JsonTypeInfo.Id.CLASS`或`JsonTypeInfo.Id.MINIMAL_CLASS`就会调用该属性类的构造函数和set方法，导致我们可以反序列化利用。
